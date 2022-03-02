@@ -1,6 +1,6 @@
 #include "error_handler.hpp"
 
-void handler(ErrorCode e){
+void handler(const ErrorCode e){
 
     //TODO
 }

@@ -5,8 +5,9 @@ typedef enum error_code {
     default__,
     not_enough_args,
     invalid_argument,
+    io_error,
 } ErrorCode;
 
-void handler(ErrorCode e);
+void handler(const ErrorCode e);
 
 #endif
