@@ -9,7 +9,7 @@ std::ostream& operator<<(std::ostream& stream, Point3d const &p){
 std::istream& operator>>(std::istream& stream, Point3d& p){
 
     Point3d tmp {};
-    char c {};
+    char c {};    //used to ignore ';' and '\n'
 
     if(stream >> tmp.x >> c >> tmp.y >> c >> tmp.z >> c){
         p.x = tmp.x;

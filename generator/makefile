@@ -3,13 +3,13 @@
 # -----------//-----------
 
 
-#define the source, header and object files directories
+#directories
 SRC_DIR := src
 HDR_DIR := include
 OBJ_DIR := obj
 
 
-#define the source and object files, and executable
+#files
 SRC_FILES := $(shell find $(SRC_DIR) -name *.cpp -o -name *.cxx -o -name *.c++ -o -name *.cc)
 OBJ_FILES := $(patsubst $(SRC_DIR)/%,$(OBJ_DIR)/%,$(patsubst %,%.o,$(SRC_FILES)))
 BIN := $(BIN_DIR)/generator
@@ -19,9 +19,9 @@ BIN := $(BIN_DIR)/generator
 #make default goal (using make with no specified recipe)
 .DEFAULT_GOAL := all
 
-all: $(BIN)
+build: clean all
 
-build: clean $(BIN)
+all: $(BIN)
 
 $(BIN): $(OBJ_FILES)
 	$(CXX) $(FLAGS) $^ -o $@ $(LINKER_FLAGS)
