@@ -52,9 +52,14 @@ int plane_writer(const string &filename, int length, int divs){
 
         Point3d p1 {}, p2 {}, p3 {};
 
-        for(double x { abs_max_coord }; x + abs_max_coord >= 0.0; x -= incr){
 
-            for(double z { abs_max_coord }; z + abs_max_coord >= 0.0; z -= incr){
+        double x { abs_max_coord };
+
+        for(int i{}; i < divs; i++, x -= incr){
+
+            double z { abs_max_coord };
+
+            for(int j {}; j < divs; j++, z -= incr){
 
                 p1.x = x; p1.z = z;
                 p2.x = x; p2.z = z - incr;
