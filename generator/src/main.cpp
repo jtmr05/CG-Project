@@ -1,5 +1,4 @@
 #include "primitive.hpp"
-#include "point.hpp"
 
 using std::string;
 
@@ -12,5 +11,9 @@ int main(int argc, const char** argv){
         args[i].append(argv[i]);
     }
 
-    return primitive_writer(args, argc);
+    const int exit_code = primitive_writer(args, argc);
+    ErrorCode err = static_cast<ErrorCode>(exit_code);
+    handler(err);
+
+    return exit_code;
 }

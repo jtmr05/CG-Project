@@ -30,6 +30,7 @@ $(OBJ_FILES): $(OBJ_DIR)/%.o : $(SRC_DIR)/%
 	$(CXX) $(FLAGS) -c $< -o $@
 
 $(UTILS_LIB): $(OBJ_FILES)
+	-find $(LIB_DIR)/* | grep $(LIB_DIR)/*.a | xargs rm
 	ar -rcs $@ $^
 
 
