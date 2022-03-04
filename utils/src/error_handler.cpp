@@ -8,7 +8,7 @@ void usage(){
         "\t generator sphere <radius> <slices> <stacks> <output_file>\n";
 }
 
-void handler(const ErrorCode e){
+void handle_error(const ErrorCode e){
 
     switch(e){
 
@@ -22,6 +22,7 @@ void handler(const ErrorCode e){
         break;
 
     case ErrorCode::not_enough_args:
+        std::cerr << "Missing arguments.\n";
         usage();
         break;
 

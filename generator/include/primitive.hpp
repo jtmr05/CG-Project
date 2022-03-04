@@ -12,21 +12,7 @@
 
 using std::string;
 
-typedef enum primitive {
-    plane,
-    box,
-    sphere,
-    cone,
-    __invalid,
-} Primitive;
 
-const int PLANE_ARGS {5};
-const int BOX_ARGS {5};
-const int CONE_ARGS {7};
-const int SPHERE_ARGS {6};
-
-
-
-int primitive_writer(const string[], const int);
+ErrorCode primitive_writer(const string[], const int);
 
 #endif

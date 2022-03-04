@@ -11,9 +11,8 @@ int main(int argc, const char** argv){
         args[i].append(argv[i]);
     }
 
-    const int exit_code = primitive_writer(args, argc);
-    ErrorCode err = static_cast<ErrorCode>(exit_code);
-    handler(err);
+    const ErrorCode exit_code = primitive_writer(args, argc);
+    handle_error(exit_code);
 
     return exit_code;
 }

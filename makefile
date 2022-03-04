@@ -15,6 +15,7 @@ LIB_DIR := $(PWD)/lib
 
 FREEGLUT_DIR := $(LIB_DIR)/freeglut
 UTILS_LIB_DIR := $(PWD)/$(UTILS_DIR)/lib
+TINY_XML_DIR := $(LIB_DIR)/tinyxml
 
 #define the compiler
 CXX := g++
@@ -25,8 +26,8 @@ ifeq (Windows_NT, $(OS))
 endif
 
 #compiler flags
-FLAGS := -Wall -Wextra -Wsign-conversion -Iinclude -I$(PWD)/$(UTILS_DIR)/include
-LINKER_FLAGS := -L$(UTILS_LIB_DIR) -lutils
+FLAGS := -Wall -Wextra -Wsign-conversion -Iinclude -I$(PWD)/$(UTILS_DIR)/include -I$(TINY_XML_DIR)
+LINKER_FLAGS := -L$(UTILS_LIB_DIR) -lutils -L$(TINY_XML_DIR) -ltinyxml
 
 ifdef IS_WIN
 	FLAGS += -I$(FREEGLUT_DIR)/include
@@ -48,7 +49,7 @@ all: utils generator engine
 
 build: clean all
 
-.PHONY: utils
+.PHONY: utils tinyxml
 generator: utils
 	make -C $(GEN_DIR)
 
@@ -58,6 +59,9 @@ engine: utils
 utils:
 	make -C $(UTILS_DIR)
 
+#in case there's need to recompile
+tinyxml:
+	make -C $(TINY_XML_DIR)
 
 #'clean' doesn't represent actual file generating recipes
 .PHONY: clean
@@ -67,4 +71,5 @@ clean:
 	-make -C $(ENG_DIR) clean
 	-make -C $(GEN_DIR) clean
 	-make -C $(UTILS_DIR) clean
+	-make -C $(TINY_XML_DIR) clean
 

@@ -1,5 +1,18 @@
 #include "primitive.hpp"
 
+typedef enum primitive {
+    plane,
+    box,
+    sphere,
+    cone,
+    __invalid,
+} Primitive;
+
+const int PLANE_ARGS {5};
+const int BOX_ARGS {5};
+const int CONE_ARGS {7};
+const int SPHERE_ARGS {6};
+
 Primitive from_string(const string &str){
 
     Primitive s { Primitive::__invalid };
@@ -16,7 +29,7 @@ Primitive from_string(const string &str){
     return s;
 }
 
-//matches with a non-negative integer
+//matches with and converts a non-negative integer
 //-1 indicates no match found
 int string_to_uint(const string &str){
 
@@ -38,9 +51,30 @@ bool has_3d_ext(const string &str){
 
 
 
-int plane_writer(const string &filename, int length, int divs){
+ErrorCode sphere_writer(const string &filename, int radius, int slices, int stacks){
 
-    int exit_code { ErrorCode::default__ };
+    ErrorCode exit_code { ErrorCode::default__ };
+
+    return exit_code;
+}
+
+ErrorCode cone_writer(const string &filename, int radius, int height, int slices, int stacks){
+
+    ErrorCode exit_code { ErrorCode::default__ };
+
+    return exit_code;
+}
+
+ErrorCode box_writer(const string &filename, int units, int grid_side){
+
+    ErrorCode exit_code { ErrorCode::default__ };
+
+    return exit_code;
+}
+
+ErrorCode plane_writer(const string &filename, int length, int divs){
+
+    ErrorCode exit_code { ErrorCode::default__ };
 
     std::ofstream file{};
     file.open(filename, std::ios::out | std::ios::trunc);
@@ -75,15 +109,15 @@ int plane_writer(const string &filename, int length, int divs){
     else
         exit_code = ErrorCode::io_error;
 
-
     return exit_code;
 }
 
 
-//parse the arguments needed for each primitive and call the respective function
-int primitive_writer(const string args[], const int size){
 
-    int exit_code { ErrorCode::default__ };
+//parse the arguments needed for each primitive and call the respective function
+ErrorCode primitive_writer(const string args[], const int size){
+
+    ErrorCode exit_code { ErrorCode::default__ };
     int ind {1};
 
     if(size > 1){
@@ -112,9 +146,8 @@ int primitive_writer(const string args[], const int size){
 
         case Primitive::box:
 
-            if(size < BOX_ARGS){
+            if(size < BOX_ARGS)
                 exit_code = ErrorCode::not_enough_args;
-            }
             else{
                 const int units { string_to_uint(args[ind++]) };
                 const int grid_side { string_to_uint(args[ind++]) };
@@ -122,18 +155,16 @@ int primitive_writer(const string args[], const int size){
 
                 if(units < 1 || grid_side < 1 || !has_3d_ext(filename))
                     exit_code = ErrorCode::invalid_argument;
-                else{
-
-                }
+                else
+                    exit_code = box_writer(filename, units, grid_side);
             }
 
             break;
 
         case Primitive::cone:
 
-            if(size < CONE_ARGS){
+            if(size < CONE_ARGS)
                 exit_code = ErrorCode::not_enough_args;
-            }
             else{
                 const int radius { string_to_uint(args[ind++]) };
                 const int height { string_to_uint(args[ind++]) };
@@ -141,31 +172,29 @@ int primitive_writer(const string args[], const int size){
                 const int stacks { string_to_uint(args[ind++]) };
                 const string filename { args[ind] };
 
-                if(radius < 1 || height < 1 || slices < 1 || stacks < 1 || !has_3d_ext(filename))
+                if(radius < 1 || height < 1 || slices < 3 || stacks < 1 || !has_3d_ext(filename))
                     exit_code = ErrorCode::invalid_argument;
-                else{
-
-                }
+                else
+                    exit_code = cone_writer(filename, radius, height, slices, stacks);
             }
 
             break;
 
         case Primitive::sphere:
 
-            if(size < SPHERE_ARGS){
+            if(size < SPHERE_ARGS)
                 exit_code = ErrorCode::not_enough_args;
-            }
             else{
                 const int radius { string_to_uint(args[ind++]) };
                 const int slices { string_to_uint(args[ind++]) };
                 const int stacks { string_to_uint(args[ind++]) };
                 const string filename { args[ind] };
 
-                if(radius < 1 || slices < 1 || stacks < 1 || !has_3d_ext(filename))
+                //can stacks be less than 1 for sphere
+                if(radius < 1 || slices < 3 || stacks < 1 || !has_3d_ext(filename))
                     exit_code = ErrorCode::invalid_argument;
-                else{
-
-                }
+                else
+                    exit_code = sphere_writer(filename, radius, slices, stacks);
             }
 
             break;

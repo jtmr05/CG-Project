@@ -10,6 +10,6 @@ typedef enum error_code {
     io_error,
 } ErrorCode;
 
-void handler(const ErrorCode e);
+void handle_error(const ErrorCode e);
 
 #endif
