@@ -69,7 +69,7 @@ endif
 #****************************************************************************
 
 #INCS := -I/usr/include/g++-2 -I/usr/local/include
-INCS :=
+INCS := -Iinclude
 
 
 #****************************************************************************
@@ -89,16 +89,19 @@ CXXFLAGS := ${CXXFLAGS} ${DEFS}
 # Source files
 #****************************************************************************
 
-SRCS := tinyxml.cpp tinyxmlparser.cpp tinyxmlerror.cpp tinystr.cpp
+SRCS := $(shell find src/*.cpp)
 
 # Add on the sources for libraries
 SRCS := ${SRCS}
 
-OBJS := $(addsuffix .o,$(basename ${SRCS}))
+OBJS := $(patsubst src/%,%.o,${SRCS})
+
+debug:
+	@echo $(OBJS)
 
 
 all: ${OBJS}
-	ar -rcs libtinyxml.a $^
+	ar -rcs lib/libtinyxml.a $^
 
 
 #****************************************************************************
@@ -106,21 +109,18 @@ all: ${OBJS}
 #****************************************************************************
 
 # Rules for compiling source files to object files
-%.o : %.cpp
+%.o : src/%
 	${CXX} -c ${CXXFLAGS} ${INCS} $< -o $@
-
-%.o : %.c
-	${CC} -c ${CFLAGS} ${INCS} $< -o $@
 
 dist:
 	bash makedistlinux
 
 clean:
-	-rm -f core ${OBJS}
+	-rm -f ${OBJS}
 
 depend:
 	#makedepend ${INCS} ${SRCS}
 
-tinyxml.o: tinyxml.h tinystr.h
-tinyxmlparser.o: tinyxml.h tinystr.h
-tinyxmlerror.o: tinyxml.h tinystr.h
+tinyxml.o: include/tinyxml.h include/tinystr.h
+tinyxmlparser.o: include/tinyxml.h include/tinystr.h
+tinyxmlerror.o: include/tinyxml.h include/tinystr.h

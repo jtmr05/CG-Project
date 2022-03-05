@@ -4,27 +4,42 @@
 
 
 #directories
-SRC_DIR := src
-HDR_DIR := include
-OBJ_DIR := obj
+SRC_DIR 		:= src
+HDR_DIR 		:= include
+OBJ_DIR 		:= obj
 
 
 #files
-SRC_FILES := $(shell find $(SRC_DIR) -name *.cpp -o -name *.cxx -o -name *.c++ -o -name *.cc)
-OBJ_FILES := $(patsubst $(SRC_DIR)/%,$(OBJ_DIR)/%,$(patsubst %,%.o,$(SRC_FILES)))
-BIN := $(BIN_DIR)/generator
+SRC_FILES 		:= $(shell find $(SRC_DIR) -name *.cpp -o -name *.cxx -o -name *.c++ -o -name *.cc)
+OBJ_FILES 		:= $(patsubst $(SRC_DIR)/%,$(OBJ_DIR)/%,$(patsubst %,%.o,$(SRC_FILES)))
+BIN 			:= $(BIN_DIR)/generator
+
+#flags
+FLAGS			+= -I$(UTILS_DIR)/include -I$(TINY_XML_DIR)/include
+LINK_FLAGS 		:= -L$(UTILS_DIR)/lib -lutils -L$(TINY_XML_DIR)/lib -ltinyxml
+
+ifeq (Windows_NT, $(OS))
+	IS_WIN = yes
+endif
+
+ifdef IS_WIN
+	FLAGS 		+= -I$(FREEGLUT_DIR)/include
+	LINK_FLAGS 	+= -L$(FREEGLUT_DIR)/lib/x64 -lopengl32 -lfreeglut -lglu32
+else
+	LINK_FLAGS 	+= -lGLU -lglut -lGL
+endif
 
 
 
 #make default goal (using make with no specified recipe)
-.DEFAULT_GOAL := all
+.DEFAULT_GOAL 	:= all
 
 build: clean all
 
 all: $(BIN)
 
 $(BIN): $(OBJ_FILES)
-	$(CXX) $(FLAGS) $^ -o $@ $(LINKER_FLAGS)
+	$(CXX) $(FLAGS) $^ -o $@ $(LINK_FLAGS)
 
 #generate each object file according to the corresponding source file
 #create directories as needed

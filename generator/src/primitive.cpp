@@ -62,6 +62,19 @@ ErrorCode cone_writer(const string &filename, int radius, int height, int slices
 
     ErrorCode exit_code { ErrorCode::default__ };
 
+    std::ofstream file{};
+    file.open(filename, std::ios::out | std::ios::trunc);
+
+    if(file.is_open()){
+
+        PolarPoint3d p1;
+
+        file.close();
+    }
+    else
+        exit_code = ErrorCode::io_error;
+
+
     return exit_code;
 }
 
@@ -84,7 +97,7 @@ ErrorCode plane_writer(const string &filename, int length, int divs){
         const double abs_max_coord { static_cast<double>(length) / 2.0 };
         const double incr { static_cast<double>(length) / static_cast<double>(divs) };
 
-        Point3d p1 {}, p2 {}, p3 {};
+        CartPoint3d p1 {}, p2 {}, p3 {};
 
 
         double x { abs_max_coord };

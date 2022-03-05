@@ -4,23 +4,28 @@
 
 
 #directories
-SRC_DIR := src
-HDR_DIR := include
-OBJ_DIR := obj
-LIB_DIR := lib
+SRC_DIR 		:= src
+HDR_DIR 		:= include
+OBJ_DIR 		:= obj
+LIB_DIR 		:= lib
 
 
 #files
-SRC_FILES := $(shell find $(SRC_DIR) -name *.cpp -o -name *.cxx -o -name *.c++ -o -name *.cc)
-OBJ_FILES := $(patsubst $(SRC_DIR)/%,$(OBJ_DIR)/%,$(patsubst %,%.o,$(SRC_FILES)))
-UTILS_LIB := $(LIB_DIR)/libutils.a
+SRC_FILES 		:= $(shell find $(SRC_DIR) -name *.cpp -o -name *.cxx -o -name *.c++ -o -name *.cc)
+OBJ_FILES 		:= $(patsubst $(SRC_DIR)/%,$(OBJ_DIR)/%,$(patsubst %,%.o,$(SRC_FILES)))
+LIB_FILE 		:= $(LIB_DIR)/libutils.a
+
+#flags
+FLAGS			+= -I$(UTILS_DIR)/include
+
+
 
 #make default goal (using make with no specified recipe)
 .DEFAULT_GOAL := all
 
 build: clean all
 
-all: $(UTILS_LIB)
+all: $(LIB_FILE)
 
 
 #generate each object file according to the corresponding source file
@@ -29,7 +34,7 @@ $(OBJ_FILES): $(OBJ_DIR)/%.o : $(SRC_DIR)/%
 	@mkdir -p $(@D)
 	$(CXX) $(FLAGS) -c $< -o $@
 
-$(UTILS_LIB): $(OBJ_FILES)
+$(LIB_FILE): $(OBJ_FILES)
 	-find $(LIB_DIR)/* | grep $(LIB_DIR)/*.a | xargs rm
 	ar -rcs $@ $^
 
