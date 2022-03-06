@@ -67,13 +67,71 @@ ErrorCode cone_writer(const string &filename, int radius, int height, int slices
 
     if(file.is_open()){
 
-        PolarPoint3d p1;
+        const angle_t angle_delta { 360.0 / static_cast<angle_t>(slices) };
+        const double height_delta { static_cast<double>(height) / static_cast<double>(stacks) };
+
+        const CartPoint3d origin{};
+        const CartPoint3d top_vertex { 0.0, static_cast<double>(height), 0.0 };
+
+        for(int i{}; i < slices; i++){
+
+            PolarPoint3d bp1 {
+                static_cast<double>(radius),
+                static_cast<angle_t>(i) * angle_delta,
+                90.0
+            };
+
+            PolarPoint3d bp2 {
+                static_cast<double>(radius),
+                static_cast<angle_t>(i + 1) * angle_delta,
+                90.0
+            }; //potential bug
+
+            file << bp1 << origin << bp2; //base
+
+
+
+            /**
+             *    /| stack 4
+             *   /_| stack 3
+             *  /__| stack 2
+             * /___| stack 1
+             *
+             * height is h; base length is radius
+             * on each stack level, the height is given by height - (stack_level * height_delta)
+             * thus, we can calculate the radius for that given stack using the similar triangles
+             * formula
+             * since we start in the yOz plane, x is 0
+             * that means z = stack_radius
+             */
+
+            for(int j{}; j < stacks; j++){
+
+                if(j == stacks - 1)
+                    file << bp1 << bp2 << top_vertex;
+                else{
+                    const double new_radius {
+                        static_cast<double>((height - (j + 1) * height_delta) * radius) /
+                        static_cast<double>(height)
+                    };
+
+                    CartPoint3d next_bp1 { 0.0, (j + 1) * height_delta, new_radius };
+                    PolarPoint3d next_bp2 { cart_to_polar(next_bp1) };
+                    next_bp2.zOx += angle_delta;
+
+                    file << bp1 << next_bp1 << bp2;
+                    file << next_bp1 << next_bp2 << bp2;
+
+                    bp1 = cart_to_polar(next_bp1);
+                    bp2 = next_bp2;
+                }
+            }
+        }
 
         file.close();
     }
     else
         exit_code = ErrorCode::io_error;
-
 
     return exit_code;
 }
@@ -106,7 +164,7 @@ ErrorCode plane_writer(const string &filename, int length, int divs){
 
             double z { abs_max_coord };
 
-            for(int j {}; j < divs; j++, z -= incr){
+            for(int j{}; j < divs; j++, z -= incr){
 
                 p1.x = x; p1.z = z;
                 p2.x = x; p2.z = z - incr;

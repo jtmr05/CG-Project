@@ -12,7 +12,7 @@ OBJ_DIR 		:= obj
 #files
 SRC_FILES 		:= $(shell find $(SRC_DIR) -name *.cpp -o -name *.cxx -o -name *.c++ -o -name *.cc)
 OBJ_FILES 		:= $(patsubst $(SRC_DIR)/%,$(OBJ_DIR)/%,$(patsubst %,%.o,$(SRC_FILES)))
-BIN 			:= $(BIN_DIR)/generator
+BIN 			:= $(BIN_DIR)/engine
 
 #flags
 FLAGS			+= -I$(UTILS_DIR)/include -I$(TINY_XML_DIR)/include

@@ -3,6 +3,7 @@
 
 #include <fstream>
 #include <cmath>
+#include <cassert>
 
 const double PI { 2 * acos(0.0) };
 
@@ -12,16 +13,24 @@ typedef double angle_t;
 
 typedef struct cart_point3d {
     double x, y, z;
+
+    cart_point3d();
+    cart_point3d(double x, double y, double z);
+
 } CartPoint3d;
 
 /**
  * radius is the distance to origin
- * theta  is the angle in degrees with the positive y axis (counterclockwise)
- * phi    is the angle in degrees with the posivive z axis (counterclockwise)
+ * zOx    is the angle in degrees with the posivive z axis (counterclockwise)
+ * yOp  is the angle in degrees with the positive y axis (clockwise)
  */
 typedef struct polar_point3d {
     double radius;
-    angle_t phi, theta;
+    angle_t zOx, yOp;
+
+    polar_point3d();
+    polar_point3d(double radius, angle_t zOx, angle_t yOp);
+
 } PolarPoint3d;
 
 

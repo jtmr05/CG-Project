@@ -2,38 +2,53 @@
 
 
 angle_t degree_to_radian(angle_t degree){
-
-    while(degree < 0.0)
-        degree += 360.0;
-
-    while(degree > 360.0)
-        degree -= 360.0;
-
     return (degree * 2.0 * PI) / 360.0;
 }
 
 angle_t radian_to_degree(angle_t radian){
-
-    const double two_pi = 2.0 * PI;
-
-    while(radian < 0.0)
-        radian += two_pi;
-
-    while(radian > two_pi)
-        radian -= two_pi;
-
-    return (radian * 360.0) / two_pi;
+    return (radian * 360.0) / (2.0 * PI);
 }
+
+
+
+cart_point3d::cart_point3d(){
+    CartPoint3d::x = 0.0;
+    CartPoint3d::y = 0.0;
+    CartPoint3d::z = 0.0;
+}
+
+cart_point3d::cart_point3d(double x, double y, double z){
+    CartPoint3d::x = x;
+    CartPoint3d::y = y;
+    CartPoint3d::z = z;
+}
+
+polar_point3d::polar_point3d(){
+    PolarPoint3d::radius = 0.0;
+    PolarPoint3d::zOx = 0.0;
+    PolarPoint3d::yOp = 0.0;
+}
+
+polar_point3d::polar_point3d(double radius, angle_t zOx, angle_t yOp){
+
+    assert(yOp >= 0.0 && yOp <= 180.0);
+
+    PolarPoint3d::radius = radius;
+    PolarPoint3d::zOx = zOx;
+    PolarPoint3d::yOp = yOp;
+}
+
+
 
 CartPoint3d polar_to_cart(PolarPoint3d const &p){
 
-    angle_t phi { degree_to_radian(p.phi) }, theta { degree_to_radian(p.theta) };
+    angle_t zOx { degree_to_radian(p.zOx) }, yOp { degree_to_radian(p.yOp) };
 
     CartPoint3d res { p.radius, p.radius, p.radius };
 
-    res.x *= sin(p.phi) * sin(p.theta);
-    res.y *= cos(p.theta);
-    res.z *= cos(p.phi) * sin(p.theta);
+    res.x *= sin(zOx) * sin(yOp);
+    res.y *= cos(yOp);
+    res.z *= cos(zOx) * sin(yOp);
 
     //https://en.wikipedia.org/wiki/Spherical_coordinate_system#Cartesian_coordinates
 
@@ -47,9 +62,10 @@ PolarPoint3d cart_to_polar(CartPoint3d const &p){
     res.radius = sqrt(p.x * p.x + p.y * p.y + p.z * p.z);
 
     if(res.radius > 0.0)
-        res.theta = radian_to_degree(acos(p.y / res.radius));
+        res.yOp = radian_to_degree(acos(p.y / res.radius));
 
-    res.phi = radian_to_degree(atan2(p.x, p.z) + PI);
+    res.zOx = radian_to_degree(atan2(p.x, p.z));
+    res.zOx = (res.zOx < 0.0) ? res.zOx + 360.0 : res.zOx;
 
     //https://en.wikipedia.org/wiki/Spherical_coordinate_system#Cartesian_coordinates
 
