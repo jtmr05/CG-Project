@@ -179,13 +179,12 @@ int main(int argc, char **argv) {
 
             while(file >> p1 >> p2 >> p3){
                 n += 3;
-                std::cout << p1 << p2 << p3;
                 points_to_draw.push_back(p1);
                 points_to_draw.push_back(p2);
                 points_to_draw.push_back(p3);
             }
 
-            std::cout << "n: " << n << '\n';
+            std::cout << "number of points: " << n << '\n';
 
             file.close();
         }

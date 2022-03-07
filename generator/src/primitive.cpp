@@ -55,6 +55,74 @@ ErrorCode sphere_writer(const string &filename, int radius, int slices, int stac
 
     ErrorCode exit_code { ErrorCode::default__ };
 
+    std::ofstream file{};
+    file.open(filename, std::ios::out | std::ios::trunc);
+
+    if(file.is_open()){
+
+        const angle_t zOx_delta { 360.0 / static_cast<angle_t>(slices) };
+        const angle_t yOp_delta { 90.0 / static_cast<angle_t>(stacks / 2) };
+        const double radius_d { static_cast<double>(radius) };
+        const double height_delta { radius_d * 2.0 / static_cast<double>(stacks) };
+
+
+        for(int i{}; i < slices; i++){
+
+            PolarPoint3d bp1 {
+                radius_d,
+                static_cast<angle_t>(i) * zOx_delta,
+                90.0
+            };
+
+            PolarPoint3d bp2 {
+                radius_d,
+                static_cast<angle_t>(i + 1) * zOx_delta,
+                90.0
+            };
+
+            for(int j{}; j < stacks/2; j++){
+
+                const double curr_height = static_cast<double>(j + 1) * height_delta;
+                const angle_t curr_yOp = 90.0 - (yOp_delta * static_cast<double>(j + 1));
+
+                PolarPoint3d next_bp1 {
+                    radius_d,
+                    bp1.zOx,
+                    curr_yOp
+                };
+
+                PolarPoint3d next_bp2 {
+                    radius_d,
+                    bp2.zOx,
+                    curr_yOp
+                };
+
+                file << bp1 << bp2 << next_bp1;
+                file << next_bp1 << bp2 << next_bp2;
+
+                PolarPoint3d neg_bp1 { bp1 };
+                PolarPoint3d neg_bp2 { bp2 };
+                PolarPoint3d neg_next_bp1 { next_bp1 };
+                PolarPoint3d neg_next_bp2 { next_bp2 };
+
+                neg_bp1.yOp = 180.0 - neg_bp1.yOp;
+                neg_bp2.yOp = 180.0 - neg_bp2.yOp;
+                neg_next_bp1.yOp = 180.0 - neg_next_bp1.yOp;
+                neg_next_bp2.yOp = 180.0 - neg_next_bp2.yOp;
+
+                file << neg_next_bp1 << neg_next_bp2 << neg_bp1;
+                file << neg_bp1 << neg_next_bp2 << neg_bp2;
+
+                bp1 = next_bp1;
+                bp2 = next_bp2;
+            }
+        }
+
+        file.close();
+    }
+    else
+        exit_code = ErrorCode::io_error;
+
     return exit_code;
 }
 
@@ -67,23 +135,22 @@ ErrorCode cone_writer(const string &filename, int radius, int height, int slices
 
     if(file.is_open()){
 
-        const angle_t angle_delta { 360.0 / static_cast<angle_t>(slices) };
+        const angle_t zOx_delta { 360.0 / static_cast<angle_t>(slices) };
         const double height_delta { static_cast<double>(height) / static_cast<double>(stacks) };
 
         const CartPoint3d origin{};
-        const CartPoint3d top_vertex { 0.0, static_cast<double>(height), 0.0 };
 
         for(int i{}; i < slices; i++){
 
             PolarPoint3d bp1 {
                 static_cast<double>(radius),
-                static_cast<angle_t>(i) * angle_delta,
+                static_cast<angle_t>(i) * zOx_delta,
                 90.0
             };
 
             PolarPoint3d bp2 {
                 static_cast<double>(radius),
-                static_cast<angle_t>(i + 1) * angle_delta,
+                static_cast<angle_t>(i + 1) * zOx_delta,
                 90.0
             };
 
@@ -119,7 +186,9 @@ ErrorCode cone_writer(const string &filename, int radius, int height, int slices
                 };
                 next_bp1.zOx = bp1.zOx;
 
-                PolarPoint3d next_bp2 { next_bp1.radius, next_bp1.zOx + angle_delta, next_bp1.yOp };
+                const PolarPoint3d next_bp2 {
+                    next_bp1.radius, next_bp1.zOx + zOx_delta, next_bp1.yOp
+                };
 
                 file << bp1 << bp2 << next_bp1;
                 file << next_bp1 << bp2 << next_bp2;
@@ -140,6 +209,16 @@ ErrorCode cone_writer(const string &filename, int radius, int height, int slices
 ErrorCode box_writer(const string &filename, int units, int grid_side){
 
     ErrorCode exit_code { ErrorCode::default__ };
+
+    std::ofstream file{};
+    file.open(filename, std::ios::out | std::ios::trunc);
+
+    if(file.is_open()){
+
+        file.close();
+    }
+    else
+        exit_code = ErrorCode::io_error;
 
     return exit_code;
 }
@@ -263,7 +342,7 @@ ErrorCode primitive_writer(const string args[], const int size){
                 const string filename { args[ind] };
 
                 //can stacks be less than 1 for sphere
-                if(radius < 1 || slices < 3 || stacks < 1 || !has_3d_ext(filename))
+                if(radius < 1 || slices < 3 || stacks < 2 || stacks % 2 != 0 || !has_3d_ext(filename))
                     exit_code = ErrorCode::invalid_argument;
                 else
                     exit_code = sphere_writer(filename, radius, slices, stacks);
