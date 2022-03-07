@@ -85,7 +85,7 @@ ErrorCode cone_writer(const string &filename, int radius, int height, int slices
                 static_cast<double>(radius),
                 static_cast<angle_t>(i + 1) * angle_delta,
                 90.0
-            }; //potential bug
+            };
 
             file << bp1 << origin << bp2; //base
 
@@ -97,34 +97,35 @@ ErrorCode cone_writer(const string &filename, int radius, int height, int slices
              *  /__| stack 2
              * /___| stack 1
              *
-             * height is h; base length is radius
+             *
+             * height is stacks * height_delta; base length is radius
              * on each stack level, the height is given by height - (stack_level * height_delta)
              * thus, we can calculate the radius for that given stack using the similar triangles
-             * formula
+             * formula:
+             *      r/(h*stacks) = r'/(h*(stacks - 1 - j)) <=> r/stacks = r'/(stacks - 1 - j)
              * since we start in the yOz plane, x is 0
              * that means z = stack_radius
              */
 
             for(int j{}; j < stacks; j++){
 
-                if(j == stacks - 1)
-                    file << bp1 << bp2 << top_vertex;
-                else{
-                    const double new_radius {
-                        static_cast<double>((height - (j + 1) * height_delta) * radius) /
-                        static_cast<double>(height)
-                    };
+                const double radius__ {
+                    static_cast<double>((stacks - 1 - j) * radius) /
+                    static_cast<double>(stacks)
+                };
 
-                    CartPoint3d next_bp1 { 0.0, (j + 1) * height_delta, new_radius };
-                    PolarPoint3d next_bp2 { cart_to_polar(next_bp1) };
-                    next_bp2.zOx += angle_delta;
+                PolarPoint3d next_bp1 {
+                    cart_to_polar( { 0.0, static_cast<double>(j + 1) * height_delta, radius__ } )
+                };
+                next_bp1.zOx = bp1.zOx;
 
-                    file << bp1 << next_bp1 << bp2;
-                    file << next_bp1 << next_bp2 << bp2;
+                PolarPoint3d next_bp2 { next_bp1.radius, next_bp1.zOx + angle_delta, next_bp1.yOp };
 
-                    bp1 = cart_to_polar(next_bp1);
-                    bp2 = next_bp2;
-                }
+                file << bp1 << bp2 << next_bp1;
+                file << next_bp1 << bp2 << next_bp2;
+
+                bp1 = next_bp1;
+                bp2 = next_bp2;
             }
         }
 

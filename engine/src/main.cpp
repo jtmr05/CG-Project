@@ -9,6 +9,8 @@
 #include <GL/glut.h>
 #include <cmath>
 #include <vector>
+#include <iostream>
+
 
 #include "point.hpp"
 
@@ -16,14 +18,28 @@ using std::string;
 using std::vector;
 
 std::vector<CartPoint3d> points_to_draw;
+float posx{}, posy{}, posz{};
 
 void drawTriangle(const CartPoint3d &p1, const CartPoint3d &p2, const CartPoint3d &p3){
 
-    glBegin(GL_TRIANGLES);
+    glBegin(GL_LINES);
 
-    glVertex3f(p1.x, p1.y, p1.z);
-    glVertex3f(p2.x, p2.y, p2.z);
-    glVertex3f(p3.x, p3.y, p3.z);
+        glVertex3f(p1.x, p1.y, p1.z);
+        glVertex3f(p2.x, p2.y, p2.z);
+
+    glEnd();
+
+    glBegin(GL_LINES);
+
+        glVertex3f(p2.x, p2.y, p2.z);
+        glVertex3f(p3.x, p3.y, p3.z);
+
+    glEnd();
+
+    glBegin(GL_LINES);
+
+        glVertex3f(p3.x, p3.y, p3.z);
+        glVertex3f(p1.x, p1.y, p1.z);
 
     glEnd();
 }
@@ -62,7 +78,7 @@ void renderScene(){
 
     // set the camera
     glLoadIdentity();
-    gluLookAt(5.0,5.0,5.0,
+    gluLookAt(5.0+posx,5.0+posy,5.0+posz,
               0.0,0.0,0.0,
               0.0f,1.0f,0.0f);
 
@@ -89,7 +105,7 @@ void renderScene(){
 
     glEnd();
 
-    glColor3f(0.5f, 0.f, 0.5f);
+    glColor3f(1.f, 1.f, 1.f);
 
     for(auto i = points_to_draw.begin(); i != points_to_draw.end(); i += 3)
         drawTriangle(*i, *(i+1), *(i+2));
@@ -100,8 +116,53 @@ void renderScene(){
     glutSwapBuffers();
 }
 
+// write function to process keyboard events
+void specialKeysEvent(int key_code, int x, int y){
 
+    switch (key_code){
 
+    case GLUT_KEY_LEFT:
+        posz -= 0.1f;
+        break;
+
+    case GLUT_KEY_RIGHT :
+        posz += 0.1f;
+        break;
+
+    case GLUT_KEY_DOWN:
+        posx += 0.1f;
+        break;
+
+    case GLUT_KEY_UP:
+        posx -= 0.1f;
+        break;
+
+    default:
+        break;
+    }
+
+    glutPostRedisplay();
+}
+
+void keysEvent(unsigned char key, int x, int y){
+
+    switch(key){
+
+    case 'w':
+        posy -= 0.1f;
+        break;
+
+    case 's':
+        posy += 0.1f;
+        break;
+
+    default:
+        break;
+
+    }
+
+    glutPostRedisplay();
+}
 
 int main(int argc, char **argv) {
 
@@ -114,12 +175,17 @@ int main(int argc, char **argv) {
         if(file.is_open()){
 
             CartPoint3d p1{}, p2{}, p3{};
+            int n {};
 
             while(file >> p1 >> p2 >> p3){
+                n += 3;
+                std::cout << p1 << p2 << p3;
                 points_to_draw.push_back(p1);
                 points_to_draw.push_back(p2);
                 points_to_draw.push_back(p3);
             }
+
+            std::cout << "n: " << n << '\n';
 
             file.close();
         }
@@ -137,6 +203,9 @@ int main(int argc, char **argv) {
     glutDisplayFunc(renderScene);
     glutReshapeFunc(changeSize);
 
+// put here the registration of the keyboard callbacks
+    glutKeyboardFunc(keysEvent);
+    glutSpecialFunc(specialKeysEvent);
 
 
 //  OpenGL settings

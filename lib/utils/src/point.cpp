@@ -46,9 +46,9 @@ CartPoint3d polar_to_cart(PolarPoint3d const &p){
 
     CartPoint3d res { p.radius, p.radius, p.radius };
 
-    res.x *= sin(zOx) * sin(yOp);
-    res.y *= cos(yOp);
-    res.z *= cos(zOx) * sin(yOp);
+    res.x *= std::sin(zOx) * std::sin(yOp);
+    res.y *= std::cos(yOp);
+    res.z *= std::cos(zOx) * std::sin(yOp);
 
     //https://en.wikipedia.org/wiki/Spherical_coordinate_system#Cartesian_coordinates
 
@@ -59,12 +59,12 @@ PolarPoint3d cart_to_polar(CartPoint3d const &p){
 
     PolarPoint3d res{};
 
-    res.radius = sqrt(p.x * p.x + p.y * p.y + p.z * p.z);
+    res.radius = std::sqrt(p.x * p.x + p.y * p.y + p.z * p.z);
 
     if(res.radius > 0.0)
-        res.yOp = radian_to_degree(acos(p.y / res.radius));
+        res.yOp = radian_to_degree(std::acos(p.y / res.radius));
 
-    res.zOx = radian_to_degree(atan2(p.x, p.z));
+    res.zOx = radian_to_degree(std::atan2(p.x, p.z));
     res.zOx = (res.zOx < 0.0) ? res.zOx + 360.0 : res.zOx;
 
     //https://en.wikipedia.org/wiki/Spherical_coordinate_system#Cartesian_coordinates
@@ -78,7 +78,7 @@ std::ostream& operator<<(std::ostream& stream, PolarPoint3d const &p){
 }
 
 std::ostream& operator<<(std::ostream& stream, CartPoint3d const &p){
-    stream << p.x << ";" << p.y << ";" << p.z << '\n';
+    stream << std::fixed << std::setprecision(PRECISION) << p.x << ";" << p.y << ";" << p.z << '\n';
     return stream;
 }
 
@@ -92,9 +92,9 @@ std::istream& operator>>(std::istream& stream, PolarPoint3d& p){
 std::istream& operator>>(std::istream& stream, CartPoint3d& p){
 
     CartPoint3d tmp {};
-    char c {};    //used to ignore ';' and '\n'
+    char c {};    //used to ignore ';'
 
-    if(stream >> tmp.x >> c >> tmp.y >> c >> tmp.z >> c){
+    if(stream >> tmp.x >> c >> tmp.y >> c >> tmp.z){
         p.x = tmp.x;
         p.y = tmp.y;
         p.z = tmp.z;
