@@ -1,6 +1,10 @@
 #include "point.hpp"
 
 
+//arbitrary number of decimal places output to a file when using << operator
+const int PRECISION { 30 };
+
+
 angle_t degree_to_radian(angle_t degree){
     return (degree * 2.0 * PI) / 360.0;
 }
@@ -12,30 +16,30 @@ angle_t radian_to_degree(angle_t radian){
 
 
 cart_point3d::cart_point3d(){
-    CartPoint3d::x = 0.0;
-    CartPoint3d::y = 0.0;
-    CartPoint3d::z = 0.0;
+    this->x = 0.0;
+    this->y = 0.0;
+    this->z = 0.0;
 }
 
 cart_point3d::cart_point3d(double x, double y, double z){
-    CartPoint3d::x = x;
-    CartPoint3d::y = y;
-    CartPoint3d::z = z;
+    this->x = x;
+    this->y = y;
+    this->z = z;
 }
 
 polar_point3d::polar_point3d(){
-    PolarPoint3d::radius = 0.0;
-    PolarPoint3d::zOx = 0.0;
-    PolarPoint3d::yOp = 0.0;
+    this->radius = 0.0;
+    this->zOx = 0.0;
+    this->yOp = 0.0;
 }
 
 polar_point3d::polar_point3d(double radius, angle_t zOx, angle_t yOp){
 
     assert(yOp >= 0.0 && yOp <= 180.0);
 
-    PolarPoint3d::radius = radius;
-    PolarPoint3d::zOx = zOx;
-    PolarPoint3d::yOp = yOp;
+    this->radius = radius;
+    this->zOx = zOx;
+    this->yOp = yOp;
 }
 
 

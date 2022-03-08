@@ -5,17 +5,12 @@
 #include <cmath>
 #include <cassert>
 #include <iomanip>
-#include <cfloat>
 
 const long double PI { 2.L * std::acos(0.L) };
 
-//https://stackoverflow.com/questions/1701055/
-//what-is-the-maximum-length-in-chars-needed-to-represent-any-double-value#1701272
-const int PRECISION { 30 };
 
 
 typedef double angle_t;
-
 
 typedef struct cart_point3d {
     double x, y, z;
@@ -39,8 +34,7 @@ typedef struct polar_point3d {
 
 } PolarPoint3d;
 
-angle_t degree_to_radian(angle_t degree);
-angle_t radian_to_degree(angle_t radian);
+
 
 PolarPoint3d cart_to_polar(CartPoint3d const &p);
 CartPoint3d polar_to_cart(PolarPoint3d const &p);
