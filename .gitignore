@@ -1,4 +1,4 @@
 .vscode
-resources/*
+resources/*.3d
 *.o
 *.exe

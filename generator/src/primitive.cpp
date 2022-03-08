@@ -63,7 +63,6 @@ ErrorCode sphere_writer(const string &filename, int radius, int slices, int stac
         const angle_t zOx_delta { 360.0 / static_cast<angle_t>(slices) };
         const angle_t yOp_delta { 90.0 / static_cast<angle_t>(stacks / 2) };
         const double radius_d { static_cast<double>(radius) };
-        const double height_delta { radius_d * 2.0 / static_cast<double>(stacks) };
 
 
         for(int i{}; i < slices; i++){
@@ -82,7 +81,6 @@ ErrorCode sphere_writer(const string &filename, int radius, int slices, int stac
 
             for(int j{}; j < stacks/2; j++){
 
-                const double curr_height = static_cast<double>(j + 1) * height_delta;
                 const angle_t curr_yOp = 90.0 - (yOp_delta * static_cast<double>(j + 1));
 
                 PolarPoint3d next_bp1 {
@@ -206,7 +204,7 @@ ErrorCode cone_writer(const string &filename, int radius, int height, int slices
     return exit_code;
 }
 
-ErrorCode box_writer(const string &filename, int units, int grid_side){
+ErrorCode box_writer(const string &filename, int units, int grid_size){
 
     ErrorCode exit_code { ErrorCode::default__ };
 
@@ -214,6 +212,89 @@ ErrorCode box_writer(const string &filename, int units, int grid_side){
     file.open(filename, std::ios::out | std::ios::trunc);
 
     if(file.is_open()){
+
+        const double abs_max_coord { static_cast<double>(units) / 2.0 };
+        const double incr { static_cast<double>(units) / static_cast<double>(grid_size) };
+
+
+        CartPoint3d p1 {}, p2 {}, p3 {}, p4 {};
+        double x {}, y {}, z {};
+
+
+        x = abs_max_coord;
+
+        for(int i{}; i < grid_size; i++, x -= incr){
+
+            z = abs_max_coord;
+
+            for(int j{}; j < grid_size; j++, z -= incr){
+
+                p1.y = p2.y = p3.y = p4.y = 0.0;
+
+                p1.x = x; p1.z = z;
+                p2.x = x; p2.z = z - incr;
+                p3.x = x - incr; p3.z = z;
+                p4.x = x - incr; p4.z = z - incr;
+
+                file << p1 << p3 << p2;
+                file << p2 << p3 << p4;
+
+                p1.y = p2.y = p3.y = p4.y = abs_max_coord * 2.0;
+
+                file << p1 << p2 << p4;
+                file << p4 << p3 << p1;
+            }
+        }
+
+        y = abs_max_coord * 2.0;
+
+        for(int i{}; i < grid_size; i++, y -= incr){
+
+            z = abs_max_coord;
+
+            for(int j{}; j < grid_size; j++, z -= incr){
+
+                p1.x = p2.x = p3.x = p4.x = abs_max_coord;
+
+                p1.y = y; p1.z = z;
+                p2.y = y; p2.z = z - incr;
+                p3.y = y - incr; p3.z = z;
+                p4.y = y - incr; p4.z = z - incr;
+
+                file << p1 << p4 << p2;
+                file << p1 << p3 << p4;
+
+                p1.x = p2.x = p3.x = p4.x = - abs_max_coord;
+
+                file << p1 << p2 << p3;
+                file << p2 << p4 << p3;
+            }
+        }
+
+        y = abs_max_coord * 2.0;
+
+        for(int i{}; i < grid_size; i++, y -= incr){
+
+            x = abs_max_coord;
+
+            for(int j{}; j < grid_size; j++, x -= incr){
+
+                p1.z = p2.z = p3.z = p4.z = abs_max_coord;
+
+                p1.y = y; p1.x = x;
+                p2.y = y; p2.x = x - incr;
+                p3.y = y - incr; p3.x = x;
+                p4.y = y - incr; p4.x = x - incr;
+
+                file << p1 << p2 << p4;
+                file << p1 << p4 << p3;
+
+                p1.z = p2.z = p3.z = p4.z = - abs_max_coord;
+
+                file << p1 << p3 << p2;
+                file << p2 << p3 << p4;
+            }
+        }
 
         file.close();
     }
@@ -235,7 +316,7 @@ ErrorCode plane_writer(const string &filename, int length, int divs){
         const double abs_max_coord { static_cast<double>(length) / 2.0 };
         const double incr { static_cast<double>(length) / static_cast<double>(divs) };
 
-        CartPoint3d p1 {}, p2 {}, p3 {};
+        CartPoint3d p1 {}, p2 {}, p3 {}, p4 {};
 
 
         double x { abs_max_coord };
@@ -249,10 +330,10 @@ ErrorCode plane_writer(const string &filename, int length, int divs){
                 p1.x = x; p1.z = z;
                 p2.x = x; p2.z = z - incr;
                 p3.x = x - incr; p3.z = z;
-                file << p1 << p2 << p3;
+                p4.x = x - incr; p4.z = z - incr;
 
-                p1.x -= incr; p1.z -= incr;
-                file << p2 << p1 << p3;
+                file << p1 << p2 << p3;
+                file << p2 << p4 << p3;
             }
         }
         file.close();
@@ -301,13 +382,13 @@ ErrorCode primitive_writer(const string args[], const int size){
                 exit_code = ErrorCode::not_enough_args;
             else{
                 const int units { string_to_uint(args[ind++]) };
-                const int grid_side { string_to_uint(args[ind++]) };
+                const int grid_size { string_to_uint(args[ind++]) };
                 const string filename { args[ind] };
 
-                if(units < 1 || grid_side < 1 || !has_3d_ext(filename))
+                if(units < 1 || grid_size < 1 || !has_3d_ext(filename))
                     exit_code = ErrorCode::invalid_argument;
                 else
-                    exit_code = box_writer(filename, units, grid_side);
+                    exit_code = box_writer(filename, units, grid_size);
             }
 
             break;

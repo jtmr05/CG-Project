@@ -18,28 +18,34 @@ using std::string;
 using std::vector;
 
 std::vector<CartPoint3d> points_to_draw;
-float posx{}, posy{}, posz{};
+float posy{};
+double zOp{ PI / 4.0 };
+bool fill { false };
+GLubyte rgb[3] { 127, 127, 127 };
 
 void drawTriangle(const CartPoint3d &p1, const CartPoint3d &p2, const CartPoint3d &p3){
 
-    glBegin(GL_LINES);
+    if(fill){
+
+        glBegin(GL_TRIANGLES);
+
+        glVertex3f(p1.x, p1.y, p1.z);
+        glVertex3f(p2.x, p2.y, p2.z);
+        glVertex3f(p3.x, p3.y, p3.z);
+    }
+    else{
+
+        glBegin(GL_LINES);
 
         glVertex3f(p1.x, p1.y, p1.z);
         glVertex3f(p2.x, p2.y, p2.z);
 
-    glEnd();
-
-    glBegin(GL_LINES);
-
         glVertex3f(p2.x, p2.y, p2.z);
         glVertex3f(p3.x, p3.y, p3.z);
 
-    glEnd();
-
-    glBegin(GL_LINES);
-
         glVertex3f(p3.x, p3.y, p3.z);
         glVertex3f(p1.x, p1.y, p1.z);
+    }
 
     glEnd();
 }
@@ -78,7 +84,7 @@ void renderScene(){
 
     // set the camera
     glLoadIdentity();
-    gluLookAt(5.0+posx,5.0+posy,5.0+posz,
+    gluLookAt(5.0 * std::sin(zOp), 5.0 + posy, 5.0 * std::cos(zOp),
               0.0,0.0,0.0,
               0.0f,1.0f,0.0f);
 
@@ -105,7 +111,7 @@ void renderScene(){
 
     glEnd();
 
-    glColor3f(1.f, 1.f, 1.f);
+    glColor3ub(rgb[0], rgb[1], rgb[2]);
 
     for(auto i = points_to_draw.begin(); i != points_to_draw.end(); i += 3)
         drawTriangle(*i, *(i+1), *(i+2));
@@ -122,19 +128,19 @@ void specialKeysEvent(int key_code, int x, int y){
     switch (key_code){
 
     case GLUT_KEY_LEFT:
-        posz -= 0.1f;
+        zOp -= 0.01f;
         break;
 
     case GLUT_KEY_RIGHT :
-        posz += 0.1f;
+        zOp += 0.01f;
         break;
 
     case GLUT_KEY_DOWN:
-        posx += 0.1f;
+        posy -= 0.1f;
         break;
 
     case GLUT_KEY_UP:
-        posx -= 0.1f;
+        posy += 0.1f;
         break;
 
     default:
@@ -154,6 +160,40 @@ void keysEvent(unsigned char key, int x, int y){
 
     case 's':
         posy += 0.1f;
+        break;
+
+    case 'f':
+        fill = !fill;
+        break;
+
+    case '1':
+        if(rgb[0] < 254)
+            rgb[0] += 2;
+        break;
+
+    case '2':
+        if(rgb[0] > 1)
+            rgb[0] -= 2;
+        break;
+
+    case '3':
+        if(rgb[1] < 254)
+            rgb[1] += 2;
+        break;
+
+    case '4':
+        if(rgb[1] > 1)
+            rgb[1] -= 2;
+        break;
+
+    case '5':
+        if(rgb[2] < 254)
+            rgb[2] += 2;
+        break;
+
+    case '6':
+        if(rgb[2] > 1)
+            rgb[2] -= 2;
         break;
 
     default:
