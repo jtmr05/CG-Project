@@ -16,6 +16,6 @@ using std::vector;
 using std::string;
 using std::array;
 
-ErrorCode start();
+ErrorCode start(char** filenames, int N);
 
 #endif

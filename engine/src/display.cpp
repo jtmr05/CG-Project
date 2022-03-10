@@ -1,11 +1,14 @@
 #include "display.hpp"
 
-vector<CartPoint3d> points_to_draw {};
-double posy {};
-double zOp { PI / 4};
-bool fill { false };
-GLubyte rgb[3] { 255, 255, 0};
-GLubyte color_delta { 3 };
+static vector<CartPoint3d> points_to_draw {};
+static double posy {};
+static double zOp { PI / 4};
+
+static bool fill { false };
+static bool show_axis { false };
+
+static GLubyte rgb[3] { 255, 255, 0};
+static GLubyte color_delta { 3 };
 
 void draw_triangle(const CartPoint3d &p1, const CartPoint3d &p2, const CartPoint3d &p3){
 
@@ -73,29 +76,33 @@ void render_scene(){
               0.0, 1.0, 0.0);
 
     // put drawing instructions here
-    glBegin(GL_LINES);
 
-        // X axis in red
-        glColor3f(1.0f, 0.0f, 0.0f);
-        glVertex3f(-100.0f, 0.0f, 0.0f);
-        glVertex3f( 100.0f, 0.0f, 0.0f);
+    if(show_axis){
 
-        // Y Axis in Green
-        glColor3f(0.0f, 1.0f, 0.0f);
-        glVertex3f(0.0f, -100.0f, 0.0f);
-        glVertex3f(0.0f, 100.0f, 0.0f);
+        glBegin(GL_LINES);
 
-        // Z Axis in Blue
-        glColor3f(0.0f, 0.0f, 1.0f);
-        glVertex3f(0.0f, 0.0f, -100.0f);
-        glVertex3f(0.0f, 0.0f, 100.0f);
+            // X axis in red
+            glColor3f(1.0f, 0.0f, 0.0f);
+            glVertex3f(-100.0f, 0.0f, 0.0f);
+            glVertex3f( 100.0f, 0.0f, 0.0f);
 
-    glEnd();
+            // Y Axis in Green
+            glColor3f(0.0f, 1.0f, 0.0f);
+            glVertex3f(0.0f, -100.0f, 0.0f);
+            glVertex3f(0.0f, 100.0f, 0.0f);
+
+            // Z Axis in Blue
+            glColor3f(0.0f, 0.0f, 1.0f);
+            glVertex3f(0.0f, 0.0f, -100.0f);
+            glVertex3f(0.0f, 0.0f, 100.0f);
+
+        glEnd();
+    }
 
     glColor3ub(rgb[0], rgb[1], rgb[2]);
 
     for(auto i = points_to_draw.begin(); i != points_to_draw.end(); i += 3)
-        draw_triangle(*i, *(i+1), *(i+2));
+        draw_triangle(i[0], i[1], i[2]);
 
 
     // End of frame
@@ -176,6 +183,10 @@ void keys_event(unsigned char key, int x, int y){
             rgb[2] -= color_delta;
         break;
 
+    case 'x':
+        show_axis = !show_axis;
+        break;
+
     default:
         break;
 
@@ -184,34 +195,39 @@ void keys_event(unsigned char key, int x, int y){
     glutPostRedisplay();
 }
 
-ErrorCode start(const string filenames[], int N){
+
+
+ErrorCode start(char** filenames, int N){
 
     ErrorCode exit_code { ErrorCode::default__ };
 
-    string filename;
-    std::ifstream file{};
-    file.open(filename, std::ios::in);
+    for(int i = 1; i < N; ++i){
 
-    if(file.is_open()){
+        std::ifstream file{};
+        file.open(filenames[i], std::ios::in);
 
-        CartPoint3d p1{}, p2{}, p3{};
-        int n {};
+        if(file.is_open()){
 
-        while(file >> p1 >> p2 >> p3){
-            n += 3;
-            points_to_draw.push_back(p1);
-            points_to_draw.push_back(p2);
-            points_to_draw.push_back(p3);
+            CartPoint3d p1{}, p2{}, p3{};
+            int n {};
+
+            while(file >> p1 >> p2 >> p3){
+                n += 3;
+                points_to_draw.push_back(p1);
+                points_to_draw.push_back(p2);
+                points_to_draw.push_back(p3);
+            }
+
+            std::cout << "number of points: " << n << '\n';
+
+            file.close();
         }
-
-        std::cout << "number of points: " << n << '\n';
-
-        file.close();
     }
 
 
+
     // init GLUT and the window
-    glutInit(NULL, NULL);
+    glutInit(&N, filenames);
     glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
     glutInitWindowPosition(100, 100);
     glutInitWindowSize(800, 800);
