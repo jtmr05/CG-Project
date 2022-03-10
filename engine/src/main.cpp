@@ -10,7 +10,7 @@
 #include <cmath>
 #include <vector>
 #include <iostream>
-
+#include <engine/src/tinyxml2-master/tinyxml2.h>
 
 #include "point.hpp"
 
@@ -202,6 +202,59 @@ void keysEvent(unsigned char key, int x, int y){
     }
 
     glutPostRedisplay();
+}
+
+int xmlParser(string path){
+    XMLDocument doc;
+
+    // Load the XML file into the Doc instance
+    doc.LoadFile(path);
+    // Get root Element
+    XMLElement * pWorld = doc.RootElement();
+    // Print out the Table Header
+
+    if (NULL != pWorld) {
+        //Get 'World' Child
+        XMLElement * pCamera = pWorld -> FirstChildElement("camera");
+
+        if (NULL != pCamera) {
+            // Get 'position' Child
+            XMLElement * pPosition = pCamera -> FirstChildElement("position");
+            if (NULL != pPosition) {
+                string pos = pPosition -> GetText();
+            }
+            //Get 'lookAt' Child
+            XMLElement * pLookAt = pCamera -> FirstChildElement("lookAt");
+            if (NULL != pLookAt) {
+                string lookat =  pLookAt -> GetText();
+            }
+            // Get 'up' Child
+            XMLElement * pUp = pCamera -> FirstChildElement("up");
+            if (NULL != pUp) {
+                string up = pUp -> GetText();
+            }
+            // Get 'projection' Child
+            XMLElement * pProjection = pCamera -> FirstChildElement("projection");
+            if (NULL != pProjection) {
+                string prj = pProjection -> GetText();
+                
+            }
+        }
+        
+        XMLElement * pGroup = pWorld -> FirstChildElement("group");
+        if (NULL != pCamera) {
+            XMLElement * pModels = pGroup -> FirstChildElement("models");
+
+            if (NULL != pModels) {
+                XMLElement * pModel = pModels -> FirstChildElement("models");
+                while(pModel){
+                    string model = pModel -> GetText();
+
+                    pModel = pModel -> NextSiblingElement("model");
+                }
+            }
+        }
+    }
 }
 
 int main(int argc, char **argv) {
