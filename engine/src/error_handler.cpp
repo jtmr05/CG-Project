@@ -1,11 +1,8 @@
 #include "error_handler.hpp"
 
 void usage(){
-    std::cerr << "Usage: \n" ;/*<<
-        "\t generator plane <length> <divisions> <output_file>\n" <<
-        "\t generator box <units> <grid_size> <output_file>\n" <<
-        "\t generator cone <radius> <height> <slices> <stacks> <output_file>\n" <<
-        "\t generator sphere <radius> <slices> <stacks> <output_file>\n"; */
+    std::cerr << "Usage: \n" <<
+        "\t engine <xml_file>\n";
 }
 
 void handle_error(const ErrorCode e){
@@ -24,6 +21,10 @@ void handle_error(const ErrorCode e){
     case ErrorCode::not_enough_args:
         std::cerr << "Missing arguments.\n";
         usage();
+        break;
+
+    case ErrorCode::invalid_xml_formatting:
+        std::cerr << "Invalid xml formatting.\n";
         break;
 
     default:

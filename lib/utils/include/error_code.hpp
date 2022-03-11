@@ -4,10 +4,11 @@
 #include <iostream>
 
 typedef enum error_code {
-    default__,
+    success,
     not_enough_args,
     invalid_argument,
     io_error,
+    invalid_xml_formatting,
 } ErrorCode;
 
 void handle_error(const ErrorCode e);

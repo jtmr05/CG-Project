@@ -1,14 +1,23 @@
 #include "display.hpp"
 
+using std::vector;
+using std::string;
+
 static vector<CartPoint3d> points_to_draw {};
-static double posy {};
-static double zOp { PI / 4};
+static double offset_y {};
+static angle_t zOp {};
 
 static bool fill { false };
 static bool show_axis { false };
 
-static GLubyte rgb[3] { 255, 255, 0};
+static GLubyte rgb[3] { 0, 255, 255};
 static GLubyte color_delta { 3 };
+
+static double fov {}, near_ {}, far_ {};
+static CartPoint3d position;
+static CartPoint3d look_at;
+static CartPoint3d up;
+
 
 void draw_triangle(const CartPoint3d &p1, const CartPoint3d &p2, const CartPoint3d &p3){
 
@@ -57,7 +66,7 @@ void change_size(int w, int h){
     glViewport(0, 0, w, h);
 
     // Set perspective
-    gluPerspective(45.f, ratio, 1.f ,1000.f);
+    gluPerspective(fov, ratio, near_, far_);
 
     // return to the model view matrix mode
     glMatrixMode(GL_MODELVIEW);
@@ -71,12 +80,13 @@ void render_scene(){
 
     // set the camera
     glLoadIdentity();
-    gluLookAt(5.0 * std::sin(zOp), 5.0 + posy, 5.0 * std::cos(zOp),
-              0.0, 0.0, 0.0,
-              0.0, 1.0, 0.0);
+
+    double radius { std::sqrt(position.z * position.z + position.x * position.x) };
+    gluLookAt(radius * std::sin(zOp), position.y + offset_y, radius * std::cos(zOp),
+              look_at.x, look_at.y, look_at.z,
+              up.x, up.y, up.z);
 
     // put drawing instructions here
-
     if(show_axis){
 
         glBegin(GL_LINES);
@@ -101,7 +111,7 @@ void render_scene(){
 
     glColor3ub(rgb[0], rgb[1], rgb[2]);
 
-    for(auto i = points_to_draw.begin(); i != points_to_draw.end(); i += 3)
+    for(auto i { points_to_draw.begin() }; i != points_to_draw.end(); i += 3)
         draw_triangle(i[0], i[1], i[2]);
 
 
@@ -109,7 +119,7 @@ void render_scene(){
     glutSwapBuffers();
 }
 
-// write function to process keyboard events
+// function to process special keyboard events
 void special_keys_event(int key_code, int x, int y){
 
     switch (key_code){
@@ -123,11 +133,11 @@ void special_keys_event(int key_code, int x, int y){
         break;
 
     case GLUT_KEY_DOWN:
-        posy -= 0.1;
+        offset_y -= 0.1;
         break;
 
     case GLUT_KEY_UP:
-        posy += 0.1;
+        offset_y += 0.1;
         break;
 
     default:
@@ -137,16 +147,17 @@ void special_keys_event(int key_code, int x, int y){
     glutPostRedisplay();
 }
 
+// function to process normal keyboard events
 void keys_event(unsigned char key, int x, int y){
 
     switch(key){
 
     case 'w':
-        posy -= 0.1f;
+        offset_y -= 0.1f;
         break;
 
     case 's':
-        posy += 0.1f;
+        offset_y += 0.1f;
         break;
 
     case 'f':
@@ -197,37 +208,10 @@ void keys_event(unsigned char key, int x, int y){
 
 
 
-ErrorCode start(char** filenames, int N){
-
-    ErrorCode exit_code { ErrorCode::default__ };
-
-    for(int i = 1; i < N; ++i){
-
-        std::ifstream file{};
-        file.open(filenames[i], std::ios::in);
-
-        if(file.is_open()){
-
-            CartPoint3d p1{}, p2{}, p3{};
-            int n {};
-
-            while(file >> p1 >> p2 >> p3){
-                n += 3;
-                points_to_draw.push_back(p1);
-                points_to_draw.push_back(p2);
-                points_to_draw.push_back(p3);
-            }
-
-            std::cout << "number of points: " << n << '\n';
-
-            file.close();
-        }
-    }
-
-
+void glut_start(int argc, char** argv){
 
     // init GLUT and the window
-    glutInit(&N, filenames);
+    glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
     glutInitWindowPosition(100, 100);
     glutInitWindowSize(800, 800);
@@ -249,6 +233,56 @@ ErrorCode start(char** filenames, int N){
 
     // enter GLUT's main cycle
     glutMainLoop();
+}
+
+
+
+ErrorCode start(int argc, char** argv){
+
+    ErrorCode exit_code { ErrorCode::success };
+
+    if(argc > 1){
+
+        CameraSettings cs {};
+        vector<string> files_3d {};
+        const string filename { argv[1] };
+
+        exit_code = xml_parser(filename, cs, files_3d);
+
+        if(exit_code == ErrorCode::success){
+
+            fov = cs.fov;
+            far_ = cs.far_;
+            near_ = cs.near_;
+            position = cs.position;
+            look_at = cs.look_at;
+            up = cs.up;
+            zOp = std::atan2(cs.position.x, cs.position.z);
+
+            for(auto i { files_3d.begin() }; i != files_3d.end(); ++i){
+
+                std::ifstream file{};
+                file.open(*i, std::ios::in);
+
+                if(file.is_open()){
+
+                    CartPoint3d p1{}, p2{}, p3{};
+                    while(file >> p1 >> p2 >> p3){
+                        points_to_draw.push_back(p1);
+                        points_to_draw.push_back(p2);
+                        points_to_draw.push_back(p3);
+                    }
+
+                    file.close();
+                }
+            }
+
+            glut_start(argc, argv);
+        }
+    }
+    else
+        exit_code = ErrorCode::not_enough_args;
+
 
     return exit_code;
 }

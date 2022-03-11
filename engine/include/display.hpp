@@ -6,16 +6,13 @@
 #include <GL/glut.h>
 #include <cmath>
 #include <vector>
-#include <iostream>
-#include <functional>
 
 #include "point.hpp"
 #include "error_handler.hpp"
+#include "xml_parser.hpp"
 
-using std::vector;
-using std::string;
-using std::array;
 
-ErrorCode start(char** filenames, int N);
+
+ErrorCode start(int argc, char** argv);
 
 #endif

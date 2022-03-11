@@ -1,5 +1,7 @@
 #include "primitive.hpp"
 
+using std::string;
+
 typedef enum primitive {
     plane,
     box,
@@ -29,31 +31,11 @@ Primitive from_string(const string &str){
     return s;
 }
 
-//matches with and converts a non-negative integer
-//-1 indicates no match found
-int string_to_uint(const string &str){
-
-    std::regex pattern { "^(\\+)?(\\d)+$", std::regex_constants::ECMAScript };
-
-    if(std::regex_match(str, pattern))
-        return stoi(str);
-    else
-        return -1;
-}
-
-// true if str ends in '.3d'
-bool has_3d_ext(const string &str){
-
-    std::regex pattern { "^(.+?)\\.3d$", std::regex_constants::ECMAScript };
-
-    return std::regex_match(str, pattern);
-}
-
 
 
 ErrorCode sphere_writer(const string &filename, int radius, int slices, int stacks){
 
-    ErrorCode exit_code { ErrorCode::default__ };
+    ErrorCode exit_code { ErrorCode::success };
 
     std::ofstream file{};
     file.open(filename, std::ios::out | std::ios::trunc);
@@ -126,7 +108,7 @@ ErrorCode sphere_writer(const string &filename, int radius, int slices, int stac
 
 ErrorCode cone_writer(const string &filename, int radius, int height, int slices, int stacks){
 
-    ErrorCode exit_code { ErrorCode::default__ };
+    ErrorCode exit_code { ErrorCode::success };
 
     std::ofstream file{};
     file.open(filename, std::ios::out | std::ios::trunc);
@@ -206,7 +188,7 @@ ErrorCode cone_writer(const string &filename, int radius, int height, int slices
 
 ErrorCode box_writer(const string &filename, int units, int grid_size){
 
-    ErrorCode exit_code { ErrorCode::default__ };
+    ErrorCode exit_code { ErrorCode::success };
 
     std::ofstream file{};
     file.open(filename, std::ios::out | std::ios::trunc);
@@ -306,7 +288,7 @@ ErrorCode box_writer(const string &filename, int units, int grid_size){
 
 ErrorCode plane_writer(const string &filename, int length, int divs){
 
-    ErrorCode exit_code { ErrorCode::default__ };
+    ErrorCode exit_code { ErrorCode::success };
 
     std::ofstream file{};
     file.open(filename, std::ios::out | std::ios::trunc);
@@ -349,7 +331,7 @@ ErrorCode plane_writer(const string &filename, int length, int divs){
 //parse the arguments needed for each primitive and call the respective function
 ErrorCode primitive_writer(const string args[], const int size){
 
-    ErrorCode exit_code { ErrorCode::default__ };
+    ErrorCode exit_code { ErrorCode::success };
     int ind {1};
 
     if(size > 1){

@@ -8,11 +8,9 @@
 
 #include "error_handler.hpp"
 #include "point.hpp"
+#include "filters.hpp"
 
 
-using std::string;
-
-
-ErrorCode primitive_writer(const string[], const int);
+ErrorCode primitive_writer(const std::string[], const int);
 
 #endif
