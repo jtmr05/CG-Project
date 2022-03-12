@@ -5,7 +5,7 @@
 #include <regex>
 
 int string_to_uint(const std::string &str);
-int string_to_int(const std::string &str, int default_value = 0);
+double string_to_double(const std::string &str, double default_value = 0.0);
 bool has_3d_ext(const std::string &str);
 bool has_xml_ext(const std::string &str);
 

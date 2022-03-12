@@ -10,19 +10,19 @@ int string_to_uint(const string &str){
     std::regex pattern { "^(\\+)?(\\d)+$", std::regex_constants::ECMAScript };
 
     if(std::regex_match(str, pattern))
-        return stoi(str);
+        return std::stoi(str);
     else
         return -1;
 }
 
-//matches with and a converts to an integer
+//matches with and a converts to a double
 //returns default_value in case no match was found
-int string_to_int(const string &str, int default_value){
+double string_to_double(const string &str, double default_value){
 
-    std::regex pattern { "^(\\+|\\-)?(\\d)+$", std::regex_constants::ECMAScript };
+    std::regex pattern { "^(\\+|\\-)?(\\d)+(\\.(\\d)+)?$", std::regex_constants::ECMAScript };
 
     if(std::regex_match(str, pattern))
-        return stoi(str);
+        return std::stod(str);
     else
         return default_value;
 }

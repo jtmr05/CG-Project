@@ -31,36 +31,36 @@ ErrorCode xml_parser(const string &path, CameraSettings &c, vector<string> &file
 
                 TiXmlElement* p_position { p_camera->FirstChildElement("position") };
                 if(p_position){
-                    const double x { static_cast<double>(string_to_int(p_position->Attribute("x"))) };
-                    const double y { static_cast<double>(string_to_int(p_position->Attribute("y"))) };
-                    const double z { static_cast<double>(string_to_int(p_position->Attribute("z"))) };
+                    const double x { string_to_double(p_position->Attribute("x")) };
+                    const double y { string_to_double(p_position->Attribute("y")) };
+                    const double z { string_to_double(p_position->Attribute("z")) };
 
                     c.position = { x, y, z };
                 }
 
                 TiXmlElement* p_look_at { p_camera->FirstChildElement("lookAt") };
                 if(p_look_at){
-                    const double x { static_cast<double>(string_to_int(p_look_at->Attribute("x"))) };
-                    const double y { static_cast<double>(string_to_int(p_look_at->Attribute("y"))) };
-                    const double z { static_cast<double>(string_to_int(p_look_at->Attribute("z"))) };
+                    const double x { string_to_double(p_look_at->Attribute("x")) };
+                    const double y { string_to_double(p_look_at->Attribute("y")) };
+                    const double z { string_to_double(p_look_at->Attribute("z")) };
 
                     c.look_at = { x, y, z };
                 }
 
                 TiXmlElement* p_up { p_camera->FirstChildElement("up") };
                 if(p_up){
-                    const double x { static_cast<double>(string_to_int(p_up->Attribute("x"))) };
-                    const double y { static_cast<double>(string_to_int(p_up->Attribute("y"))) };
-                    const double z { static_cast<double>(string_to_int(p_up->Attribute("z"))) };
+                    const double x { string_to_double(p_up->Attribute("x")) };
+                    const double y { string_to_double(p_up->Attribute("y")) };
+                    const double z { string_to_double(p_up->Attribute("z")) };
 
                     c.up = { x, y, z };
                 }
 
                 TiXmlElement* p_projection { p_camera->FirstChildElement("projection") };
                 if(p_projection){
-                    const double fov { static_cast<double>(string_to_int(p_projection->Attribute("fov"))) };
-                    const double near_ { static_cast<double>(string_to_int(p_projection->Attribute("near"))) };
-                    const double far_ { static_cast<double>(string_to_int(p_projection->Attribute("far"))) };
+                    const double fov   { string_to_double(p_projection->Attribute("fov")) };
+                    const double near_ { string_to_double(p_projection->Attribute("near")) };
+                    const double far_  { string_to_double(p_projection->Attribute("far")) };
 
                     c.fov = fov;
                     c.near_ = near_;
@@ -94,7 +94,3 @@ ErrorCode xml_parser(const string &path, CameraSettings &c, vector<string> &file
 
     return exit_code;
 }
-
-
-
-
