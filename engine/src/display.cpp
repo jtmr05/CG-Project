@@ -28,9 +28,9 @@ void draw_triangle(const CartPoint3d &p1, const CartPoint3d &p2, const CartPoint
 
     glBegin(GL_TRIANGLES);
 
-        glVertex3f(p1.x, p1.y, p1.z);
-        glVertex3f(p2.x, p2.y, p2.z);
-        glVertex3f(p3.x, p3.y, p3.z);
+        glVertex3d(p1.x, p1.y, p1.z);
+        glVertex3d(p2.x, p2.y, p2.z);
+        glVertex3d(p3.x, p3.y, p3.z);
 
     glEnd();
 }

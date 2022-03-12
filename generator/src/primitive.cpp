@@ -171,7 +171,8 @@ ErrorCode cone_writer(const string &filename, int radius, int height, int slices
                 };
 
                 file << bp1 << bp2 << next_bp1;
-                file << next_bp1 << bp2 << next_bp2;
+                if(j < stacks - 1)
+                    file << next_bp1 << bp2 << next_bp2;
 
                 bp1 = next_bp1;
                 bp2 = next_bp2;

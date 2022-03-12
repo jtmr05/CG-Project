@@ -7,7 +7,7 @@
     </camera>
 	<group>
   		<models>
-			<model file="resources/box.3d" /> <!-- generator box 2 3 box.3d -->
+			<model file="box.3d" /> <!-- generator box 2 3 box.3d -->
 
  		</models>
  	</group>

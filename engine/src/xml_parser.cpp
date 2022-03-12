@@ -22,6 +22,15 @@ ErrorCode xml_parser(const string &path, CameraSettings &c, vector<string> &file
     // Load the XML file into the Doc instance
     if(has_xml_ext(path) && doc.LoadFile(path.c_str())){
 
+        const std::size_t last_slash_pos { path.find_last_of("/") };
+        string directory_path { "" };
+
+        if(last_slash_pos < std::string::npos){
+            char aux[last_slash_pos + 1 + 1];
+            path.copy(aux, last_slash_pos + 1);
+            directory_path = { aux };
+        }
+
         // Get root Element
         TiXmlElement* p_world { doc.RootElement() };
         if(p_world){
@@ -79,7 +88,7 @@ ErrorCode xml_parser(const string &path, CameraSettings &c, vector<string> &file
 
                         const string fn { p_model->Attribute("file") };
                         if(has_3d_ext(fn))
-                            files_3d.push_back(fn);
+                            files_3d.push_back(directory_path + fn);
 
                         p_model = p_model->NextSiblingElement("model");
                     }
