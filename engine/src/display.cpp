@@ -21,27 +21,16 @@ static CartPoint3d up;
 
 void draw_triangle(const CartPoint3d &p1, const CartPoint3d &p2, const CartPoint3d &p3){
 
-    if(fill){
+    if(fill)
+        glPolygonMode(GL_FRONT, GL_FILL);
+    else
+        glPolygonMode(GL_FRONT, GL_LINE);
 
-        glBegin(GL_TRIANGLES);
+    glBegin(GL_TRIANGLES);
 
         glVertex3f(p1.x, p1.y, p1.z);
         glVertex3f(p2.x, p2.y, p2.z);
         glVertex3f(p3.x, p3.y, p3.z);
-    }
-    else{
-
-        glBegin(GL_LINES);
-
-        glVertex3f(p1.x, p1.y, p1.z);
-        glVertex3f(p2.x, p2.y, p2.z);
-
-        glVertex3f(p2.x, p2.y, p2.z);
-        glVertex3f(p3.x, p3.y, p3.z);
-
-        glVertex3f(p3.x, p3.y, p3.z);
-        glVertex3f(p1.x, p1.y, p1.z);
-    }
 
     glEnd();
 }
