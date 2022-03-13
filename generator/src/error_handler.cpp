@@ -5,7 +5,8 @@ void usage(){
         "\t generator plane <length> <divisions> <output_file>\n" <<
         "\t generator box <units> <grid_size> <output_file>\n" <<
         "\t generator cone <radius> <height> <slices> <stacks> <output_file>\n" <<
-        "\t generator sphere <radius> <slices> <stacks> <output_file>\n";
+        "\t generator sphere <radius> <slices> <stacks> <output_file>\n"  <<
+        "\t generator torus <outter_radius> <inner_radius> <slices> <stacks> <output_file>\n";
 }
 
 void handle_error(const ErrorCode e){

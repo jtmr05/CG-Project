@@ -7,13 +7,15 @@ typedef enum primitive {
     box,
     sphere,
     cone,
+    torus,
     __invalid,
 } Primitive;
 
-const int PLANE_ARGS {5};
-const int BOX_ARGS {5};
-const int CONE_ARGS {7};
-const int SPHERE_ARGS {6};
+static const int PLANE_ARGS {5};
+static const int BOX_ARGS {5};
+static const int CONE_ARGS {7};
+static const int SPHERE_ARGS {6};
+static const int TORUS_ARGS {7};
 
 Primitive from_string(const string &str){
 
@@ -27,11 +29,103 @@ Primitive from_string(const string &str){
         s = Primitive::sphere;
     else if(str == "cone")
         s = Primitive::cone;
+    else if(str == "torus")
+        s = Primitive::torus;
 
     return s;
 }
 
+ErrorCode torus_writer(const string &filename, int out_radius, int in_radius, int slices, int stacks){
 
+    ErrorCode exit_code { ErrorCode::success };
+
+    std::ofstream file{};
+    file.open(filename, std::ios::out | std::ios::trunc);
+
+    if(file.is_open()){
+
+        const angle_t zOx_delta { 360.0 / static_cast<angle_t>(slices) };
+        const angle_t yOp_delta { 180.0 / static_cast<angle_t>(stacks) };
+        const double radius { static_cast<double>(out_radius - in_radius) / 2.0 };
+
+
+
+        for(int i{}; i < slices; i++){
+
+            for(int j{}; j < stacks; j++){
+
+                angle_t bottom_yOp { 90.0 - (yOp_delta * static_cast<angle_t>(j)) };
+                angle_t top_yOp { 90.0 - (yOp_delta * static_cast<angle_t>(j + 1)) };
+                angle_t bottom_offset = 0.0;
+                angle_t top_offset = 0.0;
+
+
+                if(bottom_yOp < 0.0){
+                    bottom_yOp *= -1.0;
+                    bottom_offset = 180.0;
+                }
+
+                if(top_yOp < 0.0){
+                    top_yOp *= -1.0;
+                    top_offset = 180.0;
+                }
+
+                CartPoint3d out_bottom_start_p {
+                    polar_to_cart( PolarPoint3d{ radius, bottom_offset, bottom_yOp } )
+                };
+                out_bottom_start_p.z += static_cast<double>(in_radius) + radius;
+
+                CartPoint3d out_top_start_p {
+                    polar_to_cart( PolarPoint3d{ radius, top_offset, top_yOp } )
+                };
+                out_top_start_p.z += static_cast<double>(in_radius) + radius;
+
+
+                PolarPoint3d p1 {
+                    cart_to_polar(out_bottom_start_p)
+                };
+                p1.zOx = static_cast<angle_t>(i) * zOx_delta;
+
+                PolarPoint3d p2 {
+                    cart_to_polar(out_bottom_start_p)
+                };
+                p2.zOx = static_cast<angle_t>(i+1) * zOx_delta;
+
+                PolarPoint3d p3 {
+                    cart_to_polar(out_top_start_p)
+                };
+                p3.zOx = static_cast<angle_t>(i) * zOx_delta;
+
+                PolarPoint3d p4 {
+                    cart_to_polar(out_top_start_p)
+                };
+                p4.zOx = static_cast<angle_t>(i+1) * zOx_delta;
+
+                file << p1 << p2 << p3;
+                file << p2 << p4 << p3;
+
+
+                PolarPoint3d neg_p1 { p1 };
+                PolarPoint3d neg_p2 { p2 };
+                PolarPoint3d neg_p3 { p3 };
+                PolarPoint3d neg_p4 { p4 };
+
+                neg_p1.yOp = 180.0 - neg_p1.yOp;
+                neg_p2.yOp = 180.0 - neg_p2.yOp;
+                neg_p3.yOp = 180.0 - neg_p3.yOp;
+                neg_p4.yOp = 180.0 - neg_p4.yOp;
+
+                file << neg_p1 << neg_p3 << neg_p2;
+                file << neg_p3 << neg_p4 << neg_p2;
+            }
+        }
+        file.close();
+    }
+    else
+        exit_code = ErrorCode::io_error;
+
+    return exit_code;
+}
 
 ErrorCode sphere_writer(const string &filename, int radius, int slices, int stacks){
 
@@ -410,6 +504,27 @@ ErrorCode primitive_writer(const string args[], const int size){
                     exit_code = ErrorCode::invalid_argument;
                 else
                     exit_code = sphere_writer(filename, radius, slices, stacks);
+            }
+
+            break;
+
+        case Primitive::torus:
+
+            if(size < TORUS_ARGS)
+                exit_code = ErrorCode::not_enough_args;
+            else{
+                const int out_radius { string_to_uint(args[ind++]) };
+                const int in_radius { string_to_uint(args[ind++]) };
+                const int slices { string_to_uint(args[ind++]) };
+                const int stacks { string_to_uint(args[ind++]) };
+                const string filename { args[ind] };
+
+                //can stacks be less than 1 for sphere
+                if(out_radius < 1 || in_radius < 1 || out_radius < in_radius ||
+                    slices < 3 || stacks < 2 || stacks % 2 != 0 || !has_3d_ext(filename))
+                    exit_code = ErrorCode::invalid_argument;
+                else
+                    exit_code = torus_writer(filename, out_radius, in_radius, slices, stacks);
             }
 
             break;
