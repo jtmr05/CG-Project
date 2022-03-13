@@ -28,8 +28,10 @@ ErrorCode xml_parser(const string &path, CameraSettings &c, vector<string> &file
         if(last_slash_pos < std::string::npos){
             char aux[last_slash_pos + 1 + 1];
             path.copy(aux, last_slash_pos + 1);
+	    aux[last_slash_pos + 1] = '\0';
             directory_path = { aux };
-        }
+		std::cout << directory_path << '\n';        
+	}
 
         // Get root Element
         TiXmlElement* p_world { doc.RootElement() };

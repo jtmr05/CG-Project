@@ -40,7 +40,7 @@ export CXX FLAGS BIN_DIR
 #make default goal (using make with no specified recipe)
 .DEFAULT_GOAL := all
 
-all: utils generator engine
+all: tinyxml utils generator engine
 
 build: clean all
 
@@ -48,7 +48,7 @@ build: clean all
 generator: utils
 	make -C $(GEN_DIR)
 
-engine: utils
+engine: tinyxml utils
 	make -C $(ENG_DIR)
 
 utils:
