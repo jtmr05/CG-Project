@@ -7,6 +7,7 @@
 #include <cmath>
 #include <vector>
 
+
 #include "point.hpp"
 #include "error_handler.hpp"
 #include "xml_parser.hpp"

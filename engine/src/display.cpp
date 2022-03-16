@@ -9,6 +9,8 @@ static angle_t zOp {};
 
 static bool fill { false };
 static bool show_axis { false };
+static bool scale { false };
+
 
 static GLubyte rgb[3] { 0, 255, 255};
 static GLubyte color_delta { 3 };
@@ -74,6 +76,9 @@ void render_scene(){
     gluLookAt(radius * std::sin(zOp), position.y + offset_y, radius * std::cos(zOp),
               look_at.x, look_at.y, look_at.z,
               up.x, up.y, up.z);
+
+    if(scale)
+        glScaled(2.0, 1.0, 2.0);
 
     // put drawing instructions here
     if(show_axis){
@@ -141,14 +146,6 @@ void keys_event(unsigned char key, int x, int y){
 
     switch(key){
 
-    case 'w':
-        offset_y -= 0.1f;
-        break;
-
-    case 's':
-        offset_y += 0.1f;
-        break;
-
     case 'f':
         fill = !fill;
         break;
@@ -185,6 +182,10 @@ void keys_event(unsigned char key, int x, int y){
 
     case 'x':
         show_axis = !show_axis;
+        break;
+
+    case 's':
+        scale = !scale;
         break;
 
     default:

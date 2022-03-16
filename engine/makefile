@@ -55,7 +55,7 @@ $(OBJ_FILES): $(OBJ_DIR)/%.o : $(SRC_DIR)/%
 .PHONY: clean init
 
 clean:
-	-find $(OBJ_DIR)/* | grep -v $(OBJ_DIR)/*.md | xargs rm
+	-find $(OBJ_DIR)/* | grep -v **/*.md | xargs rm
 
 init:
 	-mkdir $(SRC_DIR)

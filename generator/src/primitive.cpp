@@ -519,8 +519,7 @@ ErrorCode primitive_writer(const string args[], const int size){
                 const int stacks { string_to_uint(args[ind++]) };
                 const string filename { args[ind] };
 
-                //can stacks be less than 1 for sphere
-                if(out_radius < 1 || in_radius < 1 || out_radius < in_radius ||
+                if(out_radius < 1 || in_radius < 0 || out_radius < in_radius ||
                     slices < 3 || stacks < 2 || stacks % 2 != 0 || !has_3d_ext(filename))
                     exit_code = ErrorCode::invalid_argument;
                 else

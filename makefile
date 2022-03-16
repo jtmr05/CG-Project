@@ -12,6 +12,7 @@ CXX 			:= g++
 #directories
 ENG_DIR 		:= engine
 GEN_DIR 		:= generator
+RSR_DIR			:= resources
 BIN_DIR 		:= $(PWD)/bin
 LIB_DIR 		:= $(PWD)/lib
 
@@ -62,9 +63,10 @@ tinyxml:
 .PHONY: clean
 
 clean:
-	-find $(BIN_DIR)/* | grep -v $(BIN_DIR)/*.md | xargs rm
+	-find $(BIN_DIR)/* | grep -v **/*.md | xargs rm
 	-make -C $(ENG_DIR) clean
 	-make -C $(GEN_DIR) clean
 	-make -C $(shell realpath --relative-to . $(UTILS_DIR)) clean
 	-make -C $(shell realpath --relative-to . $(TINY_XML_DIR)) clean
+	-find $(RSR_DIR)/* | grep .3d | xargs rm
 

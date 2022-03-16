@@ -8,6 +8,8 @@
 	<group>
   		<models>
 			<model file="torus.3d" /> <!-- generator torus 5 1 20 20 torus.3d -->
+			<model file="sphere.3d" />
+
  		</models>
  	</group>
 </world>
