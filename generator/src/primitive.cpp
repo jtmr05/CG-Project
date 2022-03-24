@@ -306,7 +306,7 @@ ErrorCode box_writer(const string &filename, int units, int grid_size){
 
             for(int j{}; j < grid_size; j++, z -= incr){
 
-                p1.y = p2.y = p3.y = p4.y = 0.0;
+                p1.y = p2.y = p3.y = p4.y = -abs_max_coord;
 
                 p1.x = x; p1.z = z;
                 p2.x = x; p2.z = z - incr;
@@ -316,14 +316,14 @@ ErrorCode box_writer(const string &filename, int units, int grid_size){
                 file << p1 << p3 << p2;
                 file << p2 << p3 << p4;
 
-                p1.y = p2.y = p3.y = p4.y = abs_max_coord * 2.0;
+                p1.y = p2.y = p3.y = p4.y = abs_max_coord;
 
                 file << p1 << p2 << p4;
                 file << p4 << p3 << p1;
             }
         }
 
-        y = abs_max_coord * 2.0;
+        y = abs_max_coord;
 
         for(int i{}; i < grid_size; i++, y -= incr){
 
@@ -348,7 +348,7 @@ ErrorCode box_writer(const string &filename, int units, int grid_size){
             }
         }
 
-        y = abs_max_coord * 2.0;
+        y = abs_max_coord;
 
         for(int i{}; i < grid_size; i++, y -= incr){
 
@@ -409,8 +409,8 @@ ErrorCode plane_writer(const string &filename, int length, int divs){
                 p3.x = x - incr; p3.z = z;
                 p4.x = x - incr; p4.z = z - incr;
 
-                file << p1 << p2 << p3;
-                file << p2 << p4 << p3;
+                file << p1 << p4 << p3;
+                file << p1 << p2 << p4;
             }
         }
         file.close();

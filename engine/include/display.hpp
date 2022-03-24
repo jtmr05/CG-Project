@@ -6,6 +6,7 @@
 #include <GL/glut.h>
 #include <cmath>
 #include <vector>
+#include <map>
 
 
 #include "point.hpp"

@@ -6,10 +6,10 @@ using std::vector;
 camera_settings::camera_settings(){
     this->position = {};
     this->look_at = {};
-    this->up = {};
-    this->fov = {};
-    this->near_ = {};
-    this->far_ = {};
+    this->up = { 0.0, 1.0, 0.0 };
+    this->fov = { 60.0 };
+    this->near_ = { 1.0 };
+    this->far_ = { 1000.0 };
 }
 
 
@@ -80,10 +80,12 @@ void parse_camera_settings(CameraSettings &c, TiXmlElement* p_world){
 void parse_groups(TiXmlElement* p_world, const string &dir_prefix, vector<Group> &groups){
 
     std::stack<TiXmlElement*> group_rollback {};
-    uint nest_level {1};
+    uint nest_level { 1 };
 
     TiXmlElement* p_group { p_world->FirstChildElement("group") };
     while(p_group){
+
+        assert(nest_level > 0);
 
         Group g { nest_level };
 
@@ -93,7 +95,7 @@ void parse_groups(TiXmlElement* p_world, const string &dir_prefix, vector<Group>
             TiXmlElement* p_generic_transform { p_transform->FirstChildElement() };
             while(p_generic_transform){
 
-                const char* attribute_name { p_generic_transform->Value() };
+                const string attribute_name { p_generic_transform->Value() };
                 const char* angle { p_generic_transform->Attribute("angle") };
 
                 const double x { string_to_double(p_generic_transform->Attribute("x")) };
@@ -138,15 +140,15 @@ void parse_groups(TiXmlElement* p_world, const string &dir_prefix, vector<Group>
 
         groups.push_back(g);
 
-        TiXmlElement* parent = p_group;
-        p_group = parent->FirstChildElement("group");
+        TiXmlElement* parent { p_group };
+        p_group = p_group->FirstChildElement("group");
 
         if(p_group){
             group_rollback.push(parent);
             nest_level++;
         }
         else{
-            p_group = p_group->NextSiblingElement("group");
+            p_group = parent->NextSiblingElement("group");
 
             if(!p_group && !group_rollback.empty()){
                 p_group = group_rollback.top();

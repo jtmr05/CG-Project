@@ -63,10 +63,12 @@ tinyxml:
 .PHONY: clean
 
 clean:
-	-find $(BIN_DIR)/* | grep -v **/*.md | xargs rm
 	-make -C $(ENG_DIR) clean
 	-make -C $(GEN_DIR) clean
 	-make -C $(shell realpath --relative-to . $(UTILS_DIR)) clean
 	-make -C $(shell realpath --relative-to . $(TINY_XML_DIR)) clean
 	-find $(RSR_DIR)/* | grep .3d | xargs rm
+	-rm *.stackdump
 
+fullclean: clean
+	-find $(BIN_DIR)/* | grep -v **/*.md | xargs rm

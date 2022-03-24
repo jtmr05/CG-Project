@@ -2,14 +2,16 @@
 
 using std::vector;
 using std::string;
+using std::map;
+using std::pair;
 
-static vector<CartPoint3d> points_to_draw {};
+static vector<Group> groups_to_draw {};
+static map<string, vector<CartPoint3d>> points_to_draw {};
 static double offset_y {};
 static angle_t zOp {};
 
 static bool fill { false };
 static bool show_axis { false };
-static bool scale { false };
 
 
 static GLubyte rgb[3] { 0, 255, 255};
@@ -72,13 +74,11 @@ void render_scene(){
     // set the camera
     glLoadIdentity();
 
-    double radius { std::sqrt(position.z * position.z + position.x * position.x) };
+    const double radius { std::sqrt(position.z * position.z + position.x * position.x) };
     gluLookAt(radius * std::sin(zOp), position.y + offset_y, radius * std::cos(zOp),
               look_at.x, look_at.y, look_at.z,
               up.x, up.y, up.z);
 
-    if(scale)
-        glScaled(2.0, 1.0, 2.0);
 
     // put drawing instructions here
     if(show_axis){
@@ -105,9 +105,60 @@ void render_scene(){
 
     glColor3ub(rgb[0], rgb[1], rgb[2]);
 
-    for(auto i { points_to_draw.begin() }; i != points_to_draw.end(); i += 3)
-        draw_triangle(i[0], i[1], i[2]);
+    uint curr_nest_level { 0 };
 
+    for(auto g { groups_to_draw.begin() }; g != groups_to_draw.end(); ++g){
+
+        if(curr_nest_level < g->nest_level)
+            while(curr_nest_level < g->nest_level){
+                glPushMatrix();
+                curr_nest_level++;
+            }
+        else
+            while(curr_nest_level >= g->nest_level){
+                glPopMatrix();
+                curr_nest_level--;
+            }
+
+        const vector<Transform> transforms { g->transforms };
+        for(auto t { transforms.begin() }; t != transforms.end(); ++t){
+
+            switch(t->type){
+
+            case TransformType::rotate:
+                glRotated(t->angle.value(), t->point.x, t->point.y, t->point.z);
+                break;
+
+            case TransformType::scale:
+                glScaled(t->point.x, t->point.y, t->point.z);
+                break;
+
+            case TransformType::translate:
+                glTranslated(t->point.x, t->point.y, t->point.z);
+                break;
+
+            default:
+                break;
+            }
+        }
+
+        const vector<string> models { g->models };
+        for(auto m { models.begin() }; m != models.end(); ++m){
+
+            std::cout << "nest level is " << g->nest_level << '\n';
+
+            if(points_to_draw.count(*m) > 0){
+                const vector<CartPoint3d> points { points_to_draw.at(*m) };
+                for(auto p { points.begin() }; p != points.end(); p += 3)
+                    draw_triangle(p[0], p[1], p[2]);
+            }
+        }
+    }
+
+    while(curr_nest_level > 0){
+        glPopMatrix();
+        curr_nest_level--;
+    }
 
     // End of frame
     glutSwapBuffers();
@@ -184,13 +235,8 @@ void keys_event(unsigned char key, int x, int y){
         show_axis = !show_axis;
         break;
 
-    case 's':
-        scale = !scale;
-        break;
-
     default:
         break;
-
     }
 
     glutPostRedisplay();
@@ -234,10 +280,9 @@ ErrorCode start(int argc, char** argv){
     if(argc > 1){
 
         CameraSettings cs {};
-        vector<string> files_3d {};
         const string filename { argv[1] };
 
-        exit_code = xml_parser(filename, cs, files_3d);
+        exit_code = xml_parser(filename, cs, groups_to_draw); //groups_to_draw is global
 
         if(exit_code == ErrorCode::success){
 
@@ -249,21 +294,31 @@ ErrorCode start(int argc, char** argv){
             up = cs.up;
             zOp = std::atan2(cs.position.x, cs.position.z);
 
-            for(auto i { files_3d.begin() }; i != files_3d.end(); ++i){
+            for(auto g { groups_to_draw.begin() }; g != groups_to_draw.end(); ++g){
 
-                std::ifstream file{};
-                file.open(*i, std::ios::in);
+                const vector<string> models { g->models };
+                for(auto m { models.begin() }; m != models.end(); ++m){
 
-                if(file.is_open()){
+                    if(points_to_draw.count(*m) == 0){    //returns number of mappings for this key
 
-                    CartPoint3d p1{}, p2{}, p3{};
-                    while(file >> p1 >> p2 >> p3){
-                        points_to_draw.push_back(p1);
-                        points_to_draw.push_back(p2);
-                        points_to_draw.push_back(p3);
+                        std::ifstream file{};
+                        file.open(*m, std::ios::in);
+
+                        if(file.is_open()){
+
+                            vector<CartPoint3d> value {};
+                            CartPoint3d p1{}, p2{}, p3{};
+
+                            while(file >> p1 >> p2 >> p3){
+                                value.push_back(p1);
+                                value.push_back(p2);
+                                value.push_back(p3);
+                            }
+
+                            points_to_draw.insert(pair<string, vector<CartPoint3d>>(*m, value));
+                            file.close();
+                        }
                     }
-
-                    file.close();
                 }
             }
 

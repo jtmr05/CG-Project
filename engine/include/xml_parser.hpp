@@ -40,7 +40,7 @@ typedef struct transform {
 typedef struct group {
 
     std::vector<Transform> transforms;
-    std::vector<string> models;
+    std::vector<std::string> models;
     uint nest_level;
 
     group(uint nest_level);
