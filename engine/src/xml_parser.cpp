@@ -118,7 +118,7 @@ void parse_groups(TiXmlElement* p_world, const string &dir_prefix, vector<Group>
                 }
 
                 if(pt)
-                    g.transforms.push_back(*pt); //potential seg fault because 't' is out of scope
+                    g.transforms.push_back(*pt);
 
                 p_generic_transform = p_generic_transform->NextSiblingElement();
             }

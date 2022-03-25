@@ -109,16 +109,31 @@ void render_scene(){
 
     for(auto g { groups_to_draw.begin() }; g != groups_to_draw.end(); ++g){
 
-        if(curr_nest_level < g->nest_level)
-            while(curr_nest_level < g->nest_level){
-                glPushMatrix();
-                curr_nest_level++;
-            }
-        else
-            while(curr_nest_level >= g->nest_level){
-                glPopMatrix();
-                curr_nest_level--;
-            }
+        /**
+         * After popping something, curr_nest_level < g->nest_level (second nested loop condition).
+         * So, we needed to come back to the first loop, store the matrix that we just popped
+         * and increment curr_nest_level so that it actually has the correct value.
+         */
+
+        bool popped { false };
+
+        do{
+            popped = false;
+            if(curr_nest_level < g->nest_level)
+                while(curr_nest_level < g->nest_level){
+                    glPushMatrix();
+                    curr_nest_level++;
+                }
+            else
+                while(curr_nest_level >= g->nest_level){
+                    popped = true;
+                    glPopMatrix();
+                    curr_nest_level--;
+                }
+        }
+        while(popped);
+
+
 
         const vector<Transform> transforms { g->transforms };
         for(auto t { transforms.begin() }; t != transforms.end(); ++t){
@@ -126,14 +141,23 @@ void render_scene(){
             switch(t->type){
 
             case TransformType::rotate:
+                #ifdef WITH_DEBUG
+                std::cout << "Rotate: " << '(' << t->angle.value() << ", " << t->point.x << ", " << t->point.y << ", " << t->point.z << ")\n";
+                #endif
                 glRotated(t->angle.value(), t->point.x, t->point.y, t->point.z);
                 break;
 
             case TransformType::scale:
+                #ifdef WITH_DEBUG
+                std::cout << "Scale: " << '(' << t->point.x << ", " << t->point.y << ", " << t->point.z << ")\n";
+                #endif
                 glScaled(t->point.x, t->point.y, t->point.z);
                 break;
 
             case TransformType::translate:
+                #ifdef WITH_DEBUG
+                std::cout << "Translate: " << '(' << t->point.x << ", " << t->point.y << ", " << t->point.z << ")\n";
+                #endif
                 glTranslated(t->point.x, t->point.y, t->point.z);
                 break;
 
@@ -144,8 +168,6 @@ void render_scene(){
 
         const vector<string> models { g->models };
         for(auto m { models.begin() }; m != models.end(); ++m){
-
-            std::cout << "nest level is " << g->nest_level << '\n';
 
             if(points_to_draw.count(*m) > 0){
                 const vector<CartPoint3d> points { points_to_draw.at(*m) };

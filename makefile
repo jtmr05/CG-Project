@@ -70,5 +70,7 @@ clean:
 	-find $(RSR_DIR)/* | grep .3d | xargs rm
 	-rm *.stackdump
 
-fullclean: clean
+shred: clean
 	-find $(BIN_DIR)/* | grep -v **/*.md | xargs rm
+	-find $(UTILS_DIR)/* | grep -F .a | xargs rm
+	-find $(TINY_XML_DIR)/* | grep -F .a | xargs rm
