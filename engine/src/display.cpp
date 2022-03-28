@@ -141,23 +141,14 @@ void render_scene(){
             switch(t->type){
 
             case TransformType::rotate:
-                #ifdef WITH_DEBUG
-                std::cout << "Rotate: " << '(' << t->angle.value() << ", " << t->point.x << ", " << t->point.y << ", " << t->point.z << ")\n";
-                #endif
                 glRotated(t->angle.value(), t->point.x, t->point.y, t->point.z);
                 break;
 
             case TransformType::scale:
-                #ifdef WITH_DEBUG
-                std::cout << "Scale: " << '(' << t->point.x << ", " << t->point.y << ", " << t->point.z << ")\n";
-                #endif
                 glScaled(t->point.x, t->point.y, t->point.z);
                 break;
 
             case TransformType::translate:
-                #ifdef WITH_DEBUG
-                std::cout << "Translate: " << '(' << t->point.x << ", " << t->point.y << ", " << t->point.z << ")\n";
-                #endif
                 glTranslated(t->point.x, t->point.y, t->point.z);
                 break;
 
