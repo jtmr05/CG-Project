@@ -255,7 +255,52 @@ void keys_event(unsigned char key, int x, int y){
     glutPostRedisplay();
 }
 
+bool firstMouse = true;
+int lastX;
+int lastY;
 
+float yaw = 0.0f;
+float pitch = 0.0f;
+
+const float sensitivity = 0.1f;
+
+float radians(float degree){
+    return degree * (PI / 180);
+}
+
+// function to process mouse events
+void mouse_event(int x, int y){
+
+    if (firstMouse)
+    {
+        lastX = x;
+        lastY = y;
+        firstMouse = false;
+    }
+  
+    float xoffset = x - lastX;
+    float yoffset = lastY - y; 
+    lastX = x;
+    lastY = y;
+
+    float sensitivity = 0.1f;
+    xoffset *= sensitivity;
+    yoffset *= sensitivity;
+
+    yaw   += xoffset;
+    pitch += yoffset;
+
+    if(pitch > 89.0f)
+        pitch = 89.0f;
+    if(pitch < -89.0f)
+        pitch = -89.0f;
+
+    look_at.x = cos(radians(yaw)) * cos(radians(pitch));
+    look_at.y = sin(radians(pitch));
+    look_at.z = sin(radians(yaw)) * cos(radians(pitch));
+
+    glutPostRedisplay();
+}
 
 void glut_start(int argc, char** argv){
 
@@ -274,6 +319,7 @@ void glut_start(int argc, char** argv){
     // put here the registration of the keyboard callbacks
     glutKeyboardFunc(keys_event);
     glutSpecialFunc(special_keys_event);
+    glutPassiveMotionFunc(mouse_event);
 
 
     // OpenGL settings
