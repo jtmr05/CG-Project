@@ -26,7 +26,7 @@ AR     := ar rc
 RANLIB := ranlib
 
 DEBUG_CFLAGS     := -Wall -Wno-format -g -DDEBUG
-RELEASE_CFLAGS   := -Wall -Wno-unknown-pragmas -Wno-format -O3
+RELEASE_CFLAGS   := -Wall -Wno-unknown-pragmas -Wno-format -O3 -std=gnu++17
 
 LIBS		 :=
 
