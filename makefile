@@ -30,7 +30,7 @@ ifeq (Windows_NT, $(OS))
 endif
 
 #compiler flags
-FLAGS 			:= -Wall -Wextra -Wsign-conversion -Iinclude -std=gnu++17
+FLAGS 			:= -Wall -Wextra -Wsign-conversion -Iinclude -std=c++17
 
 
 export CXX FLAGS BIN_DIR

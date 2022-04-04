@@ -34,9 +34,7 @@ float pitch = 0.0f;
 const float sensitivity = 0.5f;
 const float speed = 0.1f;
 
-float radians(float degree){
-    return degree * (PI / 180);
-}
+
 
 void draw_triangle(const CartPoint3d &p1, const CartPoint3d &p2, const CartPoint3d &p3){
 
@@ -118,7 +116,7 @@ void render_scene(){
 
     glColor3ub(rgb[0], rgb[1], rgb[2]);
 
-    uint curr_nest_level { 0 };
+    unsigned int curr_nest_level { 0 };
 
     for(auto g { groups_to_draw.begin() }; g != groups_to_draw.end(); ++g){
 
@@ -221,9 +219,9 @@ void special_keys_event(int key_code, int x, int y){
             break;
         }
 
-        position.x = radius * (radians(yaw)) * cos(radians(pitch));
-        position.y = radius * sin(radians(pitch));
-        position.z = radius * cos(radians(yaw)) * cos(radians(pitch));
+        position.x = radius * (degree_to_radian(yaw)) * cos(degree_to_radian(pitch));
+        position.y = radius * sin(degree_to_radian(pitch));
+        position.z = radius * cos(degree_to_radian(yaw)) * cos(degree_to_radian(pitch));
 
     }
     else{
@@ -337,15 +335,15 @@ void mouse_event(int x, int y){
         lastY = y;
         firstMouse = false;
     }
-  
+
     float xoffset = x - lastX;
-    float yoffset = y - lastY; 
+    float yoffset = y - lastY;
     lastX = x;
     lastY = y;
 
     xoffset *= sensitivity;
     yoffset *= sensitivity;
-    
+
     yaw   -= xoffset;
     pitch -= yoffset;
 /*
@@ -368,9 +366,9 @@ void mouse_event(int x, int y){
     if(pitch < -89.0f)
         pitch = -89.0f;
 
-    direction.x = sin(radians(yaw)) * cos(radians(pitch));
-    direction.y = sin(radians(pitch));
-    direction.z = cos(radians(yaw)) * cos(radians(pitch));
+    direction.x = sin(degree_to_radian(yaw)) * cos(degree_to_radian(pitch));
+    direction.y = sin(degree_to_radian(pitch));
+    direction.z = cos(degree_to_radian(yaw)) * cos(degree_to_radian(pitch));
 
     look_at.x = position.x + direction.x;
     look_at.y = position.y + direction.y;
@@ -439,9 +437,9 @@ ErrorCode start(int argc, char** argv){
             yaw = atan2(dZ, dX);
             pitch = atan2(sqrt(dZ * dZ + dX * dX), dY) + PI;
 
-            direction.x = sin(radians(yaw)) * cos(radians(pitch));
-            direction.y = sin(radians(pitch));
-            direction.z = cos(radians(yaw)) * cos(radians(pitch));
+            direction.x = sin(degree_to_radian(yaw)) * cos(degree_to_radian(pitch));
+            direction.y = sin(degree_to_radian(pitch));
+            direction.z = cos(degree_to_radian(yaw)) * cos(degree_to_radian(pitch));
 
 
             for(auto g { groups_to_draw.begin() }; g != groups_to_draw.end(); ++g){

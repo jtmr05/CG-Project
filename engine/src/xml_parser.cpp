@@ -27,7 +27,7 @@ transform::transform(TransformType type, const CartPoint3d &point){
 
 
 
-group::group(uint nest_level){
+group::group(unsigned int nest_level){
     this->nest_level = nest_level;
     this->models = {};
     this->transforms = {};
@@ -80,7 +80,7 @@ void parse_camera_settings(CameraSettings &c, TiXmlElement* p_world){
 void parse_groups(TiXmlElement* p_world, const string &dir_prefix, vector<Group> &groups){
 
     std::stack<TiXmlElement*> group_rollback {};
-    uint nest_level { 1 };
+    unsigned int nest_level { 1 };
 
     TiXmlElement* p_group { p_world->FirstChildElement("group") };
     while(p_group){

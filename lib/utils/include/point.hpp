@@ -36,6 +36,9 @@ typedef struct polar_point3d {
 
 
 
+angle_t degree_to_radian(angle_t degree);
+angle_t radian_to_degree(angle_t radian);
+
 PolarPoint3d cart_to_polar(CartPoint3d const &p);
 CartPoint3d polar_to_cart(PolarPoint3d const &p);
 

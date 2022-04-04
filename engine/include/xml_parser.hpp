@@ -41,9 +41,9 @@ typedef struct group {
 
     std::vector<Transform> transforms;
     std::vector<std::string> models;
-    uint nest_level;
+    unsigned int nest_level;
 
-    group(uint nest_level);
+    group(unsigned int nest_level);
 
 } Group;
 
