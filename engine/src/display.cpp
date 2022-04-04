@@ -193,33 +193,38 @@ void special_keys_event(int key_code, int x, int y){
 
     if(!first_person){
 
-        float radius = sqrt(position.z * position.z + position.x * position.x);
+        float radius = sqrt(position.z * position.z + position.x * position.x + position.y * position.y);
 
         switch (key_code){
 
         case GLUT_KEY_LEFT:
-            yaw -= 0.1;
+            yaw -= 1.0f;
             break;
         case GLUT_KEY_RIGHT :
-            yaw += 0.1;
+            yaw += 1.0f;
             break;
         case GLUT_KEY_DOWN:
-            pitch -= 0.1;
+            pitch -= 1.0f;
             break;
         case GLUT_KEY_UP:
-            pitch += 0.1;
+            pitch += 1.0f;
             break;
         case GLUT_KEY_PAGE_DOWN:
-            radius -= 0.1;
+            radius -= 1.0f;
             break;
         case GLUT_KEY_PAGE_UP:
-            radius += 0.1;
+            radius += 1.0f;
             break;
         default:
             break;
         }
 
-        position.x = radius * (degree_to_radian(yaw)) * cos(degree_to_radian(pitch));
+        if(pitch > 89.0f)
+            pitch = 89.0f;
+        if(pitch < -89.0f)
+            pitch = -89.0f;
+
+        position.x = radius * sin(degree_to_radian(yaw)) * cos(degree_to_radian(pitch));
         position.y = radius * sin(degree_to_radian(pitch));
         position.z = radius * cos(degree_to_radian(yaw)) * cos(degree_to_radian(pitch));
 
