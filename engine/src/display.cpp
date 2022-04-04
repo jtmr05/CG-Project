@@ -8,7 +8,7 @@ using std::pair;
 static vector<Group> groups_to_draw {};
 static map<string, vector<CartPoint3d>> points_to_draw {};
 static double offset_y {};
-static angle_t zOp {};
+//static angle_t zOp {};
 
 static bool fill { false };
 static bool show_axis { false };
@@ -195,32 +195,39 @@ void special_keys_event(int key_code, int x, int y){
 
     if(!first_person){
 
+        float radius = sqrt(position.z * position.z + position.x * position.x);
+
         switch (key_code){
 
         case GLUT_KEY_LEFT:
-            zOp -= 0.01;
+            yaw -= 0.1;
             break;
         case GLUT_KEY_RIGHT :
-            zOp += 0.01;
+            yaw += 0.1;
             break;
         case GLUT_KEY_DOWN:
-            offset_y -= 0.1;
+            pitch -= 0.1;
             break;
         case GLUT_KEY_UP:
-            offset_y += 0.1;
+            pitch += 0.1;
+            break;
+        case GLUT_KEY_PAGE_DOWN:
+            radius -= 0.1;
+            break;
+        case GLUT_KEY_PAGE_UP:
+            radius += 0.1;
             break;
         default:
             break;
         }
 
-        const double radius { std::sqrt(position.z * position.z + position.x * position.x) };
-
-        position.x = radius * sin(zOp);
-        position.y = position.y + offset_y;
-        position.z = radius * cos(zOp);
+        position.x = radius * (radians(yaw)) * cos(radians(pitch));
+        position.y = radius * sin(radians(pitch));
+        position.z = radius * cos(radians(yaw)) * cos(radians(pitch));
 
     }
     else{
+
         switch (key_code){
 
         case GLUT_KEY_LEFT:
@@ -255,6 +262,7 @@ void special_keys_event(int key_code, int x, int y){
         look_at.y = position.y + direction.y;
         look_at.z = position.z + direction.z;
     }
+
     glutPostRedisplay();
 }
 
@@ -331,7 +339,7 @@ void mouse_event(int x, int y){
     }
   
     float xoffset = x - lastX;
-    float yoffset = lastY - y; 
+    float yoffset = y - lastY; 
     lastX = x;
     lastY = y;
 
@@ -421,11 +429,20 @@ ErrorCode start(int argc, char** argv){
             position = cs.position;
             look_at = cs.look_at;
             up = cs.up;
-            zOp = std::atan2(cs.position.x, cs.position.z);
+            //zOp = std::atan2(cs.position.x, cs.position.z);
 
-            direction.x = 1.0f;
-            direction.y = 0.0f;
-            direction.z = 1.0f;
+
+            float dZ = position.z - look_at.z;
+            float dY = position.y - look_at.y;
+            float dX = position.x - look_at.x;
+
+            yaw = atan2(dZ, dX);
+            pitch = atan2(sqrt(dZ * dZ + dX * dX), dY) + PI;
+
+            direction.x = sin(radians(yaw)) * cos(radians(pitch));
+            direction.y = sin(radians(pitch));
+            direction.z = cos(radians(yaw)) * cos(radians(pitch));
+
 
             for(auto g { groups_to_draw.begin() }; g != groups_to_draw.end(); ++g){
 
