@@ -194,6 +194,7 @@ void special_keys_event(int key_code, int x, int y){
     if(!first_person){
 
         float radius = sqrt(position.z * position.z + position.x * position.x + position.y * position.y);
+        bool nothing = false;
 
         switch (key_code){
 
@@ -211,25 +212,31 @@ void special_keys_event(int key_code, int x, int y){
             break;
         case GLUT_KEY_PAGE_DOWN:
             radius -= 1.0f;
+            nothing = true;
             break;
         case GLUT_KEY_PAGE_UP:
             radius += 1.0f;
+            nothing = true;
             break;
         default:
+            nothing = true;
             break;
         }
+        if(!nothing){
+            if(pitch > 89.0f)
+                pitch = 89.0f;
+            if(pitch < -89.0f)
+                pitch = -89.0f;
 
-        if(pitch > 89.0f)
-            pitch = 89.0f;
-        if(pitch < -89.0f)
-            pitch = -89.0f;
-
-        position.x = radius * sin(degree_to_radian(yaw)) * cos(degree_to_radian(pitch));
-        position.y = radius * sin(degree_to_radian(pitch));
-        position.z = radius * cos(degree_to_radian(yaw)) * cos(degree_to_radian(pitch));
+            position.x = radius * sin(degree_to_radian(yaw)) * cos(degree_to_radian(pitch));
+            position.y = radius * sin(degree_to_radian(pitch));
+            position.z = radius * cos(degree_to_radian(yaw)) * cos(degree_to_radian(pitch));
+        }
 
     }
     else{
+
+        bool nothing = false;
 
         switch (key_code){
 
@@ -258,12 +265,15 @@ void special_keys_event(int key_code, int x, int y){
             break;
 
         default:
+            nothing = true;
             break;
         }
 
-        look_at.x = position.x + direction.x;
-        look_at.y = position.y + direction.y;
-        look_at.z = position.z + direction.z;
+        if(!nothing){
+            look_at.x = position.x + direction.x;
+            look_at.y = position.y + direction.y;
+            look_at.z = position.z + direction.z;
+        }
     }
 
     glutPostRedisplay();
@@ -279,6 +289,17 @@ void keys_event(unsigned char key, int x, int y){
             look_at.x = 0.0f;
             look_at.y = 0.0f;
             look_at.z = 0.0f;
+
+            float dZ = position.z - look_at.z;
+            float dY = position.y - look_at.y;
+            float dX = position.x - look_at.x;
+
+            yaw = atan2(dZ, dX);
+            pitch = atan2(sqrt(dZ * dZ + dX * dX), dY) + PI;
+
+            direction.x = sin(degree_to_radian(yaw)) * cos(degree_to_radian(pitch));
+            direction.y = sin(degree_to_radian(pitch));
+            direction.z = cos(degree_to_radian(yaw)) * cos(degree_to_radian(pitch));
         }
         first_person = !first_person;
         break;
@@ -334,50 +355,55 @@ void keys_event(unsigned char key, int x, int y){
 
 void mouse_event(int x, int y){
 
-    if (firstMouse)
-    {
+    if(first_person)
+    {    
+        if (firstMouse)
+        {
+            lastX = x;
+            lastY = y;
+            firstMouse = false;
+        }
+
+        float xoffset = x - lastX;
+        float yoffset = y - lastY;
         lastX = x;
         lastY = y;
-        firstMouse = false;
+
+        xoffset *= sensitivity;
+        yoffset *= sensitivity;
+
+        yaw   -= xoffset;
+        pitch -= yoffset;
+    /*
+        if(x>50){
+            yaw += 0.00001f;
+        }
+        else if(x<-50){
+            yaw -= 0.00001f;
+        }
+
+        if(y>50){
+            pitch += 0.00001f;
+        }
+        else if(y<-50){
+            pitch -= 0.00001f;
+        }
+    */
+        if(pitch > 89.0f)
+            pitch = 89.0f;
+        if(pitch < -89.0f)
+            pitch = -89.0f;
+
+        printf("%f   %d   %d  \n\n",yaw,x,y);
+
+        direction.x = sin(degree_to_radian(yaw)) * cos(degree_to_radian(pitch));
+        direction.y = sin(degree_to_radian(pitch));
+        direction.z = cos(degree_to_radian(yaw)) * cos(degree_to_radian(pitch));
+
+        look_at.x = position.x + direction.x;
+        look_at.y = position.y + direction.y;
+        look_at.z = position.z + direction.z;
     }
-
-    float xoffset = x - lastX;
-    float yoffset = y - lastY;
-    lastX = x;
-    lastY = y;
-
-    xoffset *= sensitivity;
-    yoffset *= sensitivity;
-
-    yaw   -= xoffset;
-    pitch -= yoffset;
-/*
-    if(x>50){
-        yaw += 0.00001f;
-    }
-    else if(x<-50){
-        yaw -= 0.00001f;
-    }
-
-    if(y>50){
-        pitch += 0.00001f;
-    }
-    else if(y<-50){
-        pitch -= 0.00001f;
-    }
-*/
-    if(pitch > 89.0f)
-        pitch = 89.0f;
-    if(pitch < -89.0f)
-        pitch = -89.0f;
-
-    direction.x = sin(degree_to_radian(yaw)) * cos(degree_to_radian(pitch));
-    direction.y = sin(degree_to_radian(pitch));
-    direction.z = cos(degree_to_radian(yaw)) * cos(degree_to_radian(pitch));
-
-    look_at.x = position.x + direction.x;
-    look_at.y = position.y + direction.y;
-    look_at.z = position.z + direction.z;
 
     glutPostRedisplay();
 }
