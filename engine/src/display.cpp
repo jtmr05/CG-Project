@@ -21,7 +21,22 @@ static double fov {}, near_ {}, far_ {};
 static CartPoint3d position;
 static CartPoint3d look_at;
 static CartPoint3d up;
+static CartPoint3d direction;
+static bool first_person {false};
 
+bool firstMouse = true;
+int lastX;
+int lastY;
+
+float yaw = 0.0f;
+float pitch = 0.0f;
+
+const float sensitivity = 0.5f;
+const float speed = 0.1f;
+
+float radians(float degree){
+    return degree * (PI / 180);
+}
 
 void draw_triangle(const CartPoint3d &p1, const CartPoint3d &p2, const CartPoint3d &p3){
 
@@ -74,11 +89,9 @@ void render_scene(){
     // set the camera
     glLoadIdentity();
 
-    const double radius { std::sqrt(position.z * position.z + position.x * position.x) };
-    gluLookAt(radius * std::sin(zOp), position.y + offset_y, radius * std::cos(zOp),
+    gluLookAt(position.x, position.y, position.z,
               look_at.x, look_at.y, look_at.z,
               up.x, up.y, up.z);
-
 
     // put drawing instructions here
     if(show_axis){
@@ -180,28 +193,68 @@ void render_scene(){
 // function to process special keyboard events
 void special_keys_event(int key_code, int x, int y){
 
-    switch (key_code){
+    if(!first_person){
 
-    case GLUT_KEY_LEFT:
-        zOp -= 0.01;
-        break;
+        switch (key_code){
 
-    case GLUT_KEY_RIGHT :
-        zOp += 0.01;
-        break;
+        case GLUT_KEY_LEFT:
+            zOp -= 0.01;
+            break;
+        case GLUT_KEY_RIGHT :
+            zOp += 0.01;
+            break;
+        case GLUT_KEY_DOWN:
+            offset_y -= 0.1;
+            break;
+        case GLUT_KEY_UP:
+            offset_y += 0.1;
+            break;
+        default:
+            break;
+        }
 
-    case GLUT_KEY_DOWN:
-        offset_y -= 0.1;
-        break;
+        const double radius { std::sqrt(position.z * position.z + position.x * position.x) };
 
-    case GLUT_KEY_UP:
-        offset_y += 0.1;
-        break;
+        position.x = radius * sin(zOp);
+        position.y = position.y + offset_y;
+        position.z = radius * cos(zOp);
 
-    default:
-        break;
     }
+    else{
+        switch (key_code){
 
+        case GLUT_KEY_LEFT:
+            position.x += speed * direction.z;
+            position.y += speed * direction.y;
+            position.z -= speed * direction.x;
+            break;
+
+        case GLUT_KEY_RIGHT :
+            position.x -= speed * direction.z;
+            position.y += speed * direction.y;
+            position.z += speed * direction.x;
+            break;
+
+        case GLUT_KEY_DOWN:
+            position.x -= speed * direction.x;
+            position.y -= speed * direction.y;
+            position.z -= speed * direction.z;
+            break;
+
+        case GLUT_KEY_UP:
+            position.x += speed * direction.x;
+            position.y += speed * direction.y;
+            position.z += speed * direction.z;
+            break;
+
+        default:
+            break;
+        }
+
+        look_at.x = position.x + direction.x;
+        look_at.y = position.y + direction.y;
+        look_at.z = position.z + direction.z;
+    }
     glutPostRedisplay();
 }
 
@@ -209,6 +262,15 @@ void special_keys_event(int key_code, int x, int y){
 void keys_event(unsigned char key, int x, int y){
 
     switch(key){
+
+    case 'p':
+        if(first_person) {
+            look_at.x = 0.0f;
+            look_at.y = 0.0f;
+            look_at.z = 0.0f;
+        }
+        first_person = !first_person;
+        break;
 
     case 'f':
         fill = !fill;
@@ -255,20 +317,10 @@ void keys_event(unsigned char key, int x, int y){
     glutPostRedisplay();
 }
 
-bool firstMouse = true;
-int lastX;
-int lastY;
 
-float yaw = 0.0f;
-float pitch = 0.0f;
-
-const float sensitivity = 0.1f;
-
-float radians(float degree){
-    return degree * (PI / 180);
-}
 
 // function to process mouse events
+
 void mouse_event(int x, int y){
 
     if (firstMouse)
@@ -283,24 +335,42 @@ void mouse_event(int x, int y){
     lastX = x;
     lastY = y;
 
-    float sensitivity = 0.1f;
     xoffset *= sensitivity;
     yoffset *= sensitivity;
+    
+    yaw   -= xoffset;
+    pitch -= yoffset;
+/*
+    if(x>50){
+        yaw += 0.00001f;
+    }
+    else if(x<-50){
+        yaw -= 0.00001f;
+    }
 
-    yaw   += xoffset;
-    pitch += yoffset;
-
+    if(y>50){
+        pitch += 0.00001f;
+    }
+    else if(y<-50){
+        pitch -= 0.00001f;
+    }
+*/
     if(pitch > 89.0f)
         pitch = 89.0f;
     if(pitch < -89.0f)
         pitch = -89.0f;
 
-    look_at.x = cos(radians(yaw)) * cos(radians(pitch));
-    look_at.y = sin(radians(pitch));
-    look_at.z = sin(radians(yaw)) * cos(radians(pitch));
+    direction.x = sin(radians(yaw)) * cos(radians(pitch));
+    direction.y = sin(radians(pitch));
+    direction.z = cos(radians(yaw)) * cos(radians(pitch));
+
+    look_at.x = position.x + direction.x;
+    look_at.y = position.y + direction.y;
+    look_at.z = position.z + direction.z;
 
     glutPostRedisplay();
 }
+
 
 void glut_start(int argc, char** argv){
 
@@ -309,14 +379,14 @@ void glut_start(int argc, char** argv){
     glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
     glutInitWindowPosition(100, 100);
     glutInitWindowSize(800, 800);
-    glutCreateWindow("CG Phase 1");
+    glutCreateWindow("CG Phase 2");
 
 
     // Required callback registry
     glutDisplayFunc(render_scene);
     glutReshapeFunc(change_size);
 
-    // put here the registration of the keyboard callbacks
+    // put here the registration of the keyboard and mouse callbacks
     glutKeyboardFunc(keys_event);
     glutSpecialFunc(special_keys_event);
     glutPassiveMotionFunc(mouse_event);
@@ -352,6 +422,10 @@ ErrorCode start(int argc, char** argv){
             look_at = cs.look_at;
             up = cs.up;
             zOp = std::atan2(cs.position.x, cs.position.z);
+
+            direction.x = 1.0f;
+            direction.y = 0.0f;
+            direction.z = 1.0f;
 
             for(auto g { groups_to_draw.begin() }; g != groups_to_draw.end(); ++g){
 
