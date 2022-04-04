@@ -7,8 +7,6 @@ using std::pair;
 
 static vector<Group> groups_to_draw {};
 static map<string, vector<CartPoint3d>> points_to_draw {};
-static double offset_y {};
-//static angle_t zOp {};
 
 static bool fill { false };
 static bool show_axis { false };
@@ -374,27 +372,11 @@ void mouse_event(int x, int y){
 
         yaw   -= xoffset;
         pitch -= yoffset;
-    /*
-        if(x>50){
-            yaw += 0.00001f;
-        }
-        else if(x<-50){
-            yaw -= 0.00001f;
-        }
 
-        if(y>50){
-            pitch += 0.00001f;
-        }
-        else if(y<-50){
-            pitch -= 0.00001f;
-        }
-    */
         if(pitch > 89.0f)
             pitch = 89.0f;
         if(pitch < -89.0f)
             pitch = -89.0f;
-
-        printf("%f   %d   %d  \n\n",yaw,x,y);
 
         direction.x = sin(degree_to_radian(yaw)) * cos(degree_to_radian(pitch));
         direction.y = sin(degree_to_radian(pitch));
@@ -458,7 +440,6 @@ ErrorCode start(int argc, char** argv){
             position = cs.position;
             look_at = cs.look_at;
             up = cs.up;
-            //zOp = std::atan2(cs.position.x, cs.position.z);
 
 
             float dZ = position.z - look_at.z;
