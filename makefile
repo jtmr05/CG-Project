@@ -19,9 +19,10 @@ LIB_DIR 		:= $(PWD)/lib
 UTILS_DIR		:= $(LIB_DIR)/utils
 FREEGLUT_DIR 	:= $(LIB_DIR)/freeglut
 TINY_XML_DIR 	:= $(LIB_DIR)/tinyxml
+GLEW_DIR		:= $(LIB_DIR)/glew
 
 
-export UTILS_DIR FREEGLUT_DIR TINY_XML_DIR
+export UTILS_DIR FREEGLUT_DIR TINY_XML_DIR GLEW_DIR
 
 
 #Windows
@@ -33,7 +34,7 @@ endif
 FLAGS 			:= -Wall -Wextra -Wsign-conversion -Iinclude -std=c++17
 
 
-export CXX FLAGS BIN_DIR
+export CXX FLAGS BIN_DIR IS_WIN
 
 
 

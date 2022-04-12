@@ -2,7 +2,7 @@
 
 
 //arbitrary number of decimal places output to a file when using << operator
-const int PRECISION { 30 };
+static const int PRECISION { 30 };
 
 
 angle_t degree_to_radian(angle_t degree){

@@ -1,6 +1,6 @@
 #include "error_handler.hpp"
 
-void usage(){
+static void usage(){
     std::cerr << "Usage: \n" <<
         "\t generator plane <length> <divisions> <output_file>\n" <<
         "\t generator box <units> <grid_size> <output_file>\n" <<
@@ -11,6 +11,8 @@ void usage(){
 
 void handle_error(const ErrorCode e){
 
+    std::cerr << "generator: ";
+
     switch(e){
 
     case ErrorCode::invalid_argument:
@@ -19,12 +21,16 @@ void handle_error(const ErrorCode e){
         break;
 
     case ErrorCode::io_error:
-        std::cerr << "I/O error. Perhaps path doesn't exist?\n";
+        std::cerr << "I/O error. Perhaps the specified path is incorrect?\n";
         break;
 
     case ErrorCode::not_enough_args:
         std::cerr << "Missing arguments.\n";
         usage();
+        break;
+
+    case ErrorCode::invalid_file_extension:
+        std::cerr << "Invalid file extension.\n";
         break;
 
     default:

@@ -1,11 +1,13 @@
 #include "error_handler.hpp"
 
-void usage(){
+static void usage(){
     std::cerr << "Usage: \n" <<
         "\t engine <xml_file>\n";
 }
 
 void handle_error(const ErrorCode e){
+
+    std::cerr << "engine: ";
 
     switch(e){
 
@@ -15,7 +17,7 @@ void handle_error(const ErrorCode e){
         break;
 
     case ErrorCode::io_error:
-        std::cerr << "I/O error. Perhaps path doesn't exist?\n";
+        std::cerr << "I/O error. Perhaps the specified path is incorrect?\n";
         break;
 
     case ErrorCode::not_enough_args:
@@ -25,6 +27,10 @@ void handle_error(const ErrorCode e){
 
     case ErrorCode::invalid_xml_formatting:
         std::cerr << "Invalid xml formatting.\n";
+        break;
+
+    case ErrorCode::invalid_file_extension:
+        std::cerr << "Invalid file extension.\n";
         break;
 
     default:

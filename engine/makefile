@@ -18,13 +18,11 @@ BIN 			:= $(BIN_DIR)/engine
 FLAGS			+= -I$(UTILS_DIR)/include -I$(TINY_XML_DIR)/include
 LINK_FLAGS 		:= -L$(UTILS_DIR)/lib -lutils -L$(TINY_XML_DIR)/lib -ltinyxml
 
-ifeq (Windows_NT, $(OS))
-	IS_WIN = yes
-endif
 
 ifdef IS_WIN
-	FLAGS 		+= -I$(FREEGLUT_DIR)/include
-	LINK_FLAGS 	+= -L$(FREEGLUT_DIR)/lib/x64 -lopengl32 -lfreeglut -lglu32
+	FLAGS 		+= -I$(FREEGLUT_DIR)/include -I$(GLEW_DIR)/include
+	LINK_FLAGS 	+= -L$(FREEGLUT_DIR)/lib/x64 -L$(GLEW_DIR)/lib/x64
+	LINK_FLAGS  += -lopengl32 -lfreeglut -lglu32 -lglew32
 else
 	LINK_FLAGS 	+= -lGLU -lglut -lGL
 endif

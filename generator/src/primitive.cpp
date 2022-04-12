@@ -17,7 +17,7 @@ static const int CONE_ARGS {7};
 static const int SPHERE_ARGS {6};
 static const int TORUS_ARGS {7};
 
-Primitive from_string(const string &str){
+static Primitive from_string(const string &str){
 
     Primitive s { Primitive::__invalid };
 
@@ -35,7 +35,8 @@ Primitive from_string(const string &str){
     return s;
 }
 
-ErrorCode torus_writer(const string &filename, int out_radius, int in_radius, int slices, int stacks){
+static ErrorCode torus_writer(const string &filename, int out_radius,
+                              int in_radius, int slices, int stacks){
 
     ErrorCode exit_code { ErrorCode::success };
 
@@ -127,7 +128,7 @@ ErrorCode torus_writer(const string &filename, int out_radius, int in_radius, in
     return exit_code;
 }
 
-ErrorCode sphere_writer(const string &filename, int radius, int slices, int stacks){
+static ErrorCode sphere_writer(const string &filename, int radius, int slices, int stacks){
 
     ErrorCode exit_code { ErrorCode::success };
 
@@ -200,7 +201,7 @@ ErrorCode sphere_writer(const string &filename, int radius, int slices, int stac
     return exit_code;
 }
 
-ErrorCode cone_writer(const string &filename, int radius, int height, int slices, int stacks){
+static ErrorCode cone_writer(const string &filename, int radius, int height, int slices, int stacks){
 
     ErrorCode exit_code { ErrorCode::success };
 
@@ -281,7 +282,7 @@ ErrorCode cone_writer(const string &filename, int radius, int height, int slices
     return exit_code;
 }
 
-ErrorCode box_writer(const string &filename, int units, int grid_size){
+static ErrorCode box_writer(const string &filename, int units, int grid_size){
 
     ErrorCode exit_code { ErrorCode::success };
 
@@ -381,7 +382,7 @@ ErrorCode box_writer(const string &filename, int units, int grid_size){
     return exit_code;
 }
 
-ErrorCode plane_writer(const string &filename, int length, int divs){
+static ErrorCode plane_writer(const string &filename, int length, int divs){
 
     ErrorCode exit_code { ErrorCode::success };
 
@@ -445,7 +446,10 @@ ErrorCode primitive_writer(const string args[], const int size){
                 const int divs { string_to_uint(args[ind++]) };
                 const string filename { args[ind] };
 
-                if(length < 1 || divs < 1 || !has_3d_ext(filename))
+
+                if(!has_3d_ext(filename))
+                    exit_code = ErrorCode::invalid_file_extension;
+                else if(length < 1 || divs < 1)
                     exit_code = ErrorCode::invalid_argument;
                 else
                     exit_code = plane_writer(filename, length, divs);
@@ -462,7 +466,9 @@ ErrorCode primitive_writer(const string args[], const int size){
                 const int grid_size { string_to_uint(args[ind++]) };
                 const string filename { args[ind] };
 
-                if(units < 1 || grid_size < 1 || !has_3d_ext(filename))
+                if(!has_3d_ext(filename))
+                    exit_code = ErrorCode::invalid_file_extension;
+                else if(units < 1 || grid_size < 1)
                     exit_code = ErrorCode::invalid_argument;
                 else
                     exit_code = box_writer(filename, units, grid_size);
@@ -481,7 +487,9 @@ ErrorCode primitive_writer(const string args[], const int size){
                 const int stacks { string_to_uint(args[ind++]) };
                 const string filename { args[ind] };
 
-                if(radius < 1 || height < 1 || slices < 3 || stacks < 1 || !has_3d_ext(filename))
+                if(!has_3d_ext(filename))
+                    exit_code = ErrorCode::invalid_file_extension;
+                else if(radius < 1 || height < 1 || slices < 3 || stacks < 1)
                     exit_code = ErrorCode::invalid_argument;
                 else
                     exit_code = cone_writer(filename, radius, height, slices, stacks);
@@ -499,8 +507,10 @@ ErrorCode primitive_writer(const string args[], const int size){
                 const int stacks { string_to_uint(args[ind++]) };
                 const string filename { args[ind] };
 
-                //can stacks be less than 1 for sphere
-                if(radius < 1 || slices < 3 || stacks < 2 || stacks % 2 != 0 || !has_3d_ext(filename))
+                //can stacks be less than 1 for sphere?
+                if(!has_3d_ext(filename))
+                    exit_code = ErrorCode::invalid_file_extension;
+                else if(radius < 1 || slices < 3 || stacks < 2 || stacks % 2 != 0)
                     exit_code = ErrorCode::invalid_argument;
                 else
                     exit_code = sphere_writer(filename, radius, slices, stacks);
@@ -519,8 +529,10 @@ ErrorCode primitive_writer(const string args[], const int size){
                 const int stacks { string_to_uint(args[ind++]) };
                 const string filename { args[ind] };
 
-                if(out_radius < 1 || in_radius < 0 || out_radius < in_radius ||
-                    slices < 3 || stacks < 2 || stacks % 2 != 0 || !has_3d_ext(filename))
+                if(!has_3d_ext(filename))
+                    exit_code = ErrorCode::invalid_file_extension;
+                else if(out_radius < 1 || in_radius < 0 || out_radius < in_radius ||
+                        slices < 3 || stacks < 2 || stacks % 2 != 0)
                     exit_code = ErrorCode::invalid_argument;
                 else
                     exit_code = torus_writer(filename, out_radius, in_radius, slices, stacks);
