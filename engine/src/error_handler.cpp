@@ -7,7 +7,8 @@ static void usage(){
 
 void handle_error(const ErrorCode e){
 
-    std::cerr << "engine: ";
+    if(e != ErrorCode::success)
+        std::cerr << "generator: ";
 
     switch(e){
 

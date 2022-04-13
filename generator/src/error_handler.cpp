@@ -11,7 +11,8 @@ static void usage(){
 
 void handle_error(const ErrorCode e){
 
-    std::cerr << "generator: ";
+    if(e != ErrorCode::success)
+        std::cerr << "generator: ";
 
     switch(e){
 

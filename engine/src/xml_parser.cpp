@@ -35,7 +35,9 @@ group::group(unsigned int nest_level){
 
 
 
-void parse_camera_settings(CameraSettings &c, TiXmlElement* p_world){
+static CameraSettings parse_camera_settings(TiXmlElement* p_world){
+
+    CameraSettings c;
 
     TiXmlElement* p_camera { p_world->FirstChildElement("camera") };
     if (p_camera){
@@ -74,10 +76,12 @@ void parse_camera_settings(CameraSettings &c, TiXmlElement* p_world){
             c.far_ = far_;
         }
     }
+
+    return c;
 }
 
 
-void parse_groups(TiXmlElement* p_world, const string &dir_prefix, vector<Group> &groups){
+static void parse_groups(TiXmlElement* p_world, const string &dir_prefix, vector<Group> &groups){
 
     std::stack<TiXmlElement*> group_rollback {};
     unsigned int nest_level { 1 };
@@ -145,7 +149,7 @@ void parse_groups(TiXmlElement* p_world, const string &dir_prefix, vector<Group>
 
         if(p_group){
             group_rollback.push(parent);
-            nest_level++;
+            ++nest_level;
         }
         else{
             p_group = parent->NextSiblingElement("group");
@@ -153,7 +157,7 @@ void parse_groups(TiXmlElement* p_world, const string &dir_prefix, vector<Group>
             if(!p_group && !group_rollback.empty()){
                 p_group = group_rollback.top();
                 group_rollback.pop();
-                nest_level--;
+                --nest_level;
                 p_group = p_group->NextSiblingElement("group");
             }
         }
@@ -166,7 +170,10 @@ ErrorCode xml_parser(const string &path, CameraSettings &c, vector<Group> &group
     TiXmlDocument doc {};
 
     // Load the XML file into the Doc instance
-    if(has_xml_ext(path) && doc.LoadFile(path.c_str())){
+    if(!has_xml_ext(path))
+        exit_code = ErrorCode::invalid_file_extension;
+
+    else if(doc.LoadFile(path.c_str())){
 
         const std::size_t last_slash_pos { path.find_last_of("/") };
         string directory_path { "" };
@@ -181,7 +188,7 @@ ErrorCode xml_parser(const string &path, CameraSettings &c, vector<Group> &group
         // Get root Element
         TiXmlElement* p_world { doc.RootElement() };
         if(p_world){
-            parse_camera_settings(c, p_world);
+            c = parse_camera_settings(p_world);
             parse_groups(p_world, directory_path, groups);
         }
         else

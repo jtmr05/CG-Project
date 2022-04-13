@@ -2,55 +2,38 @@
 
 using std::vector;
 using std::string;
-using std::map;
-using std::pair;
+using std::set;
 
 static vector<Group> groups_to_draw {};
-static map<string, vector<CartPoint3d>> points_to_draw {};
+static VBO* vbo_wrapper { NULL };
 
 static bool fill { false };
 static bool show_axis { false };
-
-
 static GLubyte rgb[3] { 0, 255, 255};
 static GLubyte color_delta { 3 };
+
+
 
 static double fov {}, near_ {}, far_ {};
 static CartPoint3d position;
 static CartPoint3d look_at;
 static CartPoint3d up;
+
 static CartPoint3d direction;
-static bool first_person {false};
+static bool first_person { false };
+static bool first_mouse { true };
+static int last_x;
+static int last_y;
 
-bool firstMouse = true;
-int lastX;
-int lastY;
+static float yaw { 0.f };
+static float pitch { 0.f };
 
-float yaw = 0.0f;
-float pitch = 0.0f;
-
-const float sensitivity = 0.5f;
-const float speed = 0.1f;
-
+static const float sensitivity { 0.5f };
+static const float speed { 0.1f };
 
 
-void draw_triangle(const CartPoint3d &p1, const CartPoint3d &p2, const CartPoint3d &p3){
 
-    if(fill)
-        glPolygonMode(GL_FRONT, GL_FILL);
-    else
-        glPolygonMode(GL_FRONT, GL_LINE);
-
-    glBegin(GL_TRIANGLES);
-
-        glVertex3d(p1.x, p1.y, p1.z);
-        glVertex3d(p2.x, p2.y, p2.z);
-        glVertex3d(p3.x, p3.y, p3.z);
-
-    glEnd();
-}
-
-void change_size(int w, int h){
+static void change_size(int w, int h){
 
     // Prevent a divide by zero, when window is too short
     // (you cant make a window with zero width).
@@ -58,7 +41,7 @@ void change_size(int w, int h){
         h = 1;
 
     // compute window's aspect ratio
-    float ratio = static_cast<float>(w) / static_cast<float>(h);
+    const float ratio { static_cast<float>(w) / static_cast<float>(h) };
 
     // Set the projection matrix as current
     glMatrixMode(GL_PROJECTION);
@@ -77,7 +60,7 @@ void change_size(int w, int h){
 }
 
 
-void render_scene(){
+static void render_scene(){
 
     // clear buffers
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -114,9 +97,14 @@ void render_scene(){
 
     glColor3ub(rgb[0], rgb[1], rgb[2]);
 
+    if(fill)
+        glPolygonMode(GL_FRONT, GL_FILL);
+    else
+        glPolygonMode(GL_FRONT, GL_LINE);
+
     unsigned int curr_nest_level { 0 };
 
-    for(auto g { groups_to_draw.begin() }; g != groups_to_draw.end(); ++g){
+    for(auto const& [transforms, models, nest_level] : groups_to_draw){
 
         /**
          * After popping something, curr_nest_level < g->nest_level (second nested loop condition).
@@ -124,41 +112,39 @@ void render_scene(){
          * and increment curr_nest_level so that it actually has the correct value.
          */
 
-        bool popped { false };
+        bool has_popped {};
 
         do{
-            popped = false;
-            if(curr_nest_level < g->nest_level)
-                while(curr_nest_level < g->nest_level){
+            has_popped = false;
+            if(curr_nest_level < nest_level)
+                while(curr_nest_level < nest_level){
                     glPushMatrix();
-                    curr_nest_level++;
+                    ++curr_nest_level;
                 }
             else
-                while(curr_nest_level >= g->nest_level){
-                    popped = true;
+                while(curr_nest_level >= nest_level){
+                    has_popped = true;
                     glPopMatrix();
-                    curr_nest_level--;
+                    --curr_nest_level;
                 }
         }
-        while(popped);
+        while(has_popped);
 
 
+        for(auto const& [point, angle, type] : transforms){
 
-        const vector<Transform> transforms { g->transforms };
-        for(auto t { transforms.begin() }; t != transforms.end(); ++t){
-
-            switch(t->type){
+            switch(type){
 
             case TransformType::rotate:
-                glRotated(t->angle.value(), t->point.x, t->point.y, t->point.z);
+                glRotated(angle.value(), point.x, point.y, point.z);
                 break;
 
             case TransformType::scale:
-                glScaled(t->point.x, t->point.y, t->point.z);
+                glScaled(point.x, point.y, point.z);
                 break;
 
             case TransformType::translate:
-                glTranslated(t->point.x, t->point.y, t->point.z);
+                glTranslated(point.x, point.y, point.z);
                 break;
 
             default:
@@ -166,20 +152,14 @@ void render_scene(){
             }
         }
 
-        const vector<string> models { g->models };
-        for(auto m { models.begin() }; m != models.end(); ++m){
 
-            if(points_to_draw.count(*m) > 0){
-                const vector<CartPoint3d> points { points_to_draw.at(*m) };
-                for(auto p { points.begin() }; p != points.end(); p += 3)
-                    draw_triangle(p[0], p[1], p[2]);
-            }
-        }
+        for(auto const& m : models)
+            vbo_wrapper->render(m);
     }
 
     while(curr_nest_level > 0){
         glPopMatrix();
-        curr_nest_level--;
+        --curr_nest_level;
     }
 
     // End of frame
@@ -187,54 +167,62 @@ void render_scene(){
 }
 
 // function to process special keyboard events
-void special_keys_event(int key_code, int x, int y){
+static void special_keys_event(int key_code, int, int){
 
     if(!first_person){
 
-        float radius = sqrt(position.z * position.z + position.x * position.x + position.y * position.y);
-        bool nothing = false;
+        auto&& [px, py, pz] = position;
+        double radius { std::sqrt(pz * pz + px * px + py * py) };
+        bool nothing { false };
 
         switch (key_code){
 
         case GLUT_KEY_LEFT:
             yaw -= 1.0f;
             break;
-        case GLUT_KEY_RIGHT :
+
+        case GLUT_KEY_RIGHT:
             yaw += 1.0f;
             break;
+
         case GLUT_KEY_DOWN:
             pitch -= 1.0f;
             break;
+
         case GLUT_KEY_UP:
             pitch += 1.0f;
             break;
+
         case GLUT_KEY_PAGE_DOWN:
             radius -= 1.0f;
             nothing = true;
             break;
+
         case GLUT_KEY_PAGE_UP:
             radius += 1.0f;
             nothing = true;
             break;
+
         default:
             nothing = true;
             break;
         }
+
         if(!nothing){
             if(pitch > 89.0f)
                 pitch = 89.0f;
             if(pitch < -89.0f)
                 pitch = -89.0f;
 
-            position.x = radius * sin(degree_to_radian(yaw)) * cos(degree_to_radian(pitch));
-            position.y = radius * sin(degree_to_radian(pitch));
-            position.z = radius * cos(degree_to_radian(yaw)) * cos(degree_to_radian(pitch));
+            position.x = radius * std::sin(degree_to_radian(yaw)) * std::cos(degree_to_radian(pitch));
+            position.y = radius * std::sin(degree_to_radian(pitch));
+            position.z = radius * std::cos(degree_to_radian(yaw)) * std::cos(degree_to_radian(pitch));
         }
 
     }
     else{
 
-        bool nothing = false;
+        bool nothing { false };
 
         switch (key_code){
 
@@ -278,7 +266,7 @@ void special_keys_event(int key_code, int x, int y){
 }
 
 // function to process normal keyboard events
-void keys_event(unsigned char key, int x, int y){
+static void keys_event(unsigned char key, int, int){
 
     switch(key){
 
@@ -288,16 +276,16 @@ void keys_event(unsigned char key, int x, int y){
             look_at.y = 0.0f;
             look_at.z = 0.0f;
 
-            float dZ = position.z - look_at.z;
-            float dY = position.y - look_at.y;
-            float dX = position.x - look_at.x;
+            const double dz { position.z - look_at.z };
+            const double dy { position.y - look_at.y };
+            const double dx { position.x - look_at.x };
 
-            yaw = atan2(dZ, dX);
-            pitch = atan2(sqrt(dZ * dZ + dX * dX), dY) + PI;
+            yaw = std::atan2(dz, dx);
+            pitch = std::atan2(std::sqrt(dz * dz + dx * dx), dy) + PI;
 
-            direction.x = sin(degree_to_radian(yaw)) * cos(degree_to_radian(pitch));
-            direction.y = sin(degree_to_radian(pitch));
-            direction.z = cos(degree_to_radian(yaw)) * cos(degree_to_radian(pitch));
+            direction.x = std::sin(degree_to_radian(yaw)) * std::cos(degree_to_radian(pitch));
+            direction.y = std::sin(degree_to_radian(pitch));
+            direction.z = std::cos(degree_to_radian(yaw)) * std::cos(degree_to_radian(pitch));
         }
         first_person = !first_person;
         break;
@@ -340,6 +328,10 @@ void keys_event(unsigned char key, int x, int y){
         show_axis = !show_axis;
         break;
 
+    case 'e':
+        std::exit(0);
+        break;
+
     default:
         break;
     }
@@ -350,22 +342,21 @@ void keys_event(unsigned char key, int x, int y){
 
 
 // function to process mouse events
+static void mouse_event(int x, int y){
 
-void mouse_event(int x, int y){
+    if(first_person){
 
-    if(first_person)
-    {    
-        if (firstMouse)
-        {
-            lastX = x;
-            lastY = y;
-            firstMouse = false;
+        if (first_mouse){
+
+            last_x = x;
+            last_y = y;
+            first_mouse = false;
         }
 
-        float xoffset = x - lastX;
-        float yoffset = y - lastY;
-        lastX = x;
-        lastY = y;
+        float xoffset { static_cast<float>(x - last_x) };
+        float yoffset { static_cast<float>(y - last_y) };
+        last_x = x;
+        last_y = y;
 
         xoffset *= sensitivity;
         yoffset *= sensitivity;
@@ -378,9 +369,9 @@ void mouse_event(int x, int y){
         if(pitch < -89.0f)
             pitch = -89.0f;
 
-        direction.x = sin(degree_to_radian(yaw)) * cos(degree_to_radian(pitch));
-        direction.y = sin(degree_to_radian(pitch));
-        direction.z = cos(degree_to_radian(yaw)) * cos(degree_to_radian(pitch));
+        direction.x = std::sin(degree_to_radian(yaw)) * std::cos(degree_to_radian(pitch));
+        direction.y = std::sin(degree_to_radian(pitch));
+        direction.z = std::cos(degree_to_radian(yaw)) * std::cos(degree_to_radian(pitch));
 
         look_at.x = position.x + direction.x;
         look_at.y = position.y + direction.y;
@@ -391,15 +382,14 @@ void mouse_event(int x, int y){
 }
 
 
-void glut_start(int argc, char** argv){
+static void glut_start(int argc, char** argv){
 
     // init GLUT and the window
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
-    glutInitWindowPosition(100, 100);
-    glutInitWindowSize(800, 800);
-    glutCreateWindow("CG Phase 2");
-
+    glutInitWindowPosition(0, 0);
+    glutInitWindowSize(glutGet(GLUT_SCREEN_WIDTH), glutGet(GLUT_SCREEN_HEIGHT));
+    glutCreateWindow("CG Phase 3");
 
     // Required callback registry
     glutDisplayFunc(render_scene);
@@ -410,6 +400,18 @@ void glut_start(int argc, char** argv){
     glutSpecialFunc(special_keys_event);
     glutPassiveMotionFunc(mouse_event);
 
+    /**
+     * Avoid repeated elements i.e. multiples references
+     * to the same .3d file
+     */
+    set<string> models_set {};
+
+    for(auto const& [_, models_vector, __] : groups_to_draw)
+        for(auto const& elem : models_vector)
+            if(has_3d_ext(elem))
+                models_set.insert(elem);
+
+    vbo_wrapper = VBO::get_instance(models_set);
 
     // OpenGL settings
     glEnable(GL_DEPTH_TEST);
@@ -442,45 +444,17 @@ ErrorCode start(int argc, char** argv){
             up = cs.up;
 
 
-            float dZ = position.z - look_at.z;
-            float dY = position.y - look_at.y;
-            float dX = position.x - look_at.x;
 
-            yaw = atan2(dZ, dX);
-            pitch = atan2(sqrt(dZ * dZ + dX * dX), dY) + PI;
+            const double dx { position.x - look_at.x };
+            const double dy { position.y - look_at.y };
+            const double dz { position.z - look_at.z };
 
-            direction.x = sin(degree_to_radian(yaw)) * cos(degree_to_radian(pitch));
-            direction.y = sin(degree_to_radian(pitch));
-            direction.z = cos(degree_to_radian(yaw)) * cos(degree_to_radian(pitch));
+            yaw = std::atan2(dz, dx);
+            pitch = std::atan2(std::sqrt(dz * dz + dx * dx), dy) + PI;
 
-
-            for(auto g { groups_to_draw.begin() }; g != groups_to_draw.end(); ++g){
-
-                const vector<string> models { g->models };
-                for(auto m { models.begin() }; m != models.end(); ++m){
-
-                    if(points_to_draw.count(*m) == 0){    //returns number of mappings for this key
-
-                        std::ifstream file{};
-                        file.open(*m, std::ios::in);
-
-                        if(file.is_open()){
-
-                            vector<CartPoint3d> value {};
-                            CartPoint3d p1{}, p2{}, p3{};
-
-                            while(file >> p1 >> p2 >> p3){
-                                value.push_back(p1);
-                                value.push_back(p2);
-                                value.push_back(p3);
-                            }
-
-                            points_to_draw.insert(pair<string, vector<CartPoint3d>>(*m, value));
-                            file.close();
-                        }
-                    }
-                }
-            }
+            direction.x = std::sin(degree_to_radian(yaw)) * std::cos(degree_to_radian(pitch));
+            direction.y = std::sin(degree_to_radian(pitch));
+            direction.z = std::cos(degree_to_radian(yaw)) * std::cos(degree_to_radian(pitch));
 
             glut_start(argc, argv);
         }

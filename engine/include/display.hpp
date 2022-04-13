@@ -3,16 +3,16 @@
 
 #include <string>
 #include <fstream>
-#include <GL/glut.h>
 #include <cmath>
 #include <vector>
-#include <map>
-
+#include <set>
 
 #include "point.hpp"
 #include "error_handler.hpp"
 #include "xml_parser.hpp"
+#include "vbo.hpp"
 
+#include <GL/glut.h>
 
 
 ErrorCode start(int argc, char** argv);
