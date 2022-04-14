@@ -24,7 +24,7 @@ ifdef IS_WIN
 	LINK_FLAGS 	+= -L$(FREEGLUT_DIR)/lib/x64 -L$(GLEW_DIR)/lib/x64
 	LINK_FLAGS  += -lopengl32 -lfreeglut -lglu32 -lglew32
 else
-	LINK_FLAGS 	+= -lGLU -lglut -lGL
+	LINK_FLAGS 	+= -lGLU -lglut -lGL -lGLEW
 endif
 
 

@@ -7,8 +7,6 @@ using std::pair;
 
 VBO* VBO::singleton { NULL };
 
-#include <iostream>
-
 VBO::VBO(const set<string> &models) : buffers{} {
 
     glewInit();
