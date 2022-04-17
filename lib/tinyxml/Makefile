@@ -1,126 +1,50 @@
-#****************************************************************************
-#
-# Makefile for TinyXml test.
-# Lee Thomason
-# www.grinninglizard.com
-#
-# This is a GNU make (gmake) makefile
-#****************************************************************************
+# -----------//-----------
+# This is a C++ makefile.|
+# -----------//-----------
 
-# DEBUG can be set to YES to include debugging info, or NO otherwise
-DEBUG          := NO
 
-# PROFILE can be set to YES to include profiling info, or NO otherwise
-PROFILE        := NO
 
-# TINYXML_USE_STL can be used to turn on STL support. NO, then STL
-# will not be used. YES will include the STL files.
-TINYXML_USE_STL := NO
+#directories
+SRC_DIR 		:= src
+INC_DIR 		:= include
+OBJ_DIR 		:= obj
+LIB_DIR 		:= lib
 
-#****************************************************************************
 
-CC     := gcc
-CXX    := g++
-LD     := g++
-AR     := ar rc
-RANLIB := ranlib
 
-DEBUG_CFLAGS     := -Wall -Wno-format -g -DDEBUG -std=c++17
-RELEASE_CFLAGS   := -Wall -Wno-unknown-pragmas -Wno-format -O3 -std=c++17
+#files
+SRC_FILES 		:= $(shell find $(SRC_DIR) -name *.cpp -o -name *.cxx -o -name *.c++ -o -name *.cc)
+OBJ_FILES 		:= $(patsubst $(SRC_DIR)/%,$(OBJ_DIR)/%.o,$(SRC_FILES))
+LIB_FILE 		:= $(LIB_DIR)/libtinyxml.a
 
-LIBS		 :=
 
-DEBUG_CXXFLAGS   := ${DEBUG_CFLAGS}
-RELEASE_CXXFLAGS := ${RELEASE_CFLAGS}
 
-DEBUG_LDFLAGS    := -g
-RELEASE_LDFLAGS  :=
+#compiler flags
+CXXFLAGS		   := -Wall -I$(INC_DIR) -O3 -Wno-unknown-pragmas -Wno-format -std=c++17
 
-ifeq (YES, ${DEBUG})
-   CFLAGS       := ${DEBUG_CFLAGS}
-   CXXFLAGS     := ${DEBUG_CXXFLAGS}
-   LDFLAGS      := ${DEBUG_LDFLAGS}
-else
-   CFLAGS       := ${RELEASE_CFLAGS}
-   CXXFLAGS     := ${RELEASE_CXXFLAGS}
-   LDFLAGS      := ${RELEASE_LDFLAGS}
-endif
 
-ifeq (YES, ${PROFILE})
-   CFLAGS   := ${CFLAGS} -pg -O3
-   CXXFLAGS := ${CXXFLAGS} -pg -O3
-   LDFLAGS  := ${LDFLAGS} -pg
-endif
 
+#make default goal (using make with no specified recipe)
 .DEFAULT_GOAL := all
 
-#****************************************************************************
-# Preprocessor directives
-#****************************************************************************
+all: $(LIB_FILE)
 
-ifeq (YES, ${TINYXML_USE_STL})
-  DEFS := -DTIXML_USE_STL
-else
-  DEFS :=
-endif
+build: clean all
 
-#****************************************************************************
-# Include paths
-#****************************************************************************
+#generate each object file according to the corresponding source file
+#create directories as needed
+$(OBJ_FILES): $(OBJ_DIR)/%.o : $(SRC_DIR)/%
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-#INCS := -I/usr/include/g++-2 -I/usr/local/include
-INCS := -Iinclude
+$(LIB_FILE): $(OBJ_FILES)
+	@mkdir -p $(@D)
+	$(AR) $@ $^
 
 
-#****************************************************************************
-# Makefile code common to all platforms
-#****************************************************************************
-
-CFLAGS   := ${CFLAGS}   ${DEFS}
-CXXFLAGS := ${CXXFLAGS} ${DEFS}
-
-#****************************************************************************
-# Targets of the build
-#****************************************************************************
-
-
-
-#****************************************************************************
-# Source files
-#****************************************************************************
-
-SRCS := $(shell find src/*.cpp)
-
-# Add on the sources for libraries
-SRCS := ${SRCS}
-
-OBJS := $(patsubst src/%,%.o,${SRCS})
-
-debug:
-	@echo $(OBJS)
-
-
-all: ${OBJS}
-	ar -rcs lib/libtinyxml.a $^
-
-
-#****************************************************************************
-# common rules
-#****************************************************************************
-
-# Rules for compiling source files to object files
-%.o : src/%
-	${CXX} -c ${CXXFLAGS} ${INCS} $< -o $@
-
-dist:
-	bash makedistlinux
+#'clean' doesn't represent an actual file generating recipe
+.PHONY: clean
 
 clean:
-	-rm -f ${OBJS}
-
-depend:
-	#makedepend ${INCS} ${SRCS}
-
-tinyxml.o: include/tinyxml.h include/tinystr.h
-tinyxmlparser.o: include/tinyxml.h include/tinystr.h
-tinyxmlerror.o: include/tinyxml.h include/tinystr.h
+	-rm -rf $(OBJ_DIR)
+	-rm -rf $(LIB_DIR)

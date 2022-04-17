@@ -3,28 +3,36 @@
 # -----------//-----------
 
 
+
 #directories
 SRC_DIR 		:= src
-HDR_DIR 		:= include
+INC_DIR 		:= include
 OBJ_DIR 		:= obj
+
 
 
 #files
 SRC_FILES 		:= $(shell find $(SRC_DIR) -name *.cpp -o -name *.cxx -o -name *.c++ -o -name *.cc)
-OBJ_FILES 		:= $(patsubst $(SRC_DIR)/%,$(OBJ_DIR)/%,$(patsubst %,%.o,$(SRC_FILES)))
+OBJ_FILES 		:= $(patsubst $(SRC_DIR)/%,$(OBJ_DIR)/%.o,$(SRC_FILES))
 BIN 			:= $(BIN_DIR)/engine
 
-#flags
-FLAGS			+= -I$(UTILS_DIR)/include -I$(TINY_XML_DIR)/include
-LINK_FLAGS 		:= -L$(UTILS_DIR)/lib -lutils -L$(TINY_XML_DIR)/lib -ltinyxml
 
+
+#compiler flags
+CXXFLAGS		+= -I$(INC_DIR) -I$(UTILS_DIR)/include -I$(TINY_XML_DIR)/include
+
+#linker flags
+LDFLAGS			:= -L$(UTILS_DIR)/lib -L$(TINY_XML_DIR)/lib
+
+#linker libraries
+LDLIBS			:= -lutils -ltinyxml
 
 ifdef IS_WIN
-	FLAGS 		+= -I$(FREEGLUT_DIR)/include -I$(GLEW_DIR)/include
-	LINK_FLAGS 	+= -L$(FREEGLUT_DIR)/lib/x64 -L$(GLEW_DIR)/lib/x64
-	LINK_FLAGS  += -lopengl32 -lfreeglut -lglu32 -lglew32
+	CXXFLAGS 	+= -I$(FREEGLUT_DIR)/include -I$(GLEW_DIR)/include
+	LDFLAGS 	+= -L$(FREEGLUT_DIR)/lib/x64 -L$(GLEW_DIR)/lib/x64
+	LDLIBS		+= -lopengl32 -lfreeglut -lglu32 -lglew32
 else
-	LINK_FLAGS 	+= -lGLU -lglut -lGL -lGLEW
+	LDLIBS	 	+= -lGLU -lglut -lGL -lGLEW
 endif
 
 
@@ -32,31 +40,24 @@ endif
 #make default goal (using make with no specified recipe)
 .DEFAULT_GOAL 	:= all
 
-build: clean all
-
 all: $(BIN)
 
+build: clean all
+
 $(BIN): $(OBJ_FILES)
-	$(CXX) $(FLAGS) $^ -o $@ $(LINK_FLAGS)
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS) $(LDLIBS)
 
 #generate each object file according to the corresponding source file
 #create directories as needed
 $(OBJ_FILES): $(OBJ_DIR)/%.o : $(SRC_DIR)/%
 	@mkdir -p $(@D)
-	$(CXX) $(FLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 
 
-
-
-#'clean' and 'init' don't represent actual file generating recipes
-.PHONY: clean init
+#'clean' doesn't represent an actual file generating recipe
+.PHONY: clean
 
 clean:
-	-find $(OBJ_DIR)/* | grep -v **/*.md | xargs rm
-
-init:
-	-mkdir $(SRC_DIR)
-	-mkdir $(HDR_DIR)
-	-mkdir $(OBJ_DIR)
-	-mkdir $(BIN_DIR)
+	-rm -rf $(OBJ_DIR)

@@ -3,51 +3,48 @@
 # -----------//-----------
 
 
+
 #directories
 SRC_DIR 		:= src
-HDR_DIR 		:= include
+INC_DIR 		:= include
 OBJ_DIR 		:= obj
 LIB_DIR 		:= lib
 
 
+
 #files
 SRC_FILES 		:= $(shell find $(SRC_DIR) -name *.cpp -o -name *.cxx -o -name *.c++ -o -name *.cc)
-OBJ_FILES 		:= $(patsubst $(SRC_DIR)/%,$(OBJ_DIR)/%,$(patsubst %,%.o,$(SRC_FILES)))
+OBJ_FILES 		:= $(patsubst $(SRC_DIR)/%,$(OBJ_DIR)/%.o,$(SRC_FILES))
 LIB_FILE 		:= $(LIB_DIR)/libutils.a
 
-#flags
-FLAGS			+= -I$(UTILS_DIR)/include
+
+
+#compiler flags
+CXXFLAGS		+= -I$(INC_DIR)
 
 
 
 #make default goal (using make with no specified recipe)
 .DEFAULT_GOAL := all
 
-build: clean all
-
 all: $(LIB_FILE)
 
+build: clean all
 
 #generate each object file according to the corresponding source file
 #create directories as needed
 $(OBJ_FILES): $(OBJ_DIR)/%.o : $(SRC_DIR)/%
 	@mkdir -p $(@D)
-	$(CXX) $(FLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(LIB_FILE): $(OBJ_FILES)
-	-find $(LIB_DIR)/* | grep $(LIB_DIR)/*.a | xargs rm
-	ar -rcs $@ $^
+	@mkdir -p $(@D)
+	$(AR) $@ $^
 
 
-
-#'clean' and 'init' don't represent actual file generating recipes
-.PHONY: clean init
+#'clean' doesn't represent an actual file generating recipe
+.PHONY: clean
 
 clean:
-	-find $(OBJ_DIR)/* | grep -v $(OBJ_DIR)/*.md | xargs rm
-
-init:
-	-mkdir $(SRC_DIR)
-	-mkdir $(HDR_DIR)
-	-mkdir $(OBJ_DIR)
-	-mkdir $(LIB_DIR)
+	-rm -rf $(OBJ_DIR)
+	-rm -rf $(LIB_DIR)

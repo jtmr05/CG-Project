@@ -2,12 +2,10 @@
 # This is a C++ makefile.|
 # -----------//-----------
 
-
 #suppress leaving directory messages
 MAKEFLAGS 		+= --no-print-directory
 
-#compiler
-CXX 			:= g++
+
 
 #directories
 ENG_DIR 		:= engine
@@ -21,20 +19,25 @@ FREEGLUT_DIR 	:= $(LIB_DIR)/freeglut
 TINY_XML_DIR 	:= $(LIB_DIR)/tinyxml
 GLEW_DIR		:= $(LIB_DIR)/glew
 
+export BIN_DIR UTILS_DIR FREEGLUT_DIR TINY_XML_DIR GLEW_DIR
 
-export UTILS_DIR FREEGLUT_DIR TINY_XML_DIR GLEW_DIR
 
+
+#archive-maintaining program
+AR				:= ar -rcs
+
+#compiler
+CXX 			:= g++
+
+#compiler flags
+CXXFLAGS		:= -Wall -Wextra -Wsign-conversion -std=c++17
 
 #Windows
 ifeq (Windows_NT, $(OS))
 	IS_WIN = yes
 endif
 
-#compiler flags
-FLAGS 			:= -Wall -Wextra -Wsign-conversion -Iinclude -std=c++17
-
-
-export CXX FLAGS BIN_DIR IS_WIN
+export AR CXX CXXFLAGS IS_WIN
 
 
 
@@ -46,21 +49,23 @@ all: tinyxml utils generator engine
 
 build: clean all
 
-.PHONY: utils tinyxml
 generator: utils
 	make -C $(GEN_DIR)
 
 engine: tinyxml utils
 	make -C $(ENG_DIR)
 
+.PHONY: utils
 utils:
 	make -C $(shell realpath --relative-to . $(UTILS_DIR))
 
-#in case there's need to recompile
+.PHONY: tinyxml
 tinyxml:
 	make -C $(shell realpath --relative-to . $(TINY_XML_DIR))
 
-#'clean' doesn't represent actual file generating recipes
+
+
+#'clean' doesn't represent an actual file generating recipe
 .PHONY: clean
 
 clean:
@@ -70,8 +75,4 @@ clean:
 	-make -C $(shell realpath --relative-to . $(TINY_XML_DIR)) clean
 	-find $(RSR_DIR)/* | grep .3d | xargs rm
 	-rm *.stackdump
-
-shred: clean
-	-find $(BIN_DIR)/* | grep -v **/*.md | xargs rm
-	-find $(UTILS_DIR)/* | grep -F .a | xargs rm
-	-find $(TINY_XML_DIR)/* | grep -F .a | xargs rm
+	-rm -rf $(BIN_DIR)
