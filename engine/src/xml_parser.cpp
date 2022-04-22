@@ -2,8 +2,9 @@
 
 using std::string;
 using std::vector;
+using std::unique_ptr;
 
-camera_settings::camera_settings(){
+CameraSettings::CameraSettings(){
     this->position = {};
     this->look_at = {};
     this->up = { 0.0, 1.0, 0.0 };
@@ -13,22 +14,52 @@ camera_settings::camera_settings(){
 }
 
 
-transform::transform(angle_t angle, const CartPoint3d &point){
-    this->angle = { angle };
-    this->point = { point };
-    this->type = TransformType::rotate;
+
+
+
+Transform::Transform(TransformType type) : type{ type } {}
+
+
+
+StaticRotate::StaticRotate(angle_t angle, const CartPoint3d &point) :
+    Transform(TransformType::static_rotate){       //call super constructor
+            this->angle = { angle };
+            this->point = { point };
 }
 
-transform::transform(TransformType type, const CartPoint3d &point){
-    this->angle = {};
-    this->point = { point };
-    this->type = type;
+DynamicRotate::DynamicRotate(double time, const CartPoint3d &point) :
+    Transform(TransformType::dynamic_rotate){
+        this->time = { time };
+        this->point = { point };
+}
+
+StaticTranslate::StaticTranslate(const CartPoint3d &point) :
+    Transform(TransformType::static_rotate){
+        this->point = { point };
+}
+
+DynamicTranslate::DynamicTranslate(double time, bool align, unique_ptr<vector<CartPoint3d>> &points) :
+    Transform(TransformType::dynamic_translate){
+
+        this->time = { time };
+        this->align = { align };
+        this->points = { points.release() };
+}
+
+DynamicTranslate::~DynamicTranslate(){
+    delete this->points;
+}
+
+
+Scale::Scale(const CartPoint3d &point) :
+    Transform(TransformType::scale){
+        this->point = { point };
 }
 
 
 
-group::group(unsigned int nest_level){
-    this->nest_level = nest_level;
+Group::Group(unsigned int nest_level){
+    this->nest_level = { nest_level };
     this->models = {};
     this->transforms = {};
 }
@@ -80,6 +111,26 @@ static CameraSettings parse_camera_settings(TiXmlElement* p_world){
     return c;
 }
 
+static inline bool parse_dynamic_translate(
+    TiXmlElement* p_generic_transform,
+    unique_ptr<vector<CartPoint3d>> &points
+){
+
+    TiXmlElement* p_point { p_generic_transform->FirstChildElement("point") };
+
+    while(p_point){
+
+        const double x { string_to_double(p_point->Attribute("x")) };
+        const double y { string_to_double(p_point->Attribute("y")) };
+        const double z { string_to_double(p_point->Attribute("z")) };
+
+        points->push_back( { x, y, z } );
+
+        p_point = p_point->NextSiblingElement("point");
+    }
+
+    return points->size() >= 4lu;
+}
 
 static void parse_groups(TiXmlElement* p_world, const string &dir_prefix, vector<Group> &groups){
 
@@ -100,7 +151,10 @@ static void parse_groups(TiXmlElement* p_world, const string &dir_prefix, vector
             while(p_generic_transform){
 
                 const string attribute_name { p_generic_transform->Value() };
+
                 const char* angle { p_generic_transform->Attribute("angle") };
+                const char* time { p_generic_transform->Attribute("time") };
+                const char* align { p_generic_transform->Attribute("align") };
 
                 const double x { string_to_double(p_generic_transform->Attribute("x")) };
                 const double y { string_to_double(p_generic_transform->Attribute("y")) };
@@ -108,17 +162,37 @@ static void parse_groups(TiXmlElement* p_world, const string &dir_prefix, vector
 
                 Transform *pt { NULL };
 
-                if(angle){
-                    Transform t { string_to_double(angle), { x, y, z } };
-                    pt = &t;
+                if(attribute_name == "rotate"){
+                    if(angle){
+                        StaticRotate sr { string_to_double(angle), { x, y, z } };
+                        pt = &sr;
+                    }
+                    else if(time){
+                        DynamicRotate dr { string_to_double(time), { x, y, z } };
+                        pt = &dr;
+                    }
                 }
                 else if(attribute_name == "translate"){
-                    Transform t { TransformType::translate, { x, y, z } };
-                    pt = &t;
+                    if(time){
+                        unique_ptr<vector<CartPoint3d>> points { new vector<CartPoint3d>() };
+
+                        if(parse_dynamic_translate(p_generic_transform, points)){
+                            DynamicTranslate dt {
+                                string_to_double(time),
+                                string_to_bool(align),
+                                points
+                            };
+                            pt = &dt;
+                        }
+                    }
+                    else{
+                        StaticTranslate st { { x, y, z } };
+                        pt = &st;
+                    }
                 }
                 else if(attribute_name == "scale"){
-                    Transform t { TransformType::scale, { x, y, z } };
-                    pt = &t;
+                    Scale s { { x, y, z } };
+                    pt = &s;
                 }
 
                 if(pt)

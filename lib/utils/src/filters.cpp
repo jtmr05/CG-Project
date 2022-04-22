@@ -7,7 +7,7 @@ using std::string;
 //-1 indicates no match found
 int string_to_uint(const string &str){
 
-    std::regex pattern { "^(\\+)?(\\d)+$", std::regex_constants::ECMAScript };
+    const std::regex pattern { "^(\\+)?(\\d)+$", std::regex_constants::ECMAScript };
 
     if(std::regex_match(str, pattern))
         return std::stoi(str);
@@ -15,14 +15,29 @@ int string_to_uint(const string &str){
         return -1;
 }
 
-//matches with and a converts to a double
+//matches C-string with and converts to a double
 //returns default_value in case no match was found
 double string_to_double(const string &str, double default_value){
 
-    std::regex pattern { "^(\\+|\\-)?(\\d)+(\\.(\\d)+)?$", std::regex_constants::ECMAScript };
+    const std::regex pattern { "^(\\+|\\-)?(\\d)+(\\.(\\d)+)?$", std::regex_constants::ECMAScript };
 
     if(std::regex_match(str, pattern))
         return std::stod(str);
+    else
+        return default_value;
+}
+
+//matches C-string with and converts to a bool
+//returns default_value in case no match was found
+bool string_to_bool(const std::string &str, bool default_value = false){
+
+    const std::regex true_pattern { "^[tT][rR][uU][eE]$", std::regex_constants::ECMAScript };
+    const std::regex false_pattern { "^[fF][aA][lL][sS][eE]$", std::regex_constants::ECMAScript };
+
+    if(std::regex_match(str, true_pattern))
+        return true;
+    else if(std::regex_match(str, false_pattern))
+        return false;
     else
         return default_value;
 }
@@ -32,7 +47,7 @@ double string_to_double(const string &str, double default_value){
 // true if str ends in '.3d'
 bool has_3d_ext(const string &str){
 
-    std::regex pattern { "^(.+?)\\.3d$", std::regex_constants::ECMAScript };
+    const std::regex pattern { "^(.+?)\\.3d$", std::regex_constants::ECMAScript };
 
     return std::regex_match(str, pattern);
 }
@@ -40,7 +55,7 @@ bool has_3d_ext(const string &str){
 // true if str ends in '.xml'
 bool has_xml_ext(const string &str){
 
-    std::regex pattern { "^(.+?)\\.xml$", std::regex_constants::ECMAScript };
+    const std::regex pattern { "^(.+?)\\.xml$", std::regex_constants::ECMAScript };
 
     return std::regex_match(str, pattern);
 }

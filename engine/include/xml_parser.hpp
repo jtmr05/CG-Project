@@ -3,7 +3,7 @@
 
 #include <string>
 #include <vector>
-#include <optional>
+#include <memory>
 
 #include "point.hpp"
 #include "tinyxml.h"
@@ -11,41 +11,94 @@
 #include "filters.hpp"
 
 
-typedef struct camera_settings {
+struct CameraSettings {
 
     CartPoint3d position, look_at, up;
     double fov, near_, far_;
 
-    camera_settings();
+    CameraSettings();
+};
 
-} CameraSettings;
 
-typedef enum transform_type {
-    rotate,
-    translate,
+
+enum TransformType {
+    static_rotate,
+    dynamic_rotate,
+    static_translate,
+    dynamic_translate,
     scale,
-} TransformType;
+};
 
-typedef struct transform {
+class Transform {
 
-    CartPoint3d point;
-    std::optional<angle_t> angle;
-    TransformType type;
+    public:
+        const TransformType type;
 
-    transform(angle_t angle, const CartPoint3d &point);
-    transform(TransformType type, const CartPoint3d &point);
+    protected:                    //visibility limited to subclasses
+        Transform(TransformType type);
+};
 
-} Transform;
 
-typedef struct group {
+
+class StaticRotate : public Transform {
+
+    public:
+        angle_t angle;
+        CartPoint3d point;
+
+        StaticRotate(angle_t angle, const CartPoint3d &point);
+};
+
+class DynamicRotate : public Transform {
+
+    public:
+        double time;
+        CartPoint3d point;
+
+        DynamicRotate(double time, const CartPoint3d &point);
+};
+
+class StaticTranslate : public Transform {
+
+    public:
+        CartPoint3d point;
+
+        StaticTranslate(const CartPoint3d &point);
+};
+
+class DynamicTranslate : public Transform {
+
+    public:
+        double time;
+        bool align;
+        std::vector<CartPoint3d> *points;
+
+        DynamicTranslate(
+            double time, bool align,
+            std::unique_ptr<std::vector<CartPoint3d>> &points
+        );
+
+        ~DynamicTranslate(); //destrutor to free points
+};
+
+class Scale : public Transform {
+
+    public:
+        CartPoint3d point;
+
+        Scale(const CartPoint3d &point);
+};
+
+
+
+struct Group {
 
     std::vector<Transform> transforms;
     std::vector<std::string> models;
     unsigned int nest_level;
 
-    group(unsigned int nest_level);
-
-} Group;
+    Group(unsigned int nest_level);
+};
 
 ErrorCode xml_parser(const std::string &path, CameraSettings &c, std::vector<Group> &groups);
 

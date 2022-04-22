@@ -12,27 +12,27 @@ const long double PI { 2.L * std::acos(0.L) };
 
 typedef double angle_t;
 
-typedef struct cart_point3d {
+struct CartPoint3d {
     double x, y, z;
 
-    cart_point3d();
-    cart_point3d(double x, double y, double z);
+    CartPoint3d();
+    CartPoint3d(double x, double y, double z);
 
-} CartPoint3d;
+};
 
 /**
  * radius is the distance to origin
  * zOx    is the angle in degrees with the posivive z axis (counterclockwise)
  * yOp  is the angle in degrees with the positive y axis (clockwise)
  */
-typedef struct polar_point3d {
+struct PolarPoint3d {
     double radius;
     angle_t zOx, yOp;
 
-    polar_point3d();
-    polar_point3d(double radius, angle_t zOx, angle_t yOp);
+    PolarPoint3d();
+    PolarPoint3d(double radius, angle_t zOx, angle_t yOp);
 
-} PolarPoint3d;
+};
 
 
 

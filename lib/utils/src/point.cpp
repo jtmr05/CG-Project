@@ -15,25 +15,25 @@ angle_t radian_to_degree(angle_t radian){
 
 
 
-cart_point3d::cart_point3d(){
+CartPoint3d::CartPoint3d(){
     this->x = 0.0;
     this->y = 0.0;
     this->z = 0.0;
 }
 
-cart_point3d::cart_point3d(double x, double y, double z){
+CartPoint3d::CartPoint3d(double x, double y, double z){
     this->x = x;
     this->y = y;
     this->z = z;
 }
 
-polar_point3d::polar_point3d(){
+PolarPoint3d::PolarPoint3d(){
     this->radius = 0.0;
     this->zOx = 0.0;
     this->yOp = 0.0;
 }
 
-polar_point3d::polar_point3d(double radius, angle_t zOx, angle_t yOp){
+PolarPoint3d::PolarPoint3d(double radius, angle_t zOx, angle_t yOp){
 
     assert(yOp >= 0.0 && yOp <= 180.0);
 
@@ -82,7 +82,7 @@ std::ostream& operator<<(std::ostream& stream, PolarPoint3d const &p){
 }
 
 std::ostream& operator<<(std::ostream& stream, CartPoint3d const &p){
-    stream << std::fixed << std::setprecision(PRECISION) << p.x << ";" << p.y << ";" << p.z << '\n';
+    stream << std::fixed << std::setprecision(PRECISION) << p.x << "; " << p.y << "; " << p.z << '\n';
     return stream;
 }
 
