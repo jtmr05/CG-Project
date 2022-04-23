@@ -4,67 +4,6 @@ using std::string;
 using std::vector;
 using std::unique_ptr;
 
-CameraSettings::CameraSettings(){
-    this->position = {};
-    this->look_at = {};
-    this->up = { 0.0, 1.0, 0.0 };
-    this->fov = { 60.0 };
-    this->near_ = { 1.0 };
-    this->far_ = { 1000.0 };
-}
-
-
-
-Transform::Transform(TransformType type) : type{ type } {}
-
-
-
-StaticRotate::StaticRotate(angle_t angle, const CartPoint3d &point) :
-    Transform(TransformType::static_rotate){       //call super constructor
-            this->angle = { angle };
-            this->point = { point };
-}
-
-DynamicRotate::DynamicRotate(double time, const CartPoint3d &point) :
-    Transform(TransformType::dynamic_rotate){
-        this->time = { time };
-        this->point = { point };
-}
-
-
-
-StaticTranslate::StaticTranslate(const CartPoint3d &point) :
-    Transform(TransformType::static_rotate){
-        this->point = { point };
-}
-
-DynamicTranslate::DynamicTranslate(double time, bool align, unique_ptr<vector<CartPoint3d>> &points) :
-    Transform(TransformType::dynamic_translate){
-
-        this->time = { time };
-        this->align = { align };
-        this->points = { points.release() };
-}
-
-DynamicTranslate::~DynamicTranslate(){
-    delete this->points;
-}
-
-
-
-Scale::Scale(const CartPoint3d &point) :
-    Transform(TransformType::scale){
-        this->point = { point };
-}
-
-
-
-Group::Group(unsigned int nest_level){
-    this->nest_level = { nest_level };
-    this->models = {};
-    this->transforms = {};
-}
-
 
 
 static CameraSettings parse_camera_settings(TiXmlElement* p_world){
@@ -161,7 +100,7 @@ static void parse_groups(TiXmlElement* p_world, const string &dir_prefix, vector
                 const double y { string_to_double(p_generic_transform->Attribute("y")) };
                 const double z { string_to_double(p_generic_transform->Attribute("z")) };
 
-                Transform *pt { NULL };
+                Transform *pt { nullptr };
 
                 if(attribute_name == "rotate"){
                     if(angle){
@@ -241,38 +180,36 @@ static void parse_groups(TiXmlElement* p_world, const string &dir_prefix, vector
 
 ErrorCode xml_parser(const string &path, CameraSettings &c, vector<Group> &groups){
 
-    ErrorCode exit_code { ErrorCode::success };
     TiXmlDocument doc {};
 
     // Load the XML file into the Doc instance
     if(!has_xml_ext(path))
-        exit_code = ErrorCode::invalid_file_extension;
+        return ErrorCode::invalid_file_extension;
 
-    else if(doc.LoadFile(path.c_str())){
+    if(!doc.LoadFile(path.c_str()))
+        return ErrorCode::io_error;
 
-        const std::size_t last_slash_pos { path.find_last_of("/") };
-        string directory_path { "" };
 
-        if(last_slash_pos < std::string::npos){
-            char aux[last_slash_pos + 1 + 1];
-            path.copy(aux, last_slash_pos + 1);
-	        aux[last_slash_pos + 1] = '\0';
-            directory_path = { aux };
-	    }
+
+    const std::size_t last_slash_pos { path.find_last_of("/") };
+    string directory_path { "" };
+
+    if(last_slash_pos < std::string::npos){
+        char aux[last_slash_pos + 1 + 1];
+        path.copy(aux, last_slash_pos + 1);
+	    aux[last_slash_pos + 1] = '\0';
+        directory_path = { aux };
+	}
 
         // Get root Element
-        TiXmlElement* p_world { doc.RootElement() };
-        if(p_world){
-            c = parse_camera_settings(p_world);
-            parse_groups(p_world, directory_path, groups);
-        }
-        else
-            exit_code = ErrorCode::invalid_file_formatting;
-    }
-    else
-        exit_code = ErrorCode::io_error;
+    TiXmlElement* p_world { doc.RootElement() };
+    if(p_world == nullptr)
+        return ErrorCode::invalid_file_formatting;
 
-    return exit_code;
+    c = parse_camera_settings(p_world);
+    parse_groups(p_world, directory_path, groups);
+
+    return ErrorCode::success;
 }
 
 

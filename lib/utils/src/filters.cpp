@@ -29,7 +29,7 @@ double string_to_double(const string &str, double default_value){
 
 //matches C-string with and converts to a bool
 //returns default_value in case no match was found
-bool string_to_bool(const std::string &str, bool default_value = false){
+bool string_to_bool(const std::string &str, bool default_value){
 
     const std::regex true_pattern { "^[tT][rR][uU][eE]$", std::regex_constants::ECMAScript };
     const std::regex false_pattern { "^[fF][aA][lL][sS][eE]$", std::regex_constants::ECMAScript };

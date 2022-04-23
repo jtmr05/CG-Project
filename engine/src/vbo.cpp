@@ -5,7 +5,7 @@ using std::vector;
 using std::set;
 using std::pair;
 
-VBO* VBO::singleton { NULL };
+VBO* VBO::singleton { nullptr };
 
 VBO::VBO(const set<string> &models) : buffers{} {
 
@@ -61,7 +61,7 @@ VBO::VBO(const set<string> &models) : buffers{} {
 
 VBO* VBO::get_instance(const set<string> &models){
 
-    if(VBO::singleton == NULL)
+    if(VBO::singleton == nullptr)
         VBO::singleton = new VBO{ models };
 
     return VBO::singleton;
