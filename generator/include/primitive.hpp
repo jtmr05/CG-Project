@@ -4,7 +4,9 @@
 #include <string>
 #include <regex>
 #include <fstream>
-#include <iostream>
+#include <map>
+#include <array>
+#include <vector>
 
 #include "error_handler.hpp"
 #include "point.hpp"

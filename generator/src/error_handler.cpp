@@ -6,7 +6,8 @@ static void usage(){
         "\t generator box <units> <grid_size> <output_file>\n" <<
         "\t generator cone <radius> <height> <slices> <stacks> <output_file>\n" <<
         "\t generator sphere <radius> <slices> <stacks> <output_file>\n"  <<
-        "\t generator torus <outter_radius> <inner_radius> <slices> <stacks> <output_file>\n";
+        "\t generator torus <outter_radius> <inner_radius> <slices> <stacks> <output_file>\n" <<
+        "\t generator patch <tesselation_level> <input_file> <output_file>\n";
 }
 
 void handle_error(const ErrorCode e){
@@ -32,6 +33,10 @@ void handle_error(const ErrorCode e){
 
     case ErrorCode::invalid_file_extension:
         std::cerr << "Invalid file extension.\n";
+        break;
+
+    case ErrorCode::invalid_file_formatting:
+        std::cerr << "Invalid patch formatting.\n";
         break;
 
     default:

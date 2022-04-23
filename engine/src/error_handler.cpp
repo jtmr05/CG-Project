@@ -26,7 +26,7 @@ void handle_error(const ErrorCode e){
         usage();
         break;
 
-    case ErrorCode::invalid_xml_formatting:
+    case ErrorCode::invalid_file_formatting:
         std::cerr << "Invalid xml formatting.\n";
         break;
 

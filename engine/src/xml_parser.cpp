@@ -15,8 +15,6 @@ CameraSettings::CameraSettings(){
 
 
 
-
-
 Transform::Transform(TransformType type) : type{ type } {}
 
 
@@ -32,6 +30,8 @@ DynamicRotate::DynamicRotate(double time, const CartPoint3d &point) :
         this->time = { time };
         this->point = { point };
 }
+
+
 
 StaticTranslate::StaticTranslate(const CartPoint3d &point) :
     Transform(TransformType::static_rotate){
@@ -49,6 +49,7 @@ DynamicTranslate::DynamicTranslate(double time, bool align, unique_ptr<vector<Ca
 DynamicTranslate::~DynamicTranslate(){
     delete this->points;
 }
+
 
 
 Scale::Scale(const CartPoint3d &point) :
@@ -129,7 +130,7 @@ static inline bool parse_dynamic_translate(
         p_point = p_point->NextSiblingElement("point");
     }
 
-    return points->size() >= 4lu;
+    return points->size() >= 4;
 }
 
 static void parse_groups(TiXmlElement* p_world, const string &dir_prefix, vector<Group> &groups){
@@ -266,7 +267,7 @@ ErrorCode xml_parser(const string &path, CameraSettings &c, vector<Group> &group
             parse_groups(p_world, directory_path, groups);
         }
         else
-            exit_code = ErrorCode::invalid_xml_formatting;
+            exit_code = ErrorCode::invalid_file_formatting;
     }
     else
         exit_code = ErrorCode::io_error;

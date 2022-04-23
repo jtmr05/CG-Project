@@ -10,5 +10,6 @@ bool string_to_bool(const std::string &str, bool default_value = false);
 
 bool has_3d_ext(const std::string &str);
 bool has_xml_ext(const std::string &str);
+bool has_patch_ext(const string &str);
 
 #endif

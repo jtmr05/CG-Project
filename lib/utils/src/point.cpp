@@ -96,9 +96,9 @@ std::istream& operator>>(std::istream& stream, PolarPoint3d& p){
 std::istream& operator>>(std::istream& stream, CartPoint3d& p){
 
     CartPoint3d tmp {};
-    char c {};    //used to ignore ';'
+    char comma {};    //used to ignore ';'
 
-    if(stream >> tmp.x >> c >> tmp.y >> c >> tmp.z){
+    if(stream >> tmp.x >> comma >> tmp.y >> comma >> tmp.z){
         p.x = tmp.x;
         p.y = tmp.y;
         p.z = tmp.z;

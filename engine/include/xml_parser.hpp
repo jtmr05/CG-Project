@@ -3,7 +3,6 @@
 
 #include <string>
 #include <vector>
-#include <memory>
 
 #include "point.hpp"
 #include "tinyxml.h"

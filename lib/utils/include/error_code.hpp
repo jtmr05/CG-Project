@@ -8,7 +8,7 @@ enum ErrorCode {
     not_enough_args,
     invalid_argument,
     io_error,
-    invalid_xml_formatting,
+    invalid_file_formatting,
     invalid_file_extension,
 };
 

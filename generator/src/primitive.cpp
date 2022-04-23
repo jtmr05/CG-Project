@@ -1,38 +1,126 @@
 #include "primitive.hpp"
 
 using std::string;
+using std::vector;
+using std::map;
+using std::array;
 
-typedef enum primitive {
+enum Primitive {
     plane,
     box,
     sphere,
     cone,
     torus,
+    patch,
     __invalid,
-} Primitive;
+};
 
-static const int PLANE_ARGS {5};
-static const int BOX_ARGS {5};
-static const int CONE_ARGS {7};
-static const int SPHERE_ARGS {6};
-static const int TORUS_ARGS {7};
+
+
+static constexpr size_t NUM_OF_PATCH_POINTS {16};
+
+static constexpr int PLANE_ARGS {5};
+static constexpr int BOX_ARGS {5};
+static constexpr int CONE_ARGS {7};
+static constexpr int SPHERE_ARGS {6};
+static constexpr int TORUS_ARGS {7};
+static constexpr int PATCH_ARGS {5};
+
+
 
 static Primitive from_string(const string &str){
 
-    Primitive s { Primitive::__invalid };
+    static const map<string, Primitive> str_primitive_mapping {
+        { "plane",  Primitive::plane },
+        { "box",    Primitive::box },
+        { "sphere", Primitive::sphere },
+        { "cone", Primitive::cone },
+        { "torus",  Primitive::torus },
+        { "patch",  Primitive::patch },
+    };
 
-    if(str == "plane")
-        s = Primitive::plane;
-    else if(str == "box")
-        s = Primitive::box;
-    else if(str == "sphere")
-        s = Primitive::sphere;
-    else if(str == "cone")
-        s = Primitive::cone;
-    else if(str == "torus")
-        s = Primitive::torus;
+    Primitive p { Primitive::__invalid };
 
-    return s;
+    if(str_primitive_mapping.count(str) > 0)
+        p = str_primitive_mapping.at(str);
+
+    return p;
+}
+
+
+
+static ErrorCode patch_writer(const string &out_fn, int tesselation_level, const string &in_fn){
+
+    ErrorCode exit_code { ErrorCode::success };
+
+    vector<array<unsigned, NUM_OF_PATCH_POINTS>> patch_indexes {};
+    vector<CartPoint3d> ctrl_points {};
+
+    std::ifstream input_file {};
+    input_file.open(in_fn, std::ios::in);
+
+    if(input_file.is_open()){
+
+        size_t patch_count {};
+
+        if(input_file >> patch_count){
+
+            patch_indexes.reserve(patch_count);
+
+            unsigned index {};
+            char comma {};
+
+            for(unsigned i {}; i < patch_count && exit_code == ErrorCode::success; ++i){
+
+                array<unsigned, NUM_OF_PATCH_POINTS> elem {};
+
+                while(
+                    elem.size() < NUM_OF_PATCH_POINTS - 1 && //last index will not
+                    (input_file >> index >> comma) &&          //have a following comma
+                    comma == ','
+                )
+                    elem.at(elem.size()) = index;
+
+                if(input_file >> index)
+                    elem.at(elem.size()) = index;
+
+                if(elem.size() != NUM_OF_PATCH_POINTS)
+                    exit_code = ErrorCode::invalid_file_formatting;
+                else
+                    patch_indexes.push_back(elem);
+            }
+        }
+        else
+            exit_code = ErrorCode::invalid_file_formatting;
+
+        size_t ctrl_point_count {};
+
+        if((exit_code != ErrorCode::success) && (input_file >> ctrl_point_count)){
+
+            ctrl_points.reserve(ctrl_point_count);
+
+            CartPoint3d point {};
+
+            for(unsigned i {}; i < ctrl_point_count && (input_file >> point); ++i)
+                ctrl_points.push_back(point);
+
+            if(ctrl_points.size() != ctrl_point_count)
+                exit_code = ErrorCode::invalid_file_formatting;
+        }
+        else
+            exit_code = ErrorCode::invalid_file_formatting;
+
+        input_file.close();
+    }
+    else
+        exit_code = ErrorCode::io_error;
+
+    /**
+     * Input part is done, needed structures are created
+     * Now it's time to treat them accordingly and take care of the output --'
+     */
+
+    return exit_code;
 }
 
 static ErrorCode torus_writer(const string &filename, int out_radius,
@@ -539,6 +627,26 @@ ErrorCode primitive_writer(const string args[], const int size){
             }
 
             break;
+
+        case Primitive::patch:
+
+            if(size < PATCH_ARGS)
+                exit_code = ErrorCode::not_enough_args;
+            else{
+                const int tesselation_level { string_to_uint(args[ind++]) };
+                const string input_filename { args[ind++] };
+                const string output_filename { args[ind] };
+
+                if(!has_patch_ext(input_filename) || !has_3d_ext(output_filename))
+                    exit_code = ErrorCode::invalid_file_extension;
+                else if(tesselation_level < 1.0)
+                    exit_code = ErrorCode::invalid_argument;
+                else
+                    exit_code = patch_writer(output_filename, tesselation_level, input_filename);
+            }
+
+            break;
+
 
         default:
             exit_code = ErrorCode::invalid_argument;

@@ -59,3 +59,11 @@ bool has_xml_ext(const string &str){
 
     return std::regex_match(str, pattern);
 }
+
+// true if str ends in '.patch'
+bool has_patch_ext(const string &str){
+
+    const std::regex pattern { "^(.+?)\\.patch$", std::regex_constants::ECMAScript };
+
+    return std::regex_match(str, pattern);
+}
