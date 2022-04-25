@@ -4,9 +4,7 @@ gen(){
 
     if [[ -f bin/generator ]]
     then
-        ./phase1_gen.sh
-        ./phase2_gen.sh
-        ./phase3_gen.sh
+        bin/generator bezier resources/teapot.patch 10 resources/bezier.3d
         return 0
     else
         echo "error: bin/generator not found" 1>&2

@@ -11,7 +11,7 @@ enum Primitive {
     sphere,
     cone,
     torus,
-    patch,
+    bezier,
     __invalid,
 };
 
@@ -24,7 +24,7 @@ static constexpr int BOX_ARGS {5};
 static constexpr int CONE_ARGS {7};
 static constexpr int SPHERE_ARGS {6};
 static constexpr int TORUS_ARGS {7};
-static constexpr int PATCH_ARGS {5};
+static constexpr int BEZIER_ARGS {5};
 
 
 
@@ -36,7 +36,7 @@ static Primitive from_string(const string &str){
         { "sphere", Primitive::sphere },
         { "cone", Primitive::cone },
         { "torus",  Primitive::torus },
-        { "patch",  Primitive::patch },
+        { "bezier",  Primitive::bezier },
     };
 
     Primitive p { Primitive::__invalid };
@@ -49,75 +49,219 @@ static Primitive from_string(const string &str){
 
 
 
-static ErrorCode patch_writer(const string &out_fn, int tesselation_level, const string &in_fn){
+static inline CartPoint3d cubic_bezier_curve_pt(const array<CartPoint3d, 4> &ctrl_points, double time){
 
-    std::ifstream input_file {};
-    input_file.open(in_fn, std::ios::in);
+    assert(ctrl_points.size() == 4);
 
-    if(!input_file.is_open())
-        return ErrorCode::io_error;
+    const double complement { 1.0 - time };
 
-
-
-    vector<array<unsigned, NUM_OF_PATCH_POINTS>> patch_indexes {};
-    size_t patch_count {};
-
-    if(!(input_file >> patch_count))
-        return ErrorCode::invalid_file_formatting;
-
-    patch_indexes.reserve(patch_count);
+    const array<double, 4> binomial_coeffs { //Bernstein polynomials definiton
+        time*time*time,
+        3.0 * time*time * complement,
+        3.0 * time * complement * complement,
+        1.0 * complement * complement * complement
+    };
 
 
 
-    unsigned index {};
-    char comma {};
+    double x{}, y{}, z{};
 
-    for(unsigned i {}; i < patch_count; ++i){
-
-        array<unsigned, NUM_OF_PATCH_POINTS> elem {};
-
-        while(
-            elem.size() < NUM_OF_PATCH_POINTS - 1 &&   //last index will not
-            (input_file >> index >> comma) &&          //have a following comma
-            comma == ','
-        )
-            elem.at(elem.size()) = index;
-
-        if(input_file >> index)
-            elem.at(elem.size()) = index;
-
-        if(elem.size() != NUM_OF_PATCH_POINTS)
-            return ErrorCode::invalid_file_formatting;
-
-        patch_indexes.push_back(elem);
+    for(unsigned i{}; i < binomial_coeffs.size(); ++i){
+        x += binomial_coeffs.at(i) * ctrl_points.at(ctrl_points.size() - 1 - i).x;
+        y += binomial_coeffs.at(i) * ctrl_points.at(ctrl_points.size() - 1 - i).y;
+        z += binomial_coeffs.at(i) * ctrl_points.at(ctrl_points.size() - 1 - i).z;
     }
 
+    return { x, y, z };
+}
 
+static ErrorCode read_patch_file(
+    const string &filename,
+    vector<array<unsigned, NUM_OF_PATCH_POINTS>> &patch_indexes,
+    vector<CartPoint3d> &ctrl_points){
 
-    vector<CartPoint3d> ctrl_points {};
-    size_t ctrl_point_count {};
+        std::ifstream input_file{};
+        input_file.open(filename, std::ios::in);
 
-    if(!(input_file >> ctrl_point_count))
-        return ErrorCode::invalid_file_formatting;
-
-    ctrl_points.reserve(ctrl_point_count);
-
-    CartPoint3d point {};
-
-    for(unsigned i {}; i < ctrl_point_count && (input_file >> point); ++i)
-        ctrl_points.push_back(point);
-
-    if(ctrl_points.size() != ctrl_point_count)
-        return ErrorCode::invalid_file_formatting;
+        if(!input_file.is_open())
+            return ErrorCode::io_error;
 
 
 
-    input_file.close();
+        size_t patch_count {};
+
+        if(!(input_file >> patch_count))
+            return ErrorCode::invalid_file_formatting;
+
+        patch_indexes.reserve(patch_count);
+
+
+
+        unsigned i {};
+        string line {};
+
+        while(i < patch_count && std::getline(input_file, line)){
+
+            if(line == "")
+                continue;
+
+            array<unsigned, NUM_OF_PATCH_POINTS> elem {};
+            auto elem_iter { elem.begin() };
+
+            size_t end{}, start{};
+
+            do{
+                end = line.find(',', start);
+
+                const int index { string_to_uint(line.substr(start, end - start)) };
+                if(index < 0)
+                    return ErrorCode::invalid_file_formatting;
+
+                *elem_iter = static_cast<unsigned>(index);
+                ++elem_iter;
+
+                if(end < std::string::npos)
+                    start = end + 1;
+            }
+            while(end < std::string::npos && elem_iter != elem.end());
+
+            if(elem_iter != elem.end())
+                return ErrorCode::invalid_file_formatting;
+
+            patch_indexes.push_back(elem);
+            ++i;
+        }
+
+
+        size_t ctrl_point_count {};
+
+        if(!(input_file >> ctrl_point_count))
+            return ErrorCode::invalid_file_formatting;
+
+        ctrl_points.reserve(ctrl_point_count);
+
+        CartPoint3d point {};
+
+        for(unsigned i {}; i < ctrl_point_count && (input_file >> point); ++i)
+            ctrl_points.push_back(point);
+
+        if(ctrl_points.size() != ctrl_point_count)
+            return ErrorCode::invalid_file_formatting;
+
+
+
+        input_file.close();
+
+        return ErrorCode::success;
+}
+
+static ErrorCode bezier_writer(const string &out_fn, int tesselation_level, const string &in_fn){
+
+    vector<array<unsigned, NUM_OF_PATCH_POINTS>> patch_indexes;
+    vector<CartPoint3d> ctrl_points;
+
+    const ErrorCode code { read_patch_file(in_fn, patch_indexes, ctrl_points) }; //runs fine
+    if(code != ErrorCode::success)
+        return code;
 
     /**
      * Input part is done, needed structures are created
-     * Now it's time to treat them accordingly and take care of the output --'
+     * Now it's time to treat them accordingly and take care of the output
      */
+
+    std::ofstream file{};
+    file.open(out_fn, std::ios::out | std::ios::trunc);
+
+    if(!file.is_open())
+        return ErrorCode::io_error;
+
+    const double time_step { 1.0 / static_cast<double>(tesselation_level + 1) };
+
+    for(const auto& indexes_array : patch_indexes){
+
+        vector<vector<CartPoint3d>> patch_matrix {};
+        patch_matrix.reserve(static_cast<size_t>(tesselation_level + 1));
+
+        for(int u{}; u < tesselation_level + 1; ++u){
+
+            vector<CartPoint3d> patch_line {};
+            patch_line.reserve(static_cast<size_t>(tesselation_level + 1));
+
+            auto iter { indexes_array.begin() };
+
+            const CartPoint3d new_p0 {
+                cubic_bezier_curve_pt(
+                    {
+                        ctrl_points.at(*iter++),
+                        ctrl_points.at(*iter++),
+                        ctrl_points.at(*iter++),
+                        ctrl_points.at(*iter++),
+                    },
+                    time_step * static_cast<double>(u)
+                )
+            };
+
+            const CartPoint3d new_p1 {
+                cubic_bezier_curve_pt(
+                    {
+                        ctrl_points.at(*iter++),
+                        ctrl_points.at(*iter++),
+                        ctrl_points.at(*iter++),
+                        ctrl_points.at(*iter++),
+                    },
+                    time_step * static_cast<double>(u)
+                )
+            };
+
+            const CartPoint3d new_p2 {
+                cubic_bezier_curve_pt(
+                    {
+                        ctrl_points.at(*iter++),
+                        ctrl_points.at(*iter++),
+                        ctrl_points.at(*iter++),
+                        ctrl_points.at(*iter++),
+                    },
+                    time_step * static_cast<double>(u)
+                )
+            };
+
+            const CartPoint3d new_p3 {
+                cubic_bezier_curve_pt(
+                    {
+                        ctrl_points.at(*iter++),
+                        ctrl_points.at(*iter++),
+                        ctrl_points.at(*iter++),
+                        ctrl_points.at(*iter),
+                    },
+                    time_step * static_cast<double>(u)
+                )
+            };
+
+            for(int v{}; v < tesselation_level + 1; ++v){
+                const CartPoint3d pt {
+                    cubic_bezier_curve_pt(
+                        { new_p0, new_p1, new_p2, new_p3 }, time_step * static_cast<double>(v)
+                    )
+                };
+
+                patch_line.push_back(pt);
+            }
+
+            patch_matrix.push_back(patch_line);
+        }
+
+        for(unsigned i{}; i < static_cast<size_t>(tesselation_level); ++i)
+            for(unsigned j{}; j < static_cast<size_t>(tesselation_level); ++j){
+
+                file << patch_matrix.at(i).at(j)
+                     << patch_matrix.at(i + 1).at(j)
+                     << patch_matrix.at(i).at(j + 1);
+
+                file << patch_matrix.at(i + 1).at(j + 1)
+                     << patch_matrix.at(i).at(j + 1)
+                     << patch_matrix.at(i + 1).at(j);
+            }
+    }
 
     return ErrorCode::success;
 }
@@ -614,13 +758,13 @@ ErrorCode primitive_writer(const string args[], const int size){
         return torus_writer(filename, out_radius, in_radius, slices, stacks);
     }
 
-    case Primitive::patch: {
+    case Primitive::bezier: {
 
-        if(size < PATCH_ARGS)
+        if(size < BEZIER_ARGS)
             return ErrorCode::not_enough_args;
 
-        const int tesselation_level { string_to_uint(args[ind++]) };
         const string input_filename { args[ind++] };
+        const int tesselation_level { string_to_uint(args[ind++]) };
         const string output_filename { args[ind] };
 
 
@@ -630,7 +774,7 @@ ErrorCode primitive_writer(const string args[], const int size){
         if(tesselation_level < 1)
             return ErrorCode::invalid_argument;
 
-        return patch_writer(output_filename, tesselation_level, input_filename);
+        return bezier_writer(output_filename, tesselation_level, input_filename);
     }
 
     default:

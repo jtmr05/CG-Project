@@ -7,7 +7,7 @@ using std::string;
 //-1 indicates no match found
 int string_to_uint(const string &str){
 
-    const std::regex pattern { "^(\\+)?(\\d)+$", std::regex_constants::ECMAScript };
+    const std::regex pattern { "^(\\s)*(\\+)?(\\d)+(\\s)*$", std::regex_constants::ECMAScript };
 
     if(std::regex_match(str, pattern))
         return std::stoi(str);
@@ -19,7 +19,10 @@ int string_to_uint(const string &str){
 //returns default_value in case no match was found
 double string_to_double(const string &str, double default_value){
 
-    const std::regex pattern { "^(\\+|\\-)?(\\d)+(\\.(\\d)+)?$", std::regex_constants::ECMAScript };
+    const std::regex pattern {
+        "^(\\s)*(\\+|\\-)?(\\d)+(\\.(\\d)+)?(\\s)*$",
+        std::regex_constants::ECMAScript
+    };
 
     if(std::regex_match(str, pattern))
         return std::stod(str);
@@ -31,8 +34,14 @@ double string_to_double(const string &str, double default_value){
 //returns default_value in case no match was found
 bool string_to_bool(const std::string &str, bool default_value){
 
-    const std::regex true_pattern { "^[tT][rR][uU][eE]$", std::regex_constants::ECMAScript };
-    const std::regex false_pattern { "^[fF][aA][lL][sS][eE]$", std::regex_constants::ECMAScript };
+    const std::regex true_pattern {
+        "^(\\s)*[tT][rR][uU][eE](\\s)*$",
+        std::regex_constants::ECMAScript
+    };
+    const std::regex false_pattern {
+        "^(\\s)*[fF][aA][lL][sS][eE](\\s)*$",
+        std::regex_constants::ECMAScript
+    };
 
     if(std::regex_match(str, true_pattern))
         return true;

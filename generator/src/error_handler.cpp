@@ -7,7 +7,7 @@ static void usage(){
         "\t generator cone <radius> <height> <slices> <stacks> <output_file>\n" <<
         "\t generator sphere <radius> <slices> <stacks> <output_file>\n"  <<
         "\t generator torus <outter_radius> <inner_radius> <slices> <stacks> <output_file>\n" <<
-        "\t generator patch <tesselation_level> <input_file> <output_file>\n";
+        "\t generator bezier <input_file> <tesselation_level> <output_file>\n";
 }
 
 void handle_error(const ErrorCode e){
