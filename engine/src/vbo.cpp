@@ -14,7 +14,7 @@ VBO::VBO(const set<string> &models) : buffers{} {
 
     const size_t size { models.size() };
 
-    this->buffers.reserve(size);
+    this->buffers.resize(size); //shouldn't reserve work?
     glGenBuffers(size, this->buffers.data());
 
 

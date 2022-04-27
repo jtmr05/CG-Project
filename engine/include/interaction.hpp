@@ -5,7 +5,7 @@
 #include "data.hpp"
 
 #include <GL/glut.h>
-
+#include <GL/freeglut.h>
 
 
 void interaction_init();

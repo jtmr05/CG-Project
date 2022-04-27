@@ -5,6 +5,7 @@
 #include <cmath>
 #include <cassert>
 #include <iomanip>
+#include <array>
 
 const long double PI { 2.L * std::acos(0.L) };
 
@@ -18,6 +19,7 @@ struct CartPoint3d {
     CartPoint3d();
     CartPoint3d(double x, double y, double z);
 
+    std::array<double, 3> as_array() const;
 };
 
 /**

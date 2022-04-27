@@ -72,7 +72,7 @@ static inline bool parse_dynamic_translate(
     return points->size() >= 4;
 }
 
-static void parse_groups(TiXmlElement* p_world, const string &dir_prefix, vector<Group> &groups){
+static void parse_groups(TiXmlElement* p_world, const string &dir, vector<unique_ptr<Group>> &groups){
 
     std::stack<TiXmlElement*> group_rollback {};
     unsigned int nest_level { 1 };
@@ -82,7 +82,7 @@ static void parse_groups(TiXmlElement* p_world, const string &dir_prefix, vector
 
         assert(nest_level > 0);
 
-        Group g { nest_level };
+        Group* g { new Group{ nest_level } };
 
         TiXmlElement* p_transform { p_group->FirstChildElement("transform") };
         if(p_transform){
@@ -96,47 +96,85 @@ static void parse_groups(TiXmlElement* p_world, const string &dir_prefix, vector
                 const char* time { p_generic_transform->Attribute("time") };
                 const char* align { p_generic_transform->Attribute("align") };
 
-                const double x { string_to_double(p_generic_transform->Attribute("x")) };
-                const double y { string_to_double(p_generic_transform->Attribute("y")) };
-                const double z { string_to_double(p_generic_transform->Attribute("z")) };
 
-                Transform *pt { nullptr };
 
                 if(attribute_name == "rotate"){
-                    if(angle){
-                        StaticRotate sr { string_to_double(angle), { x, y, z } };
-                        pt = &sr;
-                    }
+
+                    const double x { string_to_double(p_generic_transform->Attribute("x")) };
+                    const double y { string_to_double(p_generic_transform->Attribute("y")) };
+                    const double z { string_to_double(p_generic_transform->Attribute("z")) };
+
+                    if(angle)
+                        g->transforms.push_back(
+                            unique_ptr<Transform>{
+                                new StaticRotate { string_to_double(angle), { x, y, z } }
+                            }
+                        );
+
                     else if(time){
-                        DynamicRotate dr { string_to_double(time), { x, y, z } };
-                        pt = &dr;
+
+                        int const itime { string_to_uint(time) };
+
+                        if(itime > 0)
+                            g->transforms.push_back(
+                                unique_ptr<Transform>{
+                                    new DynamicRotate {
+                                        static_cast<unsigned>(itime),
+                                        { x, y, z }
+                                    }
+                                }
+                            );
                     }
+
                 }
                 else if(attribute_name == "translate"){
                     if(time){
                         unique_ptr<vector<CartPoint3d>> points { new vector<CartPoint3d>() };
 
                         if(parse_dynamic_translate(p_generic_transform, points)){
-                            DynamicTranslate dt {
-                                string_to_double(time),
-                                string_to_bool(align),
-                                points
-                            };
-                            pt = &dt;
+
+                            assert(points->size() >= 4);
+
+                            int const itime { string_to_uint(time) };
+
+                            if(itime > 0)
+                                g->transforms.push_back(
+                                    unique_ptr<Transform>{
+                                        new DynamicTranslate {
+                                            static_cast<unsigned>(itime),
+                                            string_to_bool(align),
+                                            points
+                                        }
+                                    }
+                                );
                         }
                     }
                     else{
-                        StaticTranslate st { { x, y, z } };
-                        pt = &st;
+
+                        const double x { string_to_double(p_generic_transform->Attribute("x")) };
+                        const double y { string_to_double(p_generic_transform->Attribute("y")) };
+                        const double z { string_to_double(p_generic_transform->Attribute("z")) };
+
+                        g->transforms.push_back(
+                            unique_ptr<Transform>{
+                                new StaticTranslate { { x, y, z } }
+                            }
+                        );
                     }
                 }
                 else if(attribute_name == "scale"){
-                    Scale s { { x, y, z } };
-                    pt = &s;
+
+                    const double x { string_to_double(p_generic_transform->Attribute("x")) };
+                    const double y { string_to_double(p_generic_transform->Attribute("y")) };
+                    const double z { string_to_double(p_generic_transform->Attribute("z")) };
+
+                    g->transforms.push_back(
+                        unique_ptr<Transform>{
+                            new Scale { { x, y, z } }
+                        }
+                    );
                 }
 
-                if(pt)
-                    g.transforms.push_back(*pt);
 
                 p_generic_transform = p_generic_transform->NextSiblingElement();
             }
@@ -150,13 +188,13 @@ static void parse_groups(TiXmlElement* p_world, const string &dir_prefix, vector
 
                 const string fn { p_model->Attribute("file") };
                 if(has_3d_ext(fn))
-                    g.models.push_back(dir_prefix + fn);
+                    g->models.push_back(dir + fn);
 
                 p_model = p_model->NextSiblingElement("model");
             }
         }
 
-        groups.push_back(g);
+        groups.push_back(unique_ptr<Group>{g});
 
         TiXmlElement* parent { p_group };
         p_group = p_group->FirstChildElement("group");
@@ -178,7 +216,7 @@ static void parse_groups(TiXmlElement* p_world, const string &dir_prefix, vector
     }
 }
 
-ErrorCode xml_parser(const string &path, CameraSettings &c, vector<Group> &groups){
+ErrorCode xml_parser(const string &path, CameraSettings &c, vector<unique_ptr<Group>> &groups){
 
     TiXmlDocument doc {};
 

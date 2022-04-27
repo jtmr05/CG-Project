@@ -12,6 +12,10 @@
 
 
 
-ErrorCode xml_parser(const std::string &path, CameraSettings &c, std::vector<Group> &groups);
+ErrorCode xml_parser(
+    const std::string &path,
+    CameraSettings &c,
+    std::vector<std::unique_ptr<Group>> &groups
+);
 
 #endif

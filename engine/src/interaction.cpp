@@ -199,7 +199,7 @@ void keys_event(unsigned char key, int, int){
         break;
 
     case 'e':
-        std::exit(0);
+        glutLeaveMainLoop();
         break;
 
     default:

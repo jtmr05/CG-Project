@@ -28,14 +28,13 @@ enum TransformType {
 
 class Transform {
 
-    private:
-        TransformType type;
+        //Transform(const Transform&) = delete;
+        //Transform& operator=(const Transform&) = delete;
 
-    protected:                    //visibility limited to subclasses
-        Transform(TransformType type);
 
     public:
-        TransformType get_type() const;
+        Transform();
+        virtual TransformType get_type() const = 0;
 };
 
 
@@ -47,15 +46,17 @@ class StaticRotate : public Transform {
         CartPoint3d point;
 
         StaticRotate(angle_t angle, const CartPoint3d &point);
+        TransformType get_type() const;
 };
 
 class DynamicRotate : public Transform {
 
     public:
-        double time;
+        unsigned time;
         CartPoint3d point;
 
-        DynamicRotate(double time, const CartPoint3d &point);
+        DynamicRotate(unsigned time, const CartPoint3d &point);
+        TransformType get_type() const;
 };
 
 class StaticTranslate : public Transform {
@@ -64,21 +65,24 @@ class StaticTranslate : public Transform {
         CartPoint3d point;
 
         StaticTranslate(const CartPoint3d &point);
+        TransformType get_type() const;
 };
 
 class DynamicTranslate : public Transform {
 
     public:
-        double time;
+        unsigned time;
         bool align;
-        std::vector<CartPoint3d> *points;
+        std::vector<CartPoint3d>* points;
 
         DynamicTranslate(
-            double time, bool align,
+            unsigned time, bool align,
             std::unique_ptr<std::vector<CartPoint3d>> &points
         );
 
         ~DynamicTranslate(); //destrutor to free points
+
+        TransformType get_type() const;
 };
 
 class Scale : public Transform {
@@ -87,13 +91,14 @@ class Scale : public Transform {
         CartPoint3d point;
 
         Scale(const CartPoint3d &point);
+        TransformType get_type() const;
 };
 
 
 
 struct Group {
 
-    std::vector<Transform> transforms;
+    std::vector<std::unique_ptr<Transform>> transforms;
     std::vector<std::string> models;
     unsigned int nest_level;
 

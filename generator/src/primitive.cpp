@@ -175,17 +175,20 @@ static ErrorCode bezier_writer(const string &out_fn, int tesselation_level, cons
     if(!file.is_open())
         return ErrorCode::io_error;
 
-    const double time_step { 1.0 / static_cast<double>(tesselation_level + 1) };
+    /* tesselation_level is incremented
+     * in order for all the various patches to be "stitched" together
+     */
+    const double time_step { 1.0 / static_cast<double>(tesselation_level++) };
 
     for(const auto& indexes_array : patch_indexes){
 
         vector<vector<CartPoint3d>> patch_matrix {};
-        patch_matrix.reserve(static_cast<size_t>(tesselation_level + 1));
+        patch_matrix.reserve(static_cast<size_t>(tesselation_level));
 
-        for(int u{}; u < tesselation_level + 1; ++u){
+        for(int u{}; u < tesselation_level; ++u){
 
             vector<CartPoint3d> patch_line {};
-            patch_line.reserve(static_cast<size_t>(tesselation_level + 1));
+            patch_line.reserve(static_cast<size_t>(tesselation_level));
 
             auto iter { indexes_array.begin() };
 
@@ -237,7 +240,7 @@ static ErrorCode bezier_writer(const string &out_fn, int tesselation_level, cons
                 )
             };
 
-            for(int v{}; v < tesselation_level + 1; ++v){
+            for(int v{}; v < tesselation_level; ++v){
                 const CartPoint3d pt {
                     cubic_bezier_curve_pt(
                         { new_p0, new_p1, new_p2, new_p3 }, time_step * static_cast<double>(v)
@@ -250,8 +253,8 @@ static ErrorCode bezier_writer(const string &out_fn, int tesselation_level, cons
             patch_matrix.push_back(patch_line);
         }
 
-        for(unsigned i{}; i < static_cast<size_t>(tesselation_level); ++i)
-            for(unsigned j{}; j < static_cast<size_t>(tesselation_level); ++j){
+        for(unsigned i{}; i < static_cast<size_t>(tesselation_level - 1); ++i)
+            for(unsigned j{}; j < static_cast<size_t>(tesselation_level - 1); ++j){
 
                 file << patch_matrix.at(i).at(j)
                      << patch_matrix.at(i + 1).at(j)

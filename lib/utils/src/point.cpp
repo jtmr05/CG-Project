@@ -1,5 +1,6 @@
 #include "point.hpp"
 
+using std::array;
 
 //arbitrary number of decimal places output to a file when using << operator
 static const int PRECISION { 30 };
@@ -26,6 +27,11 @@ CartPoint3d::CartPoint3d(double x, double y, double z){
     this->y = y;
     this->z = z;
 }
+
+array<double, 3> CartPoint3d::as_array() const {
+    return { this->x, this->y, this->z };
+}
+
 
 PolarPoint3d::PolarPoint3d(){
     this->radius = 0.0;

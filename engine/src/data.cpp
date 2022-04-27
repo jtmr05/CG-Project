@@ -17,56 +17,68 @@ CameraSettings::CameraSettings(){
 
 
 
-Transform::Transform(TransformType type) : type{ type } {}
+Transform::Transform(){}
 
-TransformType Transform::get_type() const {
-    return this->type;
+
+
+StaticRotate::StaticRotate(angle_t angle, const CartPoint3d &point){
+    this->angle = { angle };
+    this->point = { point };
+}
+
+TransformType StaticRotate::get_type() const {
+    return TransformType::static_rotate;
 }
 
 
 
-StaticRotate::StaticRotate(angle_t angle, const CartPoint3d &point) :
-    Transform(TransformType::static_rotate){       //call super constructor
-            this->angle = { angle };
-            this->point = { point };
+DynamicRotate::DynamicRotate(unsigned time, const CartPoint3d &point){
+    this->time = { time };
+    this->point = { point };
 }
 
-DynamicRotate::DynamicRotate(double time, const CartPoint3d &point) :
-    Transform(TransformType::dynamic_rotate){
-        this->time = { time };
-        this->point = { point };
+TransformType DynamicRotate::get_type() const {
+    return TransformType::dynamic_rotate;
 }
 
 
 
-StaticTranslate::StaticTranslate(const CartPoint3d &point) :
-    Transform(TransformType::static_rotate){
-        this->point = { point };
+StaticTranslate::StaticTranslate(const CartPoint3d &point){
+    this->point = { point };
 }
 
-DynamicTranslate::DynamicTranslate(double time, bool align, unique_ptr<vector<CartPoint3d>> &points) :
-    Transform(TransformType::dynamic_translate){
+TransformType StaticTranslate::get_type() const {
+    return TransformType::static_translate;
+}
 
-        this->time = { time };
-        this->align = { align };
-        this->points = { points.release() };
+
+
+DynamicTranslate::DynamicTranslate(unsigned time, bool align, unique_ptr<vector<CartPoint3d>> &points){
+    this->time = { time };
+    this->align = { align };
+    this->points = { points.release() };
 }
 
 DynamicTranslate::~DynamicTranslate(){
     delete this->points;
 }
 
+TransformType DynamicTranslate::get_type() const {
+    return TransformType::dynamic_translate;
+}
 
 
-Scale::Scale(const CartPoint3d &point) :
-    Transform(TransformType::scale){
-        this->point = { point };
+
+Scale::Scale(const CartPoint3d &point){
+    this->point = { point };
+}
+
+TransformType Scale::get_type() const {
+    return TransformType::scale;
 }
 
 
 
 Group::Group(unsigned int nest_level){
     this->nest_level = { nest_level };
-    this->models = {};
-    this->transforms = {};
 }

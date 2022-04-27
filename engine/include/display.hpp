@@ -6,6 +6,7 @@
 #include <cmath>
 #include <vector>
 #include <set>
+#include <array>
 
 #include "point.hpp"
 #include "error_handler.hpp"
