@@ -12,18 +12,8 @@ CameraSettings cs {};
 static vector<unique_ptr<Group>> groups_to_draw {};
 static VBO* vbo_wrapper { nullptr };
 
-static int const tesselation { 100 };
+static int tesselation { 100 };
 
-
-template<class T, size_t rows, size_t columns>
-struct matrix {
-
-    array<array<T, columns>, rows> m;
-
-    constexpr array<T, columns>& operator[](size_t i){
-        return m[i];
-    }
-};
 
 
 static void change_size(int w, int h){
@@ -82,9 +72,9 @@ static void normalize(array<double, 3> &a) {
 
 template<size_t left_size, size_t inner_size, size_t right_size>
 static void mult_matrixes(
-    matrix<double, left_size, inner_size> &m1,
-    matrix<double, inner_size, right_size> &m2,
-    matrix<double, left_size, right_size> &res
+    Matrix<double, left_size, inner_size> &m1,
+    Matrix<double, inner_size, right_size> &m2,
+    Matrix<double, left_size, right_size> &res
 ){
 
     for(size_t l {}; l < left_size; ++l){
@@ -106,18 +96,18 @@ static void get_catmull_rom_point(
     const array<double, 3> &p1,
     const array<double, 3> &p2,
     const array<double, 3> &p3,
-    matrix<double, 1, 3> &pos,
-    matrix<double, 1, 3> &deriv
+    Matrix<double, 1, 3> &pos,
+    Matrix<double, 1, 3> &deriv
 ){
 
     // catmull-rom matrix
-    matrix<double, 4, 4> m {};
-    m[0] = {-0.5f,  1.5f, -1.5f,  0.5f};
-    m[1] = { 1.0f, -2.5f,  2.0f, -0.5f};
-    m[2] = {-0.5f,  0.0f,  0.5f,  0.0f};
-    m[3] = { 0.0f,  1.0f,  0.0f,  0.0f};
+    Matrix<double, 4, 4> m {};
+    m[0] = {-0.5,  1.5, -1.5,  0.5};
+    m[1] = { 1.0, -2.5,  2.0, -0.5};
+    m[2] = {-0.5,  0.0,  0.5,  0.0};
+    m[3] = { 0.0,  1.0,  0.0,  0.0};
 
-    matrix<double, 4, 3> p {};
+    Matrix<double, 4, 3> p {};
     p[0] = {p0[0], p0[1], p0[2]};
     p[1] = {p1[0], p1[1], p1[2]};
     p[2] = {p2[0], p2[1], p2[2]};
@@ -125,13 +115,13 @@ static void get_catmull_rom_point(
 
     // Compute A = M * P
     // M is 4x4, P is 4x3, therefore A is 4x3
-    matrix<double, 4, 3> a {};
+    Matrix<double, 4, 3> a {};
     mult_matrixes(m, p, a);
 
 
 
     // Compute pos = T * A
-    matrix<double, 1, 4> t_vector {};
+    Matrix<double, 1, 4> t_vector {};
     t_vector[0] = { t * t * t, t * t, t, 1.f };
 
     mult_matrixes(t_vector, a, pos);
@@ -139,7 +129,7 @@ static void get_catmull_rom_point(
 
 
     // compute deriv = T' * A
-    matrix<double, 1, 4> t_vector_deriv {};
+    Matrix<double, 1, 4> t_vector_deriv {};
     t_vector_deriv[0] = { 3.f * t * t, 2.f * t, 1.f, 0.f };
 
     mult_matrixes(t_vector_deriv, a, deriv);
@@ -148,8 +138,8 @@ static void get_catmull_rom_point(
 static void get_global_catmull_rom_point(
     const vector<CartPoint3d> &points,
     double gt,
-    matrix<double, 1, 3> &pos,
-    matrix<double, 1, 3> &deriv
+    Matrix<double, 1, 3> &pos,
+    Matrix<double, 1, 3> &deriv
 ){
 
     size_t const point_count { points.size() };
@@ -177,7 +167,7 @@ static void get_global_catmull_rom_point(
 
 static void render_catmull_rom_curve(const vector<CartPoint3d> &points){
 
-    matrix<double, 1, 3> pos {}, deriv {};
+    Matrix<double, 1, 3> pos {}, deriv {};
     const double step { 1.0 / static_cast<float>(tesselation) };
 
     glBegin(GL_LINE_LOOP);
@@ -185,7 +175,7 @@ static void render_catmull_rom_curve(const vector<CartPoint3d> &points){
         for(double gt {}; gt < 1.0; gt += step){
 
             get_global_catmull_rom_point(points, gt, pos, deriv);
-            glVertex3f(pos[0][0], pos[0][1], pos[0][2]);
+            glVertex3d(pos[0][0], pos[0][1], pos[0][2]);
         }
 
     glEnd();
@@ -298,27 +288,19 @@ static void render_scene(){
 
                 render_catmull_rom_curve(*(dt->points));
 
-                int const current_seconds { glutGet(GLUT_ELAPSED_TIME) / 1000 };
-
-                double const time_delta {
-                    static_cast<double>(100) /
-                    static_cast<double>(dt->time * 1000)
+                double const t {
+                    (static_cast<double>(glutGet(GLUT_ELAPSED_TIME)) / 1000.0) /
+                    static_cast<double>(dt->time)
                 };
 
-                double const current_time {
-                    static_cast<double>(
-                        current_seconds % static_cast<ssize_t>(dt->time * 1000)
-                    )
-                    * time_delta
-                };
+                Matrix<double, 1, 3> pos {};
+                Matrix<double, 1, 3> deriv {};
+                get_global_catmull_rom_point(*(dt->points), t, pos, deriv);
 
-                matrix<double, 1, 3> pos {};
-                matrix<double, 1, 3> deriv {};
-                get_global_catmull_rom_point(*(dt->points), current_time, pos, deriv);
                 glTranslated(pos[0][0], pos[0][1], pos[0][2]);
 
                 if(dt->align){
-                    static array<double, 3> Y { 0.f, 1.f, 0.f };
+                    static array<double, 3> Y { 0.0, 1.0, 0.0 };
 
                     array<double, 3> X { deriv[0] }, Z {};
 
@@ -408,6 +390,10 @@ ErrorCode start(int argc, char** argv){
 
     const string filename { argv[1] };
     const ErrorCode code { xml_parser(filename, cs, groups_to_draw) }; //groups_to_draw and cs are global
+
+    if(argc >= 3)
+        tesselation = (tesselation = string_to_uint(argv[2])) > 0 ? tesselation : 100;
+
 
     if(code == ErrorCode::success){
         interaction_init();

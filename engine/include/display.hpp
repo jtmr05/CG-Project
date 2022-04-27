@@ -7,11 +7,13 @@
 #include <vector>
 #include <set>
 #include <array>
+#include <optional>
 
 #include "point.hpp"
 #include "error_handler.hpp"
 #include "xml_parser.hpp"
 #include "vbo.hpp"
+#include "data.hpp"
 #include "interaction.hpp" //must be below vbo.hpp !!
 
 #include <GL/glut.h>

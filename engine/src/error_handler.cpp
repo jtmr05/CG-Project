@@ -2,13 +2,13 @@
 
 static void usage(){
     std::cerr << "Usage: \n" <<
-        "\t engine <xml_file>\n";
+        "\t engine <xml_file> [dynamic_translate_tesselation_level]\n";
 }
 
 void handle_error(const ErrorCode e){
 
     if(e != ErrorCode::success)
-        std::cerr << "generator: ";
+        std::cerr << "engine: ";
 
     switch(e){
 

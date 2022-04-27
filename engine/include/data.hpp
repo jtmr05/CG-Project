@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <array>
 
 #include "point.hpp"
 
@@ -27,10 +28,6 @@ enum TransformType {
 };
 
 class Transform {
-
-        //Transform(const Transform&) = delete;
-        //Transform& operator=(const Transform&) = delete;
-
 
     public:
         Transform();
@@ -103,6 +100,18 @@ struct Group {
     unsigned int nest_level;
 
     Group(unsigned int nest_level);
+};
+
+
+
+template<class T, size_t rows, size_t columns>
+struct Matrix {
+
+    std::array<std::array<T, columns>, rows> m;
+
+    constexpr std::array<T, columns>& operator[](size_t i){
+        return this->m[i];
+    }
 };
 
 #endif

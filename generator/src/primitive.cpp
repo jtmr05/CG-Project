@@ -176,7 +176,8 @@ static ErrorCode bezier_writer(const string &out_fn, int tesselation_level, cons
         return ErrorCode::io_error;
 
     /* tesselation_level is incremented
-     * in order for all the various patches to be "stitched" together
+     * in order for all the various patches
+     * to be "stitched" together
      */
     const double time_step { 1.0 / static_cast<double>(tesselation_level++) };
 
