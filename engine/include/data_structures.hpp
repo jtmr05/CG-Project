@@ -1,10 +1,11 @@
-#ifndef DATA_HPP
-#define DATA_HPP
+#ifndef DATA_STRUCTURES_HPP
+#define DATA_STRUCTURES_HPP
 
 #include <string>
 #include <vector>
 #include <memory>
 #include <array>
+#include <optional>
 
 #include "point.hpp"
 
@@ -112,6 +113,37 @@ struct Matrix {
     constexpr std::array<T, columns>& operator[](size_t i){
         return this->m[i];
     }
+};
+
+
+
+template <typename T> class Constant {
+
+    private:
+        std::optional<T> v;
+
+    public:
+        Constant() = default;
+        Constant(const Constant&) = delete;
+        Constant& operator=(const Constant&) = delete;
+
+        Constant& operator=(const T& x){
+            if (!this->v.has_value())
+                this->v = std::make_optional<T>(x);
+            else
+                std::terminate();
+
+            return *this;
+
+        }
+
+        bool has_value() const {
+            return this->v.has_value();
+        }
+
+        const T& value() const {
+            return this->v.value();
+        }
 };
 
 #endif

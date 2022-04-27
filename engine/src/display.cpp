@@ -10,9 +10,9 @@ using std::array;
 CameraSettings cs {};
 
 static vector<unique_ptr<Group>> groups_to_draw {};
-static VBO* vbo_wrapper { nullptr };
 
-static int tesselation { 100 };
+static VBO* vbo_wrapper {};
+static Constant<int> tesselation {};
 
 
 
@@ -168,7 +168,7 @@ static void get_global_catmull_rom_point(
 static void render_catmull_rom_curve(const vector<CartPoint3d> &points){
 
     Matrix<double, 1, 3> pos {}, deriv {};
-    const double step { 1.0 / static_cast<float>(tesselation) };
+    const double step { 1.0 / static_cast<float>(tesselation.value()) };
 
     glBegin(GL_LINE_LOOP);
 
@@ -391,8 +391,10 @@ ErrorCode start(int argc, char** argv){
     const string filename { argv[1] };
     const ErrorCode code { xml_parser(filename, cs, groups_to_draw) }; //groups_to_draw and cs are global
 
-    if(argc >= 3)
-        tesselation = (tesselation = string_to_uint(argv[2])) > 0 ? tesselation : 100;
+    if(argc >= 3){
+        const int aux_tess { string_to_uint(argv[2]) };
+        tesselation = (aux_tess > 0) ? aux_tess : 100;
+    }
 
 
     if(code == ErrorCode::success){

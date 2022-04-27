@@ -2,7 +2,7 @@
 #define INTERACTION_HPP
 
 
-#include "data.hpp"
+#include "data_structures.hpp"
 
 #include <GL/glut.h>
 #include <GL/freeglut.h>

@@ -13,7 +13,7 @@
 #include "error_handler.hpp"
 #include "xml_parser.hpp"
 #include "vbo.hpp"
-#include "data.hpp"
+#include "data_structures.hpp"
 #include "interaction.hpp" //must be below vbo.hpp !!
 
 #include <GL/glut.h>
