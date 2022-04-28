@@ -67,7 +67,7 @@ VBO* VBO::get_instance(const set<string> &models){
     return VBO::singleton;
 }
 
-bool VBO::render(const string& model){
+bool VBO::render(const string& model) const{
 
     //check number of mappings for this key
     const bool has_value { this->model_index_mappings.count(model) > 0 };

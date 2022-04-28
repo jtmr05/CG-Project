@@ -9,11 +9,11 @@ static bool show_axis { false };
 static GLubyte rgb[3] { 0, 255, 255};
 static GLubyte color_delta { 3 };
 
-static CartPoint3d direction;
+static CartPoint3d direction {};
 static bool first_person { false };
 static bool first_mouse { true };
-static int last_x;
-static int last_y;
+static int last_x {};
+static int last_y {};
 
 static float yaw { 0.f };
 static float pitch { 0.f };
@@ -39,11 +39,12 @@ void interaction_init(){
 // function to process special keyboard events
 void special_keys_event(int key_code, int, int){
 
+    bool nothing { false };
+
     if(!first_person){
 
         auto&& [px, py, pz] = cs.position;
         double radius { std::sqrt(pz * pz + px * px + py * py) };
-        bool nothing { false };
 
         switch (key_code){
 
@@ -91,8 +92,6 @@ void special_keys_event(int key_code, int, int){
 
     }
     else{
-
-        bool nothing { false };
 
         switch (key_code){
 
@@ -215,19 +214,15 @@ void mouse_event(int x, int y){
     if(first_person){
 
         if (first_mouse){
-
             last_x = x;
             last_y = y;
             first_mouse = false;
         }
 
-        float xoffset { static_cast<float>(x - last_x) };
-        float yoffset { static_cast<float>(y - last_y) };
+        float const xoffset { static_cast<float>(x - last_x) * sensitivity };
+        float const yoffset { static_cast<float>(y - last_y) * sensitivity };
         last_x = x;
         last_y = y;
-
-        xoffset *= sensitivity;
-        yoffset *= sensitivity;
 
         yaw   -= xoffset;
         pitch -= yoffset;
@@ -280,8 +275,5 @@ void set_color(){
 }
 
 void set_polygon_mode(){
-    if(fill)
-        glPolygonMode(GL_FRONT, GL_FILL);
-    else
-        glPolygonMode(GL_FRONT, GL_LINE);
+    glPolygonMode(GL_FRONT, fill ? GL_FILL : GL_LINE);
 }

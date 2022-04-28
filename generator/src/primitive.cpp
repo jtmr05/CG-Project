@@ -51,8 +51,6 @@ static Primitive from_string(const string &str){
 
 static inline CartPoint3d cubic_bezier_curve_pt(const array<CartPoint3d, 4> &ctrl_points, double time){
 
-    assert(ctrl_points.size() == 4);
-
     const double complement { 1.0 - time };
 
     const array<double, 4> binomial_coeffs { //Bernstein polynomials definiton
@@ -67,9 +65,9 @@ static inline CartPoint3d cubic_bezier_curve_pt(const array<CartPoint3d, 4> &ctr
     double x{}, y{}, z{};
 
     for(unsigned i{}; i < binomial_coeffs.size(); ++i){
-        x += binomial_coeffs.at(i) * ctrl_points.at(ctrl_points.size() - 1 - i).x;
-        y += binomial_coeffs.at(i) * ctrl_points.at(ctrl_points.size() - 1 - i).y;
-        z += binomial_coeffs.at(i) * ctrl_points.at(ctrl_points.size() - 1 - i).z;
+        x += binomial_coeffs[i] * ctrl_points[ctrl_points.size() - 1 - i].x;
+        y += binomial_coeffs[i] * ctrl_points[ctrl_points.size() - 1 - i].y;
+        z += binomial_coeffs[i] * ctrl_points[ctrl_points.size() - 1 - i].z;
     }
 
     return { x, y, z };
@@ -530,20 +528,20 @@ static ErrorCode box_writer(const string &filename, int units, int grid_size){
 
         for(int j{}; j < grid_size; ++j, z -= incr){
 
-            p1.y = p2.y = p3.y = p4.y = -abs_max_coord;
+            p1.y = p2.y = p3.y = p4.y = abs_max_coord;
 
             p1.x = x; p1.z = z;
             p2.x = x; p2.z = z - incr;
             p3.x = x - incr; p3.z = z;
             p4.x = x - incr; p4.z = z - incr;
 
-            file << p1 << p3 << p2;
-            file << p2 << p3 << p4;
-
-            p1.y = p2.y = p3.y = p4.y = abs_max_coord;
-
             file << p1 << p2 << p4;
             file << p4 << p3 << p1;
+
+            p1.y = p2.y = p3.y = p4.y = -abs_max_coord;
+
+            file << p1 << p3 << p2;
+            file << p2 << p3 << p4;
         }
     }
 
@@ -565,7 +563,7 @@ static ErrorCode box_writer(const string &filename, int units, int grid_size){
             file << p1 << p4 << p2;
             file << p1 << p3 << p4;
 
-            p1.x = p2.x = p3.x = p4.x = - abs_max_coord;
+            p1.x = p2.x = p3.x = p4.x = -abs_max_coord;
 
             file << p1 << p2 << p3;
             file << p2 << p4 << p3;
@@ -590,7 +588,7 @@ static ErrorCode box_writer(const string &filename, int units, int grid_size){
             file << p1 << p2 << p4;
             file << p1 << p4 << p3;
 
-            p1.z = p2.z = p3.z = p4.z = - abs_max_coord;
+            p1.z = p2.z = p3.z = p4.z = -abs_max_coord;
 
             file << p1 << p3 << p2;
             file << p2 << p3 << p4;

@@ -11,7 +11,7 @@ CameraSettings cs {};
 
 static vector<unique_ptr<Group>> groups_to_draw {};
 
-static VBO* vbo_wrapper {};
+static Constant<VBO*> vbo_wrapper {};
 static Constant<int> tesselation {};
 
 
@@ -122,7 +122,7 @@ static void get_catmull_rom_point(
 
     // Compute pos = T * A
     Matrix<double, 1, 4> t_vector {};
-    t_vector[0] = { t * t * t, t * t, t, 1.f };
+    t_vector[0] = { t * t * t, t * t, t, 1.0 };
 
     mult_matrixes(t_vector, a, pos);
 
@@ -130,7 +130,7 @@ static void get_catmull_rom_point(
 
     // compute deriv = T' * A
     Matrix<double, 1, 4> t_vector_deriv {};
-    t_vector_deriv[0] = { 3.f * t * t, 2.f * t, 1.f, 0.f };
+    t_vector_deriv[0] = { 3.0 * t * t, 2.0 * t, 1.0, 0.0 };
 
     mult_matrixes(t_vector_deriv, a, deriv);
 }
@@ -168,7 +168,7 @@ static void get_global_catmull_rom_point(
 static void render_catmull_rom_curve(const vector<CartPoint3d> &points){
 
     Matrix<double, 1, 3> pos {}, deriv {};
-    const double step { 1.0 / static_cast<float>(tesselation.value()) };
+    const double step { 1.0 / static_cast<double>(tesselation.value()) };
 
     glBegin(GL_LINE_LOOP);
 
@@ -326,7 +326,7 @@ static void render_scene(){
 
 
         for(auto const& m : group->models)
-            vbo_wrapper->render(m);
+            vbo_wrapper.value()->render(m);
     }
 
     while(curr_nest_level > 0){
@@ -395,6 +395,8 @@ ErrorCode start(int argc, char** argv){
         const int aux_tess { string_to_uint(argv[2]) };
         tesselation = (aux_tess > 0) ? aux_tess : 100;
     }
+    else
+        tesselation = 100;
 
 
     if(code == ErrorCode::success){
@@ -402,7 +404,7 @@ ErrorCode start(int argc, char** argv){
         glut_start(argc, argv);
     }
 
-    delete vbo_wrapper;
+    delete vbo_wrapper.value();
 
     return code;
 }

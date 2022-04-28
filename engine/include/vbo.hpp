@@ -29,7 +29,7 @@ class VBO{
 
     public:
         static VBO* get_instance(const std::set<std::string> &models);
-        bool render(const std::string &model);
+        bool render(const std::string &model) const;
 };
 
 #endif

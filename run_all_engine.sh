@@ -5,10 +5,9 @@ run(){
     if [[ -f bin/engine ]]
     then
         for test_file in resources/*.xml ; do
-            echo "Running $test_file..."
+            echo "Running bin/engine $test_file..."
             bin/engine $test_file 100
-            echo "Done"
-            echo ""
+            echo -e "Done\n"
         done
         return 0
     else
