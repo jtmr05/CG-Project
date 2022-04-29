@@ -224,7 +224,9 @@ static inline void compute_fps(){
         begin_millis = current_millis;
 
     #ifndef NDEBUG
-        if(fps_values_iter == fps_values.end() && once){
+        if(fps_values_iter != fps_values.end())
+            *fps_values_iter++ = fps;
+        else if(once){
 
             once = false;
 
@@ -240,9 +242,8 @@ static inline void compute_fps(){
                       << " | average[" << fps_values.size() << "]: " << avg
                       << " | VBOs enabled: "
                       << (as_vbo.value() ? "yes" : "no") << '\n';
-        }
-        else
-            *fps_values_iter++ = fps;
+            glutLeaveMainLoop();
+	}
     #endif
     }
 }
