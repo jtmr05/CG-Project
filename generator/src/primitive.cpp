@@ -186,18 +186,18 @@ static ErrorCode bezier_writer(const string &out_fn, int tesselation_level, cons
 
         for(int u{}; u < tesselation_level; ++u){
 
-            vector<CartPoint3d> patch_line {};
-            patch_line.reserve(static_cast<size_t>(tesselation_level));
+            vector<CartPoint3d> patch_row {};
+            patch_row.reserve(static_cast<size_t>(tesselation_level));
 
             auto iter { indexes_array.begin() };
 
             const CartPoint3d new_p0 {
                 cubic_bezier_curve_pt(
                     {
-                        ctrl_points.at(*iter++),
-                        ctrl_points.at(*iter++),
-                        ctrl_points.at(*iter++),
-                        ctrl_points.at(*iter++),
+                        ctrl_points[*iter++],
+                        ctrl_points[*iter++],
+                        ctrl_points[*iter++],
+                        ctrl_points[*iter++],
                     },
                     time_step * static_cast<double>(u)
                 )
@@ -206,10 +206,10 @@ static ErrorCode bezier_writer(const string &out_fn, int tesselation_level, cons
             const CartPoint3d new_p1 {
                 cubic_bezier_curve_pt(
                     {
-                        ctrl_points.at(*iter++),
-                        ctrl_points.at(*iter++),
-                        ctrl_points.at(*iter++),
-                        ctrl_points.at(*iter++),
+                        ctrl_points[*iter++],
+                        ctrl_points[*iter++],
+                        ctrl_points[*iter++],
+                        ctrl_points[*iter++],
                     },
                     time_step * static_cast<double>(u)
                 )
@@ -218,10 +218,10 @@ static ErrorCode bezier_writer(const string &out_fn, int tesselation_level, cons
             const CartPoint3d new_p2 {
                 cubic_bezier_curve_pt(
                     {
-                        ctrl_points.at(*iter++),
-                        ctrl_points.at(*iter++),
-                        ctrl_points.at(*iter++),
-                        ctrl_points.at(*iter++),
+                        ctrl_points[*iter++],
+                        ctrl_points[*iter++],
+                        ctrl_points[*iter++],
+                        ctrl_points[*iter++],
                     },
                     time_step * static_cast<double>(u)
                 )
@@ -230,10 +230,10 @@ static ErrorCode bezier_writer(const string &out_fn, int tesselation_level, cons
             const CartPoint3d new_p3 {
                 cubic_bezier_curve_pt(
                     {
-                        ctrl_points.at(*iter++),
-                        ctrl_points.at(*iter++),
-                        ctrl_points.at(*iter++),
-                        ctrl_points.at(*iter),
+                        ctrl_points[*iter++],
+                        ctrl_points[*iter++],
+                        ctrl_points[*iter++],
+                        ctrl_points[*iter],
                     },
                     time_step * static_cast<double>(u)
                 )
@@ -246,22 +246,22 @@ static ErrorCode bezier_writer(const string &out_fn, int tesselation_level, cons
                     )
                 };
 
-                patch_line.push_back(pt);
+                patch_row.push_back(pt);
             }
 
-            patch_matrix.push_back(patch_line);
+            patch_matrix.push_back(patch_row);
         }
 
         for(unsigned i{}; i < static_cast<size_t>(tesselation_level - 1); ++i)
             for(unsigned j{}; j < static_cast<size_t>(tesselation_level - 1); ++j){
 
-                file << patch_matrix.at(i).at(j)
-                     << patch_matrix.at(i + 1).at(j)
-                     << patch_matrix.at(i).at(j + 1);
+                file << patch_matrix[i][j]
+                     << patch_matrix[i + 1][j]
+                     << patch_matrix[i][j + 1];
 
-                file << patch_matrix.at(i + 1).at(j + 1)
-                     << patch_matrix.at(i).at(j + 1)
-                     << patch_matrix.at(i + 1).at(j);
+                file << patch_matrix[i + 1][j + 1]
+                     << patch_matrix[i][j + 1]
+                     << patch_matrix[i + 1][j];
             }
     }
 

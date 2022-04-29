@@ -201,6 +201,10 @@ void keys_event(unsigned char key, int, int){
         glutLeaveMainLoop();
         break;
 
+    case 'q':
+        std::exit(1);
+        break;
+
     default:
         break;
     }

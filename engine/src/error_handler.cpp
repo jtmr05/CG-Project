@@ -2,7 +2,7 @@
 
 static void usage(){
     std::cerr << "Usage: \n" <<
-        "\t engine <xml_file> [dynamic_translate_tesselation_level]\n";
+        "\t engine <xml_file> [use_vbos:y|n] [dynamic_translate_tesselation_level]\n";
 }
 
 void handle_error(const ErrorCode e){

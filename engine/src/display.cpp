@@ -5,6 +5,7 @@ using std::string;
 using std::set;
 using std::unique_ptr;
 using std::array;
+using std::map;
 
 
 CameraSettings cs {};
@@ -13,6 +14,10 @@ static vector<unique_ptr<Group>> groups_to_draw {};
 
 static Constant<VBO*> vbo_wrapper {};
 static Constant<int> tesselation {};
+static Constant<map<string, vector<CartPoint3d>>> points_to_draw {};
+static Constant<bool> as_vbo {};
+
+static const string TITLE { "CG Phase 3" };
 
 
 
@@ -181,6 +186,36 @@ static void render_catmull_rom_curve(const vector<CartPoint3d> &points){
     glEnd();
 }
 
+static inline void compute_fps(){
+
+    static unsigned frames { 0 };
+    ++frames;
+
+    static int begin_millis { glutGet(GLUT_ELAPSED_TIME) };
+    int const current_millis { glutGet(GLUT_ELAPSED_TIME) };
+    int const diff_millis { current_millis - begin_millis };
+
+    if(diff_millis > 1000){
+
+        double const fps {
+            static_cast<double>(frames * 1000) /
+            static_cast<double>(diff_millis)
+        };
+
+        std::stringstream string_buffer {};
+        string_buffer << TITLE
+                      << " --- FPS: "
+                      << fps
+                      << " --- VBOs enabled: "
+                      << (as_vbo.value() ? "yes" : "no");
+
+        glutSetWindowTitle(string_buffer.str().c_str());
+
+        frames = 0;
+        begin_millis = current_millis;
+    }
+}
+
 static void render_scene(){
 
     // clear buffers
@@ -289,8 +324,8 @@ static void render_scene(){
                 render_catmull_rom_curve(*(dt->points));
 
                 double const t {
-                    (static_cast<double>(glutGet(GLUT_ELAPSED_TIME)) / 1000.0) /
-                    static_cast<double>(dt->time)
+                    static_cast<double>(glutGet(GLUT_ELAPSED_TIME)) /
+                    static_cast<double>(dt->time * 1000)
                 };
 
                 Matrix<double, 1, 3> pos {};
@@ -325,14 +360,34 @@ static void render_scene(){
         }
 
 
-        for(auto const& m : group->models)
-            vbo_wrapper.value()->render(m);
+        for(auto const& m : group->models){
+
+            if(as_vbo.value())
+                vbo_wrapper.value()->render(m);
+
+            else if(points_to_draw.value().count(m) > 0){
+
+                const vector<CartPoint3d> points { points_to_draw.value().at(m) };
+
+                glBegin(GL_TRIANGLES);
+
+                for(auto p { points.begin() }; p != points.end(); p += 3){
+                    glVertex3d(p[0].x, p[0].y, p[0].z);
+                    glVertex3d(p[1].x, p[1].y, p[1].z);
+                    glVertex3d(p[2].x, p[2].y, p[2].z);
+                }
+
+                glEnd();
+            }
+        }
     }
 
     while(curr_nest_level > 0){
         glPopMatrix();
         --curr_nest_level;
     }
+
+    compute_fps();
 
     // End of frame
     glutSwapBuffers();
@@ -347,7 +402,7 @@ static void glut_start(int argc, char** argv){
     glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
     glutInitWindowPosition(0, 0);
     glutInitWindowSize(glutGet(GLUT_SCREEN_WIDTH), glutGet(GLUT_SCREEN_HEIGHT));
-    glutCreateWindow("CG Phase 3");
+    glutCreateWindow(TITLE.c_str());
 
     // Required callback registry
     glutDisplayFunc(render_scene);
@@ -363,14 +418,49 @@ static void glut_start(int argc, char** argv){
      * Avoid repeated elements i.e. multiples references
      * to the same .3d file
      */
-    set<string> models_set {};
 
-    for(auto const& group : groups_to_draw)
-        for(auto const& elem : group->models)
-            if(has_3d_ext(elem))
-                models_set.insert(elem);
+    if(!as_vbo.value()){
 
-    vbo_wrapper = VBO::get_instance(models_set);
+        map<string, vector<CartPoint3d>> aux_points_to_draw {};
+
+        for(auto const& group : groups_to_draw)
+
+            for(auto const& m : group->models)
+
+                if(aux_points_to_draw.count(m) == 0){    //returns number of mappings for this key
+
+                    std::ifstream file{};
+                    file.open(m, std::ios::in);
+
+                    if(file.is_open()){
+
+                        vector<CartPoint3d> value {};
+                        CartPoint3d p1{}, p2{}, p3{};
+
+                        while(file >> p1 >> p2 >> p3){
+                            value.push_back(p1);
+                            value.push_back(p2);
+                            value.push_back(p3);
+                        }
+
+                        aux_points_to_draw.insert(std::pair<string, vector<CartPoint3d>>(m, value));
+                        file.close();
+                    }
+                }
+
+        points_to_draw = aux_points_to_draw;
+    }
+    else{
+
+        set<string> models_set {};
+
+        for(auto const& group : groups_to_draw)
+            for(auto const& m : group->models)
+                if(has_3d_ext(m))
+                    models_set.insert(m);
+
+        vbo_wrapper = VBO::get_instance(models_set);
+    }
 
     // OpenGL settings
     glEnable(GL_DEPTH_TEST);
@@ -389,22 +479,39 @@ ErrorCode start(int argc, char** argv){
 
 
     const string filename { argv[1] };
-    const ErrorCode code { xml_parser(filename, cs, groups_to_draw) }; //groups_to_draw and cs are global
 
     if(argc >= 3){
-        const int aux_tess { string_to_uint(argv[2]) };
-        tesselation = (aux_tess > 0) ? aux_tess : 100;
+        if(argv[2][0] == 'n' || argv[2][0] == 'N')
+            as_vbo = false;
+        else if(argv[2][0] == 'y' || argv[2][0] == 'Y')
+            as_vbo = true;
+        else
+            return ErrorCode::invalid_argument;
+    }
+    else
+        as_vbo = true;
+
+    if(argc >= 4){
+        const int aux_tess { string_to_uint(argv[3]) };
+        if(aux_tess > 0)
+            tesselation = aux_tess;
+        else
+            return ErrorCode::invalid_argument;
     }
     else
         tesselation = 100;
 
 
+
+    const ErrorCode code { xml_parser(filename, cs, groups_to_draw) }; //groups_to_draw and cs are global
+
     if(code == ErrorCode::success){
         interaction_init();
         glut_start(argc, argv);
-    }
 
-    delete vbo_wrapper.value();
+        if(vbo_wrapper.has_value())
+            delete vbo_wrapper.value();
+    }
 
     return code;
 }

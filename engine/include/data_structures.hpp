@@ -117,6 +117,13 @@ struct Matrix {
 
 
 
+class InvalidAssignment: public std::exception {
+
+    virtual const char* what() const throw(){
+        return "Illegal assignment";
+    }
+};
+
 template <typename T> class Constant {
 
     private:
@@ -131,7 +138,7 @@ template <typename T> class Constant {
             if (!this->v.has_value())
                 this->v = std::make_optional<T>(x);
             else
-                std::terminate();
+                throw InvalidAssignment{};
 
             return *this;
 

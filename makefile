@@ -43,7 +43,7 @@ export AR CXX CXXFLAGS IS_WIN
 
 
 #make default goal (using make with no specified recipe)
-.DEFAULT_GOAL := all
+.DEFAULT_GOAL 	:= all
 
 all: tinyxml utils generator engine
 
