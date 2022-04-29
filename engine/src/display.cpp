@@ -186,6 +186,11 @@ static void render_catmull_rom_curve(const vector<CartPoint3d> &points){
     glEnd();
 }
 
+#ifndef NDEBUG
+#include <algorithm>
+#include <numeric>
+#endif
+
 static inline void compute_fps(){
 
     static unsigned frames { 0 };
@@ -194,6 +199,12 @@ static inline void compute_fps(){
     static int begin_millis { glutGet(GLUT_ELAPSED_TIME) };
     int const current_millis { glutGet(GLUT_ELAPSED_TIME) };
     int const diff_millis { current_millis - begin_millis };
+
+#ifndef NDEBUG
+    static array<double, 15> fps_values {};
+    static auto fps_values_iter { fps_values.begin() };
+    static bool once { true };
+#endif
 
     if(diff_millis > 1000){
 
@@ -205,14 +216,34 @@ static inline void compute_fps(){
         std::stringstream string_buffer {};
         string_buffer << TITLE
                       << " --- FPS: "
-                      << fps
-                      << " --- VBOs enabled: "
-                      << (as_vbo.value() ? "yes" : "no");
+                      << fps;
 
         glutSetWindowTitle(string_buffer.str().c_str());
 
         frames = 0;
         begin_millis = current_millis;
+
+    #ifndef NDEBUG
+        if(fps_values_iter == fps_values.end() && once){
+
+            once = false;
+
+            double const max { *(std::max_element(fps_values.begin(), fps_values.end())) };
+            double const min { *(std::min_element(fps_values.begin(), fps_values.end())) };
+            double const avg {
+                std::accumulate(fps_values.begin(), fps_values.end(), 0.0) /
+                static_cast<double>(fps_values.size())
+            };
+
+            std::cout << "\tmax: " << max
+                      << " | min: " << min
+                      << " | average[" << fps_values.size() << "]: " << avg
+                      << " | VBOs enabled: "
+                      << (as_vbo.value() ? "yes" : "no") << '\n';
+        }
+        else
+            *fps_values_iter++ = fps;
+    #endif
     }
 }
 

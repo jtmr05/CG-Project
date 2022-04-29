@@ -4,7 +4,7 @@ run(){
 
     if [[ -f bin/generator && -f bin/engine ]]
     then
-        for (( i=8; i < 64; i *= 2 ));
+        for (( i=8; i < 128; i *= 2 ));
         do
             echo "tesselation level: $i"
             bin/generator bezier resources/teapot.patch $i resources/bezier.3d

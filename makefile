@@ -30,7 +30,7 @@ AR				:= ar -rcs
 CXX 			:= g++
 
 #compiler flags
-CXXFLAGS		:= -Wall -Wextra -Wsign-conversion -std=c++17 -g -DNDEBUG -O2
+CXXFLAGS		:= -Wall -Wextra -Wsign-conversion -std=c++17 -g -O2 #-DNDEBUG
 
 #Windows
 ifeq (Windows_NT, $(OS))
