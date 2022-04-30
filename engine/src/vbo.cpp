@@ -7,7 +7,8 @@ using std::pair;
 
 VBO* VBO::singleton { nullptr };
 
-VBO::VBO(const set<string> &models) : buffers{} {
+VBO::VBO(const set<string> &models) :
+    buffers( {} ), model_index_mappings( {} ){
 
     glewInit();
     glEnableClientState(GL_VERTEX_ARRAY);

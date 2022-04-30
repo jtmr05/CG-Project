@@ -16,36 +16,24 @@ angle_t radian_to_degree(angle_t radian){
 
 
 
-CartPoint3d::CartPoint3d(){
-    this->x = 0.0;
-    this->y = 0.0;
-    this->z = 0.0;
-}
+CartPoint3d::CartPoint3d() :
+    x(0.0), y(0.0), z(0.0) {}
 
-CartPoint3d::CartPoint3d(double x, double y, double z){
-    this->x = x;
-    this->y = y;
-    this->z = z;
-}
+CartPoint3d::CartPoint3d(double x, double y, double z) :
+    x(x), y(y), z(z) {}
 
 array<double, 3> CartPoint3d::as_array() const {
     return { this->x, this->y, this->z };
 }
 
 
-PolarPoint3d::PolarPoint3d(){
-    this->radius = 0.0;
-    this->zOx = 0.0;
-    this->yOp = 0.0;
-}
+PolarPoint3d::PolarPoint3d() :
+    radius(0.0), zOx(0.0), yOp(0.0) {}
 
-PolarPoint3d::PolarPoint3d(double radius, angle_t zOx, angle_t yOp){
-
+PolarPoint3d::PolarPoint3d(double radius, angle_t zOx, angle_t yOp) :
+    radius(radius), zOx(zOx), yOp(yOp)
+{
     assert(yOp >= 0.0 && yOp <= 180.0);
-
-    this->radius = radius;
-    this->zOx = zOx;
-    this->yOp = yOp;
 }
 
 

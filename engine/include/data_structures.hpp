@@ -141,7 +141,6 @@ template <typename T> class Constant {
                 throw InvalidAssignment{};
 
             return *this;
-
         }
 
         bool has_value() const {

@@ -7,14 +7,9 @@ using std::array;
 
 
 
-CameraSettings::CameraSettings(){
-    this->position = {};
-    this->look_at = {};
-    this->up = { 0.0, 1.0, 0.0 };
-    this->fov = { 60.0 };
-    this->near_ = { 1.0 };
-    this->far_ = { 1000.0 };
-}
+CameraSettings::CameraSettings() :
+    position( {} ), look_at( {} ), up( { 0.0, 1.0, 0.0 } ),
+    fov(60.0), near_(1.0), far_(1000.0) {}
 
 
 
@@ -22,10 +17,8 @@ Transform::Transform(){}
 
 
 
-StaticRotate::StaticRotate(angle_t angle, const CartPoint3d &point){
-    this->angle = { angle };
-    this->point = { point };
-}
+StaticRotate::StaticRotate(angle_t angle, const CartPoint3d &point) :
+    angle(angle), point(point) {}
 
 TransformType StaticRotate::get_type() const {
     return TransformType::static_rotate;
@@ -33,10 +26,8 @@ TransformType StaticRotate::get_type() const {
 
 
 
-DynamicRotate::DynamicRotate(unsigned time, const CartPoint3d &point){
-    this->time = { time };
-    this->point = { point };
-}
+DynamicRotate::DynamicRotate(unsigned time, const CartPoint3d &point) :
+    time(time), point(point) {}
 
 TransformType DynamicRotate::get_type() const {
     return TransformType::dynamic_rotate;
@@ -44,9 +35,8 @@ TransformType DynamicRotate::get_type() const {
 
 
 
-StaticTranslate::StaticTranslate(const CartPoint3d &point){
-    this->point = { point };
-}
+StaticTranslate::StaticTranslate(const CartPoint3d &point) :
+    point(point) {}
 
 TransformType StaticTranslate::get_type() const {
     return TransformType::static_translate;
@@ -54,11 +44,8 @@ TransformType StaticTranslate::get_type() const {
 
 
 
-DynamicTranslate::DynamicTranslate(unsigned time, bool align, unique_ptr<vector<CartPoint3d>> &points){
-    this->time = { time };
-    this->align = { align };
-    this->points = { points.release() };
-}
+DynamicTranslate::DynamicTranslate(unsigned time, bool align, unique_ptr<vector<CartPoint3d>> &points) :
+    time(time), align(align), points(points.release()) {}
 
 DynamicTranslate::~DynamicTranslate(){
     delete this->points;
@@ -70,9 +57,8 @@ TransformType DynamicTranslate::get_type() const {
 
 
 
-Scale::Scale(const CartPoint3d &point){
-    this->point = { point };
-}
+Scale::Scale(const CartPoint3d &point) :
+    point(point) {}
 
 TransformType Scale::get_type() const {
     return TransformType::scale;
@@ -80,6 +66,5 @@ TransformType Scale::get_type() const {
 
 
 
-Group::Group(unsigned int nest_level){
-    this->nest_level = { nest_level };
-}
+Group::Group(unsigned int nest_level) :
+    nest_level(nest_level) {}

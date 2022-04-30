@@ -49,28 +49,19 @@ static Primitive from_string(const string &str){
 
 
 
-static inline CartPoint3d cubic_bezier_curve_pt(const array<CartPoint3d, 4> &ctrl_points, double time){
+static inline CartPoint3d cubic_bezier_curve_pt(
+    const array<CartPoint3d, 4> &ctrl_points,
+    const array<double, 4> &binomial_coeffs){
 
-    const double complement { 1.0 - time };
+        double x{}, y{}, z{};
 
-    const array<double, 4> binomial_coeffs { //Bernstein polynomials definiton
-        time*time*time,
-        3.0 * time*time * complement,
-        3.0 * time * complement * complement,
-        1.0 * complement * complement * complement
-    };
+        for(unsigned i{}; i < binomial_coeffs.size(); ++i){
+            x += binomial_coeffs[i] * ctrl_points[ctrl_points.size() - 1 - i].x;
+            y += binomial_coeffs[i] * ctrl_points[ctrl_points.size() - 1 - i].y;
+            z += binomial_coeffs[i] * ctrl_points[ctrl_points.size() - 1 - i].z;
+        }
 
-
-
-    double x{}, y{}, z{};
-
-    for(unsigned i{}; i < binomial_coeffs.size(); ++i){
-        x += binomial_coeffs[i] * ctrl_points[ctrl_points.size() - 1 - i].x;
-        y += binomial_coeffs[i] * ctrl_points[ctrl_points.size() - 1 - i].y;
-        z += binomial_coeffs[i] * ctrl_points[ctrl_points.size() - 1 - i].z;
-    }
-
-    return { x, y, z };
+        return { x, y, z };
 }
 
 static ErrorCode read_patch_file(
@@ -126,7 +117,7 @@ static ErrorCode read_patch_file(
             if(elem_iter != elem.end())
                 return ErrorCode::invalid_file_formatting;
 
-            patch_indexes.push_back(elem);
+            patch_indexes.push_back(std::move(elem));
             ++i;
         }
 
@@ -189,6 +180,15 @@ static ErrorCode bezier_writer(const string &out_fn, int tesselation_level, cons
             vector<CartPoint3d> patch_row {};
             patch_row.reserve(static_cast<size_t>(tesselation_level));
 
+            const double utime { time_step * static_cast<double>(u) };
+            const double ucompl { 1.0 - utime };
+            const array<double, 4> u_binomial_coeffs { //Bernstein polynomials definiton
+                utime * utime * utime,
+                3.0 * utime * utime * ucompl,
+                3.0 * utime * ucompl * ucompl,
+                1.0 * ucompl * ucompl * ucompl
+            };
+
             auto iter { indexes_array.begin() };
 
             const CartPoint3d new_p0 {
@@ -199,7 +199,7 @@ static ErrorCode bezier_writer(const string &out_fn, int tesselation_level, cons
                         ctrl_points[*iter++],
                         ctrl_points[*iter++],
                     },
-                    time_step * static_cast<double>(u)
+                    u_binomial_coeffs
                 )
             };
 
@@ -211,7 +211,7 @@ static ErrorCode bezier_writer(const string &out_fn, int tesselation_level, cons
                         ctrl_points[*iter++],
                         ctrl_points[*iter++],
                     },
-                    time_step * static_cast<double>(u)
+                    u_binomial_coeffs
                 )
             };
 
@@ -223,7 +223,7 @@ static ErrorCode bezier_writer(const string &out_fn, int tesselation_level, cons
                         ctrl_points[*iter++],
                         ctrl_points[*iter++],
                     },
-                    time_step * static_cast<double>(u)
+                    u_binomial_coeffs
                 )
             };
 
@@ -235,21 +235,31 @@ static ErrorCode bezier_writer(const string &out_fn, int tesselation_level, cons
                         ctrl_points[*iter++],
                         ctrl_points[*iter],
                     },
-                    time_step * static_cast<double>(u)
+                    u_binomial_coeffs
                 )
             };
 
             for(int v{}; v < tesselation_level; ++v){
+
+                const double vtime { time_step * static_cast<double>(v) };
+                const double vcompl { 1.0 - vtime };
+                const array<double, 4> v_binomial_coeffs { //Bernstein polynomials definiton
+                    vtime * vtime * vtime,
+                    3.0 * vtime * vtime * vcompl,
+                    3.0 * vtime * vcompl * vcompl,
+                    1.0 * vcompl * vcompl * vcompl
+                };
+
                 const CartPoint3d pt {
                     cubic_bezier_curve_pt(
-                        { new_p0, new_p1, new_p2, new_p3 }, time_step * static_cast<double>(v)
+                        { new_p0, new_p1, new_p2, new_p3 }, v_binomial_coeffs
                     )
                 };
 
                 patch_row.push_back(pt);
             }
 
-            patch_matrix.push_back(patch_row);
+            patch_matrix.push_back(std::move(patch_row));
         }
 
         for(unsigned i{}; i < static_cast<size_t>(tesselation_level - 1); ++i)
@@ -264,6 +274,8 @@ static ErrorCode bezier_writer(const string &out_fn, int tesselation_level, cons
                      << patch_matrix[i + 1][j];
             }
     }
+
+    file.close();
 
     return ErrorCode::success;
 }

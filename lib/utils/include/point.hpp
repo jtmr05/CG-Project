@@ -33,7 +33,6 @@ struct PolarPoint3d {
 
     PolarPoint3d();
     PolarPoint3d(double radius, angle_t zOx, angle_t yOp);
-
 };
 
 

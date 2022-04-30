@@ -133,8 +133,6 @@ static void parse_groups(TiXmlElement* p_world, const string &dir, vector<unique
 
                         if(parse_dynamic_translate(p_generic_transform, points)){
 
-                            assert(points->size() >= 4);
-
                             int const itime { string_to_uint(time) };
 
                             if(itime > 0)
@@ -230,13 +228,13 @@ ErrorCode xml_parser(const string &path, CameraSettings &c, vector<unique_ptr<Gr
 
 
     const std::size_t last_slash_pos { path.find_last_of("/") };
-    string directory_path { "" };
+    string directory_path {};
 
     if(last_slash_pos < std::string::npos){
         char aux[last_slash_pos + 1 + 1];
         path.copy(aux, last_slash_pos + 1);
 	    aux[last_slash_pos + 1] = '\0';
-        directory_path = { aux };
+        directory_path = std::move(string{ aux });
 	}
 
         // Get root Element

@@ -186,7 +186,7 @@ static void render_catmull_rom_curve(const vector<CartPoint3d> &points){
     glEnd();
 }
 
-#ifndef NDEBUG
+#ifdef BENCH
 #include <algorithm>
 #include <numeric>
 #endif
@@ -200,7 +200,7 @@ static inline void compute_fps(){
     int const current_millis { glutGet(GLUT_ELAPSED_TIME) };
     int const diff_millis { current_millis - begin_millis };
 
-#ifndef NDEBUG
+#ifdef BENCH
     static array<double, 15> fps_values {};
     static auto fps_values_iter { fps_values.begin() };
     static bool once { true };
@@ -223,7 +223,7 @@ static inline void compute_fps(){
         frames = 0;
         begin_millis = current_millis;
 
-    #ifndef NDEBUG
+#ifdef BENCH
         if(fps_values_iter != fps_values.end())
             *fps_values_iter++ = fps;
         else if(once){
@@ -243,8 +243,8 @@ static inline void compute_fps(){
                       << " | VBOs enabled: "
                       << (as_vbo.value() ? "yes" : "no") << '\n';
             glutLeaveMainLoop();
-	}
-    #endif
+	    }
+#endif
     }
 }
 
@@ -480,7 +480,7 @@ static void glut_start(int argc, char** argv){
                     }
                 }
 
-        points_to_draw = aux_points_to_draw;
+        points_to_draw = std::move(aux_points_to_draw);
     }
     else{
 
