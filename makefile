@@ -73,6 +73,6 @@ clean:
 	-make -C $(GEN_DIR) clean
 	-make -C $(shell realpath --relative-to . $(UTILS_DIR)) clean
 	-make -C $(shell realpath --relative-to . $(TINY_XML_DIR)) clean
-	-find $(RSR_DIR)/* | grep .3d | xargs rm
+	-find $(RSR_DIR)/* | grep \.3d | xargs rm
 	-rm *.stackdump
 	-rm -rf $(BIN_DIR)

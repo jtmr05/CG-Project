@@ -253,7 +253,7 @@
                     <point x="64.671570" y="0.000000" z="26.787840" />
                 </translate>
 
-				<rotate angle="3" x="0" y="0" z="1" />
+				<rotate time="5" x="0" y="1" z="0" />
 				<scale x="3" y="3" z="3" />
             </transform>
 
@@ -539,7 +539,7 @@
         <group>
             <transform>
 			    <rotate angle="5" x="0" y="0" z="1" />
-                <translate time = "20" align="false">
+                <translate time = "20" align="true">
                     <point x="180.000000" y="0.000000" z="0.000000" />
                     <point x="172.387939" y="0.000000" z="9.567086" />
                     <point x="150.710678" y="0.000000" z="17.677670" />
