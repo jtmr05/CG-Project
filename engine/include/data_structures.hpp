@@ -10,6 +10,9 @@
 #include "point.hpp"
 
 
+
+/** Camera **/
+
 struct CameraSettings {
 
     CartPoint3d position, look_at, up;
@@ -19,6 +22,8 @@ struct CameraSettings {
 };
 
 
+
+/** Transforms **/
 
 enum TransformType {
     static_rotate,
@@ -71,14 +76,12 @@ class DynamicTranslate : public Transform {
     public:
         unsigned time;
         bool align;
-        std::vector<CartPoint3d>* points;
+        std::unique_ptr<std::vector<CartPoint3d>> points;
 
         DynamicTranslate(
             unsigned time, bool align,
             std::unique_ptr<std::vector<CartPoint3d>> &points
         );
-
-        ~DynamicTranslate(); //destrutor to free points
 
         TransformType get_type() const;
 };
@@ -94,16 +97,113 @@ class Scale : public Transform {
 
 
 
-struct Group {
+/** Models **/
 
-    std::vector<std::unique_ptr<Transform>> transforms;
-    std::vector<std::string> models;
-    unsigned int nest_level;
+enum RGBIndex { r = 0, g = 1, b = 2 };
 
-    Group(unsigned int nest_level);
+class RGB {
+
+    private:
+        std::array<uint8_t, 3> arr;
+
+    public:
+        constexpr uint8_t& operator[](size_t i){
+            return this->arr[i];
+        }
+
+        constexpr uint8_t& operator[](RGBIndex i){
+            return this->arr[static_cast<size_t>(i)];
+        }
+
+        RGB(uint8_t r, uint8_t g, uint8_t b);
+};
+
+struct Color {
+
+    RGB diffuse;
+    RGB ambient;
+    RGB specular;
+    RGB emissive;
+    unsigned shininess;
+
+    Color();
+    Color(const RGB& diffuse, const RGB& ambient,
+          const RGB& specular, const RGB& emissive,
+          unsigned shininess);
+};
+
+struct Model {
+
+    std::string model_filename;
+    std::optional<std::string> texture_filename;
+    Color color;
+
+    Model(std::string&& model_fn, const Color& color);
+    Model(std::string&& model_fn, std::string&& texture_fn, const Color& color);
 };
 
 
+
+/** Groups **/
+
+struct Group {
+
+    std::vector<std::unique_ptr<Transform>> transforms;
+    std::vector<Model> models;
+    unsigned nest_level;
+
+    Group(unsigned nest_level);
+};
+
+
+
+/** Lights **/
+
+enum LightType {
+    point,
+    directional,
+    spotlight,
+};
+
+class Light {
+
+    public:
+        Light();
+        virtual LightType get_type() const = 0;
+};
+
+class PointLight : public Light {
+
+    public:
+        CartPoint3d pos;
+
+        PointLight(const CartPoint3d &pos);
+        LightType get_type() const;
+};
+
+class DirectionalLight : public Light {
+
+    public:
+        CartPoint3d dir;
+
+        DirectionalLight(const CartPoint3d &dir);
+        LightType get_type() const;
+};
+
+class Spotlight : public Light {
+
+    public:
+        CartPoint3d pos;
+        CartPoint3d dir;
+        unsigned cutoff;
+
+        Spotlight(const CartPoint3d &pos, const CartPoint3d &dir, unsigned cutoff);
+        LightType get_type() const;
+};
+
+
+
+/** Matrix **/
 
 template<class T, size_t rows, size_t columns>
 struct Matrix {
@@ -117,14 +217,17 @@ struct Matrix {
 
 
 
-class InvalidAssignment: public std::exception {
+/** Runtime Constants **/
+
+class InvalidAssignment : public std::exception {
 
     virtual const char* what() const throw(){
         return "Illegal assignment";
     }
 };
 
-template <typename T> class Constant {
+template <typename T>
+class Constant {
 
     private:
         std::optional<T> v;

@@ -43,7 +43,7 @@ void special_keys_event(int key_code, int, int){
 
     if(!first_person){
 
-        auto&& [px, py, pz] = cs.position;
+        const auto& [px, py, pz] = cs.position;
         double radius { std::sqrt(pz * pz + px * px + py * py) };
 
         switch (key_code){

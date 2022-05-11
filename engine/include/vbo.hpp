@@ -10,6 +10,8 @@
 #include <GL/glew.h>
 
 #include "point.hpp"
+#include "file_handler.hpp"
+
 
 
 class VBO{
@@ -24,12 +26,12 @@ class VBO{
          */
         std::map<std::string, std::pair<unsigned, size_t>> model_index_mappings;
 
-        VBO(const std::set<std::string> &models);
+        VBO(const std::set<std::string> &model_fns);
 
 
     public:
-        static VBO* get_instance(const std::set<std::string> &models);
-        bool render(const std::string &model) const;
+        static VBO* get_instance(const std::set<std::string> &model_fns);
+        bool render(const std::string &model_fn) const;
 };
 
 #endif

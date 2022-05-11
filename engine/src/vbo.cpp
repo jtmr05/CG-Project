@@ -5,53 +5,59 @@ using std::vector;
 using std::set;
 using std::pair;
 
+
+
 VBO* VBO::singleton { nullptr };
 
-VBO::VBO(const set<string> &models) :
+VBO::VBO(const set<string> &model_fns) :
     buffers( {} ), model_index_mappings( {} ){
 
     glewInit();
     glEnableClientState(GL_VERTEX_ARRAY);
 
-    const size_t size { models.size() };
+    const size_t size { model_fns.size() };
 
-    this->buffers.resize(size); //shouldn't reserve work?
+    /**
+     * Reserve doesn't work as the vector merely holds enough memory for 'size' elements
+     * but contains no actual elements (i.e. buffers.size() == 0)
+     *
+     * The call to glGenBuffers will indeed write elements to the underlying array
+     * through the pointer obtained from std::vector::data()
+     *
+     * However, the std::vector container itself doesn't acknowledge any elements
+     * since they weren't added through a call to one of its member functions,
+     * meaning buffers.size() appears to be 0
+     *
+     * Hence, buffers.resize() is the solution, as it fills
+     * the newly allocated space with default constructed values
+     */
+
+    this->buffers.resize(size);
     glGenBuffers(size, this->buffers.data());
 
 
 
     unsigned ind {};
 
-    for(auto const& m : models){
+    for(auto const& model_fn : model_fns){
 
-        std::ifstream file{};
-        file.open(m, std::ios::in);
+        vector<CartPoint3d> points {};
 
-        if(file.is_open()){
+        if(point_reader(model_fn, points) != ErrorCode::success)
+            continue;
 
-            vector<CartPoint3d> points {};
-            CartPoint3d p1{}, p2{}, p3{};
+        glBindBuffer(GL_ARRAY_BUFFER, this->buffers.data()[ind]);
+        glBufferData(
+            GL_ARRAY_BUFFER,
+            static_cast<long>(points.size() * sizeof(*points.data())),
+            points.data(),
+            GL_STATIC_DRAW
+        );
 
-            while(file >> p1 >> p2 >> p3){
-                points.push_back(p1);
-                points.push_back(p2);
-                points.push_back(p3);
-            }
+        const pair<string, pair<unsigned, size_t>> key_value { model_fn, { ind, points.size() } };
+        this->model_index_mappings.insert(key_value);
 
-            glBindBuffer(GL_ARRAY_BUFFER, this->buffers.data()[ind]);
-            glBufferData(
-                GL_ARRAY_BUFFER,
-                static_cast<long>(points.size() * sizeof(*points.data())),
-                points.data(),
-                GL_STATIC_DRAW
-            );
-
-            const pair<string, pair<unsigned, size_t>> key_value { m, { ind, points.size() } };
-            this->model_index_mappings.insert(key_value);
-
-            file.close();
-            ++ind;
-        }
+        ++ind;
     }
 
     if(ind < size){
@@ -60,22 +66,22 @@ VBO::VBO(const set<string> &models) :
     }
 }
 
-VBO* VBO::get_instance(const set<string> &models){
+VBO* VBO::get_instance(const set<string> &model_fns){
 
     if(VBO::singleton == nullptr)
-        VBO::singleton = new VBO{ models };
+        VBO::singleton = new VBO{ model_fns };
 
     return VBO::singleton;
 }
 
-bool VBO::render(const string& model) const{
+bool VBO::render(const string& model) const {
 
     //check number of mappings for this key
     const bool has_value { this->model_index_mappings.count(model) > 0 };
 
     if(has_value){
 
-        auto&& [index, size] = this->model_index_mappings.at(model);
+        const auto& [index, size] = this->model_index_mappings.at(model);
 
         glBindBuffer(GL_ARRAY_BUFFER, this->buffers.at(index));
         glVertexPointer(3, GL_DOUBLE, 0, 0);

@@ -17,26 +17,26 @@ enum Primitive {
 
 
 
-static constexpr size_t NUM_OF_PATCH_POINTS {16};
+static constexpr size_t NUM_OF_PATCH_POINTS { 16 };
 
-static constexpr int PLANE_ARGS {5};
-static constexpr int BOX_ARGS {5};
-static constexpr int CONE_ARGS {7};
-static constexpr int SPHERE_ARGS {6};
-static constexpr int TORUS_ARGS {7};
-static constexpr int BEZIER_ARGS {5};
+static constexpr int PLANE_ARGS  { 5 };
+static constexpr int BOX_ARGS    { 5 };
+static constexpr int CONE_ARGS   { 7 };
+static constexpr int SPHERE_ARGS { 6 };
+static constexpr int TORUS_ARGS  { 7 };
+static constexpr int BEZIER_ARGS { 5 };
 
 
 
 static Primitive from_string(const string &str){
 
     static const map<string, Primitive> str_primitive_mapping {
-        { "plane",  Primitive::plane },
-        { "box",    Primitive::box },
+        { "plane",  Primitive::plane  },
+        { "box",    Primitive::box    },
         { "sphere", Primitive::sphere },
-        { "cone", Primitive::cone },
-        { "torus",  Primitive::torus },
-        { "bezier",  Primitive::bezier },
+        { "cone",   Primitive::cone   },
+        { "torus",  Primitive::torus  },
+        { "bezier", Primitive::bezier },
     };
 
     Primitive p { Primitive::__invalid };
@@ -49,102 +49,103 @@ static Primitive from_string(const string &str){
 
 
 
-static inline CartPoint3d cubic_bezier_curve_pt(
-    const array<CartPoint3d, 4> &ctrl_points,
-    const array<double, 4> &binomial_coeffs){
+static inline CartPoint3d get_cubic_bezier_curve_point(const array<CartPoint3d, 4> &ctrl_points,
+                                                       const array<double, 4> &binomial_coeffs){
 
-        double x{}, y{}, z{};
+    double x{}, y{}, z{};
 
-        for(unsigned i{}; i < binomial_coeffs.size(); ++i){
-            x += binomial_coeffs[i] * ctrl_points[ctrl_points.size() - 1 - i].x;
-            y += binomial_coeffs[i] * ctrl_points[ctrl_points.size() - 1 - i].y;
-            z += binomial_coeffs[i] * ctrl_points[ctrl_points.size() - 1 - i].z;
-        }
+    for(unsigned i{}; i < binomial_coeffs.size(); ++i){
+        x += binomial_coeffs[i] * ctrl_points[ctrl_points.size() - 1 - i].x;
+        y += binomial_coeffs[i] * ctrl_points[ctrl_points.size() - 1 - i].y;
+        z += binomial_coeffs[i] * ctrl_points[ctrl_points.size() - 1 - i].z;
+    }
 
-        return { x, y, z };
+    return { x, y, z };
 }
 
-static ErrorCode read_patch_file(
-    const string &filename,
-    vector<array<unsigned, NUM_OF_PATCH_POINTS>> &patch_indexes,
-    vector<CartPoint3d> &ctrl_points){
+static ErrorCode read_patch_file(const string &filename,
+                                 vector<array<unsigned, NUM_OF_PATCH_POINTS>> &patch_indexes,
+                                 vector<CartPoint3d> &ctrl_points){
 
-        std::ifstream input_file{};
-        input_file.open(filename, std::ios::in);
+    std::ifstream input_file{};
+    input_file.open(filename, std::ios::in);
 
-        if(!input_file.is_open())
-            return ErrorCode::io_error;
-
-
-
-        size_t patch_count {};
-
-        if(!(input_file >> patch_count))
-            return ErrorCode::invalid_file_formatting;
-
-        patch_indexes.reserve(patch_count);
+    if(!input_file.is_open())
+        return ErrorCode::io_error;
 
 
 
-        unsigned i {};
-        string line {};
+    size_t num_of_patches {};
 
-        while(i < patch_count && std::getline(input_file, line)){
+    if(!(input_file >> num_of_patches))
+        return ErrorCode::invalid_file_formatting;
 
-            if(line == "")
-                continue;
+    patch_indexes.reserve(num_of_patches);
 
-            array<unsigned, NUM_OF_PATCH_POINTS> elem {};
-            auto elem_iter { elem.begin() };
 
-            size_t end{}, start{};
 
-            do{
-                end = line.find(',', start);
+    size_t patch_count {};
+    string line {};
 
-                const int index { string_to_uint(line.substr(start, end - start)) };
-                if(index < 0)
-                    return ErrorCode::invalid_file_formatting;
+    while(patch_count < num_of_patches && std::getline(input_file, line)){
 
-                *elem_iter = static_cast<unsigned>(index);
-                ++elem_iter;
+        if(line == "")
+            continue;
 
-                if(end < std::string::npos)
-                    start = end + 1;
-            }
-            while(end < std::string::npos && elem_iter != elem.end());
+        array<unsigned, NUM_OF_PATCH_POINTS> elem {};
+        auto elem_iter { elem.begin() };
 
-            if(elem_iter != elem.end())
+        size_t end{}, start{};
+
+        do{
+            end = line.find(',', start);
+
+            const int index { string_to_uint(line.substr(start, end - start)) };
+            if(index < 0)
                 return ErrorCode::invalid_file_formatting;
 
-            patch_indexes.push_back(std::move(elem));
-            ++i;
+            *elem_iter = static_cast<unsigned>(index);
+            ++elem_iter;
+
+            if(end < std::string::npos)
+                start = end + 1;
         }
+        while(end < std::string::npos && elem_iter != elem.end());
 
-
-        size_t ctrl_point_count {};
-
-        if(!(input_file >> ctrl_point_count))
+        if(elem_iter != elem.end())
             return ErrorCode::invalid_file_formatting;
 
-        ctrl_points.reserve(ctrl_point_count);
+        patch_indexes.push_back(std::move(elem));
+        ++patch_count;
+    }
 
-        CartPoint3d point {};
-
-        for(unsigned i {}; i < ctrl_point_count && (input_file >> point); ++i)
-            ctrl_points.push_back(point);
-
-        if(ctrl_points.size() != ctrl_point_count)
-            return ErrorCode::invalid_file_formatting;
+    if(patch_count != num_of_patches)
+        return ErrorCode::invalid_file_formatting;
 
 
+    size_t num_of_ctrl_points {};
 
-        input_file.close();
+    if(!(input_file >> num_of_ctrl_points))
+        return ErrorCode::invalid_file_formatting;
 
-        return ErrorCode::success;
+    ctrl_points.reserve(num_of_ctrl_points);
+
+    CartPoint3d point {};
+
+    for(unsigned i {}; i < num_of_ctrl_points && (input_file >> point); ++i)
+        ctrl_points.push_back(point);
+
+    if(ctrl_points.size() != num_of_ctrl_points)
+        return ErrorCode::invalid_file_formatting;
+
+
+
+    input_file.close();
+
+    return ErrorCode::success;
 }
 
-static ErrorCode bezier_writer(const string &out_fn, int tesselation_level, const string &in_fn){
+static ErrorCode bezier_writer(const string &out_fn, const string &in_fn, unsigned tesselation_level){
 
     vector<array<unsigned, NUM_OF_PATCH_POINTS>> patch_indexes;
     vector<CartPoint3d> ctrl_points;
@@ -173,12 +174,12 @@ static ErrorCode bezier_writer(const string &out_fn, int tesselation_level, cons
     for(const auto& indexes_array : patch_indexes){
 
         vector<vector<CartPoint3d>> patch_matrix {};
-        patch_matrix.reserve(static_cast<size_t>(tesselation_level));
+        patch_matrix.reserve(tesselation_level);
 
-        for(int u{}; u < tesselation_level; ++u){
+        for(unsigned u{}; u < tesselation_level; ++u){
 
             vector<CartPoint3d> patch_row {};
-            patch_row.reserve(static_cast<size_t>(tesselation_level));
+            patch_row.reserve(tesselation_level);
 
             const double utime { time_step * static_cast<double>(u) };
             const double ucompl { 1.0 - utime };
@@ -192,7 +193,7 @@ static ErrorCode bezier_writer(const string &out_fn, int tesselation_level, cons
             auto iter { indexes_array.begin() };
 
             const CartPoint3d new_p0 {
-                cubic_bezier_curve_pt(
+                get_cubic_bezier_curve_point(
                     {
                         ctrl_points[*iter++],
                         ctrl_points[*iter++],
@@ -204,7 +205,7 @@ static ErrorCode bezier_writer(const string &out_fn, int tesselation_level, cons
             };
 
             const CartPoint3d new_p1 {
-                cubic_bezier_curve_pt(
+                get_cubic_bezier_curve_point(
                     {
                         ctrl_points[*iter++],
                         ctrl_points[*iter++],
@@ -216,7 +217,7 @@ static ErrorCode bezier_writer(const string &out_fn, int tesselation_level, cons
             };
 
             const CartPoint3d new_p2 {
-                cubic_bezier_curve_pt(
+                get_cubic_bezier_curve_point(
                     {
                         ctrl_points[*iter++],
                         ctrl_points[*iter++],
@@ -228,7 +229,7 @@ static ErrorCode bezier_writer(const string &out_fn, int tesselation_level, cons
             };
 
             const CartPoint3d new_p3 {
-                cubic_bezier_curve_pt(
+                get_cubic_bezier_curve_point(
                     {
                         ctrl_points[*iter++],
                         ctrl_points[*iter++],
@@ -239,7 +240,7 @@ static ErrorCode bezier_writer(const string &out_fn, int tesselation_level, cons
                 )
             };
 
-            for(int v{}; v < tesselation_level; ++v){
+            for(unsigned v{}; v < tesselation_level; ++v){
 
                 const double vtime { time_step * static_cast<double>(v) };
                 const double vcompl { 1.0 - vtime };
@@ -251,7 +252,7 @@ static ErrorCode bezier_writer(const string &out_fn, int tesselation_level, cons
                 };
 
                 const CartPoint3d pt {
-                    cubic_bezier_curve_pt(
+                    get_cubic_bezier_curve_point(
                         { new_p0, new_p1, new_p2, new_p3 }, v_binomial_coeffs
                     )
                 };
@@ -295,56 +296,61 @@ static ErrorCode torus_writer(const string &filename, int out_radius,
 
 
 
-    for(int i{}; i < slices; ++i){
+    for(int sl{}; sl < slices; ++sl)
 
-        for(int j{}; j < stacks; ++j){
+        for(int st{}; st < stacks; ++st){
 
-            angle_t bottom_yOp { 90.0 - (yOp_delta * static_cast<angle_t>(j)) };
-            angle_t top_yOp { 90.0 - (yOp_delta * static_cast<angle_t>(j + 1)) };
-            angle_t bottom_offset = 0.0;
-            angle_t top_offset = 0.0;
+            angle_t bottom_yOp { 90.0 - (yOp_delta * static_cast<angle_t>(st)) };
+            angle_t top_yOp { 90.0 - (yOp_delta * static_cast<angle_t>(st + 1)) };
+            angle_t bottom_zOx_offset {};
+            angle_t top_zOx_offset {};
 
-
+            /**
+             * If yOp ever becomes negative, rotate zOx by 180
+             * and negate yOp
+             * That way the same point is represented
+             * by this combo of angles
+             */
             if(bottom_yOp < 0.0){
                 bottom_yOp *= -1.0;
-                bottom_offset = 180.0;
+                bottom_zOx_offset = 180.0;
             }
 
             if(top_yOp < 0.0){
                 top_yOp *= -1.0;
-                top_offset = 180.0;
+                top_zOx_offset = 180.0;
             }
 
-            CartPoint3d out_bottom_start_p {
-                polar_to_cart( PolarPoint3d{ radius, bottom_offset, bottom_yOp } )
+            CartPoint3d bottom_starting_p {
+                polar_to_cart( PolarPoint3d{ radius, bottom_zOx_offset, bottom_yOp } )
             };
-            out_bottom_start_p.z += static_cast<double>(in_radius) + radius;
+            bottom_starting_p.z += static_cast<double>(in_radius) + radius;
 
-            CartPoint3d out_top_start_p {
-                polar_to_cart( PolarPoint3d{ radius, top_offset, top_yOp } )
+            CartPoint3d top_starting_p {
+                polar_to_cart( PolarPoint3d{ radius, top_zOx_offset, top_yOp } )
             };
-            out_top_start_p.z += static_cast<double>(in_radius) + radius;
+            top_starting_p.z += static_cast<double>(in_radius) + radius;
 
 
             PolarPoint3d p1 {
-                cart_to_polar(out_bottom_start_p)
+                cart_to_polar(bottom_starting_p)
             };
-            p1.zOx = static_cast<angle_t>(i) * zOx_delta;
+            p1.zOx = static_cast<angle_t>(sl) * zOx_delta;
 
             PolarPoint3d p2 {
-                cart_to_polar(out_bottom_start_p)
+                cart_to_polar(bottom_starting_p)
             };
-            p2.zOx = static_cast<angle_t>(i+1) * zOx_delta;
+            p2.zOx = static_cast<angle_t>(sl + 1) * zOx_delta;
 
             PolarPoint3d p3 {
-                cart_to_polar(out_top_start_p)
+                cart_to_polar(top_starting_p)
             };
-            p3.zOx = static_cast<angle_t>(i) * zOx_delta;
+            p3.zOx = static_cast<angle_t>(sl) * zOx_delta;
 
             PolarPoint3d p4 {
-                cart_to_polar(out_top_start_p)
+                cart_to_polar(top_starting_p)
             };
-            p4.zOx = static_cast<angle_t>(i+1) * zOx_delta;
+            p4.zOx = static_cast<angle_t>(sl + 1) * zOx_delta;
 
             file << p1 << p2 << p3;
             file << p2 << p4 << p3;
@@ -363,7 +369,6 @@ static ErrorCode torus_writer(const string &filename, int out_radius,
             file << neg_p1 << neg_p3 << neg_p2;
             file << neg_p3 << neg_p4 << neg_p2;
         }
-    }
 
     file.close();
 
@@ -383,23 +388,23 @@ static ErrorCode sphere_writer(const string &filename, int radius, int slices, i
     const double radius_d { static_cast<double>(radius) };
 
 
-    for(int i{}; i < slices; ++i){
+    for(int sl{}; sl < slices; ++sl){
 
         PolarPoint3d bp1 {
             radius_d,
-            static_cast<angle_t>(i) * zOx_delta,
+            static_cast<angle_t>(sl) * zOx_delta,
             90.0
         };
 
         PolarPoint3d bp2 {
             radius_d,
-            static_cast<angle_t>(i + 1) * zOx_delta,
+            static_cast<angle_t>(sl + 1) * zOx_delta,
             90.0
         };
 
-        for(int j{}; j < stacks/2; ++j){
+        for(int st{}; st < stacks / 2; ++st){
 
-            const angle_t curr_yOp = 90.0 - (yOp_delta * static_cast<double>(j + 1));
+            const angle_t curr_yOp = 90.0 - (yOp_delta * static_cast<double>(st + 1));
 
             PolarPoint3d next_bp1 {
                 radius_d,
@@ -452,17 +457,17 @@ static ErrorCode cone_writer(const string &filename, int radius, int height, int
 
     const CartPoint3d origin{};
 
-    for(int i{}; i < slices; ++i){
+    for(int sl{}; sl < slices; ++sl){
 
         PolarPoint3d bp1 {
             static_cast<double>(radius),
-            static_cast<angle_t>(i) * zOx_delta,
+            static_cast<angle_t>(sl) * zOx_delta,
             90.0
         };
 
         PolarPoint3d bp2 {
             static_cast<double>(radius),
-            static_cast<angle_t>(i + 1) * zOx_delta,
+            static_cast<angle_t>(sl + 1) * zOx_delta,
             90.0
         };
 
@@ -481,20 +486,24 @@ static ErrorCode cone_writer(const string &filename, int radius, int height, int
          * on each stack level, the height is given by height - (stack_level * height_delta)
          * thus, we can calculate the radius for that given stack using the similar triangles
          * formula:
-         *      r/(h*stacks) = r'/(h*(stacks - 1 - j)) <=> r/stacks = r'/(stacks - 1 - j)
+         *      r/(h*stacks) = r'/(h*(stacks - 1 - st)) <=> r/stacks = r'/(stacks - 1 - st)
          * since we start in the yOz plane, x is 0
          * that means z = stack_radius
          */
 
-        for(int j{}; j < stacks; ++j){
+        for(int st{}; st < stacks; ++st){
 
-            const double radius__ {
-                static_cast<double>((stacks - 1 - j) * radius) /
+            const double stack_radius {
+                static_cast<double>((stacks - 1 - st) * radius) /
                 static_cast<double>(stacks)
             };
 
+            const double stack_height {
+                static_cast<double>(st + 1) * height_delta
+            };
+
             PolarPoint3d next_bp1 {
-                cart_to_polar( { 0.0, static_cast<double>(j + 1) * height_delta, radius__ } )
+                cart_to_polar( { 0.0, stack_height, stack_radius } )
             };
             next_bp1.zOx = bp1.zOx;
 
@@ -503,7 +512,7 @@ static ErrorCode cone_writer(const string &filename, int radius, int height, int
             };
 
             file << bp1 << bp2 << next_bp1;
-            if(j < stacks - 1)
+            if(st < stacks - 1)
                 file << next_bp1 << bp2 << next_bp2;
 
             bp1 = next_bp1;
@@ -525,7 +534,7 @@ static ErrorCode box_writer(const string &filename, int units, int grid_size){
         return ErrorCode::io_error;
 
     const double abs_max_coord { static_cast<double>(units) / 2.0 };
-    const double incr { static_cast<double>(units) / static_cast<double>(grid_size) };
+    const double step { static_cast<double>(units) / static_cast<double>(grid_size) };
 
 
     CartPoint3d p1 {}, p2 {}, p3 {}, p4 {};
@@ -534,18 +543,18 @@ static ErrorCode box_writer(const string &filename, int units, int grid_size){
 
     x = abs_max_coord;
 
-    for(int i{}; i < grid_size; ++i, x -= incr){
+    for(int i{}; i < grid_size; ++i, x -= step){
 
         z = abs_max_coord;
 
-        for(int j{}; j < grid_size; ++j, z -= incr){
+        for(int j{}; j < grid_size; ++j, z -= step){
 
             p1.y = p2.y = p3.y = p4.y = abs_max_coord;
 
             p1.x = x; p1.z = z;
-            p2.x = x; p2.z = z - incr;
-            p3.x = x - incr; p3.z = z;
-            p4.x = x - incr; p4.z = z - incr;
+            p2.x = x; p2.z = z - step;
+            p3.x = x - step; p3.z = z;
+            p4.x = x - step; p4.z = z - step;
 
             file << p1 << p2 << p4;
             file << p4 << p3 << p1;
@@ -559,18 +568,18 @@ static ErrorCode box_writer(const string &filename, int units, int grid_size){
 
     y = abs_max_coord;
 
-    for(int i{}; i < grid_size; ++i, y -= incr){
+    for(int i{}; i < grid_size; ++i, y -= step){
 
         z = abs_max_coord;
 
-        for(int j{}; j < grid_size; ++j, z -= incr){
+        for(int j{}; j < grid_size; ++j, z -= step){
 
             p1.x = p2.x = p3.x = p4.x = abs_max_coord;
 
             p1.y = y; p1.z = z;
-            p2.y = y; p2.z = z - incr;
-            p3.y = y - incr; p3.z = z;
-            p4.y = y - incr; p4.z = z - incr;
+            p2.y = y; p2.z = z - step;
+            p3.y = y - step; p3.z = z;
+            p4.y = y - step; p4.z = z - step;
 
             file << p1 << p4 << p2;
             file << p1 << p3 << p4;
@@ -584,18 +593,18 @@ static ErrorCode box_writer(const string &filename, int units, int grid_size){
 
     y = abs_max_coord;
 
-    for(int i{}; i < grid_size; i++, y -= incr){
+    for(int i{}; i < grid_size; i++, y -= step){
 
         x = abs_max_coord;
 
-        for(int j{}; j < grid_size; j++, x -= incr){
+        for(int j{}; j < grid_size; j++, x -= step){
 
             p1.z = p2.z = p3.z = p4.z = abs_max_coord;
 
             p1.y = y; p1.x = x;
-            p2.y = y; p2.x = x - incr;
-            p3.y = y - incr; p3.x = x;
-            p4.y = y - incr; p4.x = x - incr;
+            p2.y = y; p2.x = x - step;
+            p3.y = y - step; p3.x = x;
+            p4.y = y - step; p4.x = x - step;
 
             file << p1 << p2 << p4;
             file << p1 << p4 << p3;
@@ -621,23 +630,23 @@ static ErrorCode plane_writer(const string &filename, int length, int divs){
         return ErrorCode::io_error;
 
     const double abs_max_coord { static_cast<double>(length) / 2.0 };
-    const double incr { static_cast<double>(length) / static_cast<double>(divs) };
+    const double step { static_cast<double>(length) / static_cast<double>(divs) };
 
     CartPoint3d p1 {}, p2 {}, p3 {}, p4 {};
 
 
     double x { abs_max_coord };
 
-    for(int i{}; i < divs; ++i, x -= incr){
+    for(int i{}; i < divs; ++i, x -= step){
 
         double z { abs_max_coord };
 
-        for(int j{}; j < divs; ++j, z -= incr){
+        for(int j{}; j < divs; ++j, z -= step){
 
             p1.x = x; p1.z = z;
-            p2.x = x; p2.z = z - incr;
-            p3.x = x - incr; p3.z = z;
-            p4.x = x - incr; p4.z = z - incr;
+            p2.x = x; p2.z = z - step;
+            p3.x = x - step; p3.z = z;
+            p4.x = x - step; p4.z = z - step;
 
             file << p1 << p4 << p3;
             file << p1 << p2 << p4;
@@ -652,16 +661,16 @@ static ErrorCode plane_writer(const string &filename, int length, int divs){
 
 
 //parse the arguments needed for each primitive and call the respective function
-ErrorCode primitive_writer(const string args[], const int size){
+ErrorCode primitive_writer(int size, const string args[]){
 
-    unsigned ind {1};
+    unsigned args_index { 1 };
 
     if(size == 1)
         return ErrorCode::not_enough_args;
 
 
 
-    const Primitive primitive { from_string(args[ind++]) };
+    const Primitive primitive { from_string(args[args_index++]) };
 
     switch(primitive){
 
@@ -670,9 +679,9 @@ ErrorCode primitive_writer(const string args[], const int size){
         if(size < PLANE_ARGS)
             return ErrorCode::not_enough_args;
 
-        const int length { string_to_uint(args[ind++]) };
-        const int divs { string_to_uint(args[ind++]) };
-        const string filename { args[ind] };
+        const int length { string_to_uint(args[args_index++]) };
+        const int divs { string_to_uint(args[args_index++]) };
+        const string filename { args[args_index] };
 
 
         if(!has_3d_ext(filename))
@@ -689,9 +698,9 @@ ErrorCode primitive_writer(const string args[], const int size){
         if(size < BOX_ARGS)
             return ErrorCode::not_enough_args;
 
-        const int units { string_to_uint(args[ind++]) };
-        const int grid_size { string_to_uint(args[ind++]) };
-        const string filename { args[ind] };
+        const int units { string_to_uint(args[args_index++]) };
+        const int grid_size { string_to_uint(args[args_index++]) };
+        const string filename { args[args_index] };
 
 
         if(!has_3d_ext(filename))
@@ -708,11 +717,11 @@ ErrorCode primitive_writer(const string args[], const int size){
         if(size < CONE_ARGS)
             return ErrorCode::not_enough_args;
 
-        const int radius { string_to_uint(args[ind++]) };
-        const int height { string_to_uint(args[ind++]) };
-        const int slices { string_to_uint(args[ind++]) };
-        const int stacks { string_to_uint(args[ind++]) };
-        const string filename { args[ind] };
+        const int radius { string_to_uint(args[args_index++]) };
+        const int height { string_to_uint(args[args_index++]) };
+        const int slices { string_to_uint(args[args_index++]) };
+        const int stacks { string_to_uint(args[args_index++]) };
+        const string filename { args[args_index] };
 
 
         if(!has_3d_ext(filename))
@@ -729,10 +738,10 @@ ErrorCode primitive_writer(const string args[], const int size){
         if(size < SPHERE_ARGS)
             return ErrorCode::not_enough_args;
 
-        const int radius { string_to_uint(args[ind++]) };
-        const int slices { string_to_uint(args[ind++]) };
-        const int stacks { string_to_uint(args[ind++]) };
-        const string filename { args[ind] };
+        const int radius { string_to_uint(args[args_index++]) };
+        const int slices { string_to_uint(args[args_index++]) };
+        const int stacks { string_to_uint(args[args_index++]) };
+        const string filename { args[args_index] };
 
 
         if(!has_3d_ext(filename))
@@ -749,23 +758,22 @@ ErrorCode primitive_writer(const string args[], const int size){
         if(size < TORUS_ARGS)
             return ErrorCode::not_enough_args;
 
-        const int out_radius { string_to_uint(args[ind++]) };
-        const int in_radius { string_to_uint(args[ind++]) };
-        const int slices { string_to_uint(args[ind++]) };
-        const int stacks { string_to_uint(args[ind++]) };
-        const string filename { args[ind] };
+        const int out_radius { string_to_uint(args[args_index++]) };
+        const int in_radius { string_to_uint(args[args_index++]) };
+        const int slices { string_to_uint(args[args_index++]) };
+        const int stacks { string_to_uint(args[args_index++]) };
+        const string filename { args[args_index] };
 
 
         if(!has_3d_ext(filename))
             return ErrorCode::invalid_file_extension;
 
-        if(
-               out_radius <  1
-            || in_radius  <  0
-            || out_radius <  in_radius
-            || slices     <  3
-            || stacks     <  2
-            || stacks % 2 != 0
+        if(out_radius <  1 ||
+           in_radius  <  0 ||
+           stacks % 2 != 0 ||
+           slices     <  3 ||
+           stacks     <  2 ||
+           out_radius <  in_radius
         )
             return ErrorCode::invalid_argument;
 
@@ -777,18 +785,18 @@ ErrorCode primitive_writer(const string args[], const int size){
         if(size < BEZIER_ARGS)
             return ErrorCode::not_enough_args;
 
-        const string input_filename { args[ind++] };
-        const int tesselation_level { string_to_uint(args[ind++]) };
-        const string output_filename { args[ind] };
+        const string in_filename { args[args_index++] };
+        const int tesselation_level { string_to_uint(args[args_index++]) };
+        const string out_filename { args[args_index] };
 
 
-        if(!has_patch_ext(input_filename) || !has_3d_ext(output_filename))
+        if(!has_patch_ext(in_filename) || !has_3d_ext(out_filename))
             return ErrorCode::invalid_file_extension;
 
         if(tesselation_level < 1)
             return ErrorCode::invalid_argument;
 
-        return bezier_writer(output_filename, tesselation_level, input_filename);
+        return bezier_writer(out_filename, in_filename, static_cast<unsigned>(tesselation_level));
     }
 
     default:

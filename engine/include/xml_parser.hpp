@@ -15,7 +15,8 @@
 ErrorCode xml_parser(
     const std::string &path,
     CameraSettings &c,
-    std::vector<std::unique_ptr<Group>> &groups
+    std::vector<std::unique_ptr<Group>> &groups,
+    std::vector<std::unique_ptr<Light>> &lights
 );
 
 #endif

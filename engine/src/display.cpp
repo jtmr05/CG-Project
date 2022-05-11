@@ -6,11 +6,13 @@ using std::set;
 using std::unique_ptr;
 using std::array;
 using std::map;
+using std::pair;
 
 
 CameraSettings cs {};
 
 static vector<unique_ptr<Group>> groups_to_draw {};
+static vector<unique_ptr<Light>> lights {};
 
 static Constant<VBO*> vbo_wrapper {};
 static Constant<int> tesselation {};
@@ -392,14 +394,14 @@ static void render_scene(){
         }
 
 
-        for(auto const& m : group->models){
+        for(auto const& [model_fn, _, __] : group->models){
 
             if(as_vbo.value())
-                vbo_wrapper.value()->render(m);
+                vbo_wrapper.value()->render(model_fn);
 
-            else if(points_to_draw.value().count(m) > 0){
+            else if(points_to_draw.value().count(model_fn) > 0){
 
-                const vector<CartPoint3d> points { points_to_draw.value().at(m) };
+                const vector<CartPoint3d> points { points_to_draw.value().at(model_fn) };
 
                 glBegin(GL_TRIANGLES);
 
@@ -457,27 +459,15 @@ static void glut_start(int argc, char** argv){
 
         for(auto const& group : groups_to_draw)
 
-            for(auto const& m : group->models)
+            for(auto const& [model_fn, _, __] : group->models)
 
-                if(aux_points_to_draw.count(m) == 0){    //returns number of mappings for this key
+                //count returns number of mappings for the given key
 
-                    std::ifstream file{};
-                    file.open(m, std::ios::in);
-
-                    if(file.is_open()){
-
-                        vector<CartPoint3d> value {};
-                        CartPoint3d p1{}, p2{}, p3{};
-
-                        while(file >> p1 >> p2 >> p3){
-                            value.push_back(p1);
-                            value.push_back(p2);
-                            value.push_back(p3);
-                        }
-
-                        aux_points_to_draw.insert(std::pair<string, vector<CartPoint3d>>(m, value));
-                        file.close();
-                    }
+                if(aux_points_to_draw.count(model_fn) == 0){
+                    vector<CartPoint3d> value {};
+                    if(point_reader(model_fn, value) == ErrorCode::success)
+                        aux_points_to_draw.insert(
+                            pair<string, vector<CartPoint3d>>(model_fn, std::move(value)));
                 }
 
         points_to_draw = std::move(aux_points_to_draw);
@@ -487,9 +477,9 @@ static void glut_start(int argc, char** argv){
         set<string> models_set {};
 
         for(auto const& group : groups_to_draw)
-            for(auto const& m : group->models)
-                if(has_3d_ext(m))
-                    models_set.insert(m);
+            for(auto const& [model_fn, _, __] : group->models)
+                if(has_3d_ext(model_fn))
+                    models_set.insert(model_fn);
 
         vbo_wrapper = VBO::get_instance(models_set);
     }
@@ -534,8 +524,8 @@ ErrorCode start(int argc, char** argv){
         tesselation = 100;
 
 
-
-    const ErrorCode code { xml_parser(filename, cs, groups_to_draw) }; //groups_to_draw and cs are global
+    //'groups_to_draw', 'lights' and 'cs' are global
+    const ErrorCode code { xml_parser(filename, cs, groups_to_draw, lights) };
 
     if(code == ErrorCode::success){
         interaction_init();

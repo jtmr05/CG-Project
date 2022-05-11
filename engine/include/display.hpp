@@ -12,6 +12,7 @@
 #include "point.hpp"
 #include "error_handler.hpp"
 #include "xml_parser.hpp"
+#include "file_handler.hpp"
 #include "vbo.hpp"
 #include "data_structures.hpp"
 #include "interaction.hpp" //must be below vbo.hpp !!

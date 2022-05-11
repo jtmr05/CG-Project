@@ -4,14 +4,19 @@ using std::string;
 using std::vector;
 using std::unique_ptr;
 using std::array;
+using std::optional;
 
 
+
+/** Camera **/
 
 CameraSettings::CameraSettings() :
-    position( {} ), look_at( {} ), up( { 0.0, 1.0, 0.0 } ),
+    position( {} ), look_at( {} ), up(0.0, 1.0, 0.0),
     fov(60.0), near_(1.0), far_(1000.0) {}
 
 
+
+/** Transforms **/
 
 Transform::Transform(){}
 
@@ -47,10 +52,6 @@ TransformType StaticTranslate::get_type() const {
 DynamicTranslate::DynamicTranslate(unsigned time, bool align, unique_ptr<vector<CartPoint3d>> &points) :
     time(time), align(align), points(points.release()) {}
 
-DynamicTranslate::~DynamicTranslate(){
-    delete this->points;
-}
-
 TransformType DynamicTranslate::get_type() const {
     return TransformType::dynamic_translate;
 }
@@ -66,5 +67,85 @@ TransformType Scale::get_type() const {
 
 
 
-Group::Group(unsigned int nest_level) :
-    nest_level(nest_level) {}
+/** Models **/
+
+RGB::RGB(uint8_t r, uint8_t g, uint8_t b) :
+    arr( { r, g, b } ) {}
+
+Color::Color() :
+    diffuse(200, 200, 200), ambient(50, 50, 50),
+    specular(0, 0, 0), emissive(0, 0, 0),
+    shininess(0) {}
+
+Color::Color(const RGB& diffuse, const RGB& ambient,
+             const RGB& specular, const RGB& emissive,
+             unsigned shininess) :
+    diffuse(diffuse), ambient(ambient),
+    specular(specular), emissive(emissive),
+    shininess(shininess) {}
+
+
+
+Model::Model(string&& model_fn, const Color& color) :
+    model_filename(
+        model_fn
+    ),
+    texture_filename(
+        std::move(
+            optional<string>{}
+        )
+    ),
+    color( color ) {}
+
+Model::Model(string&& model_fn, string&& texture_fn, const Color& color) :
+    model_filename(
+        model_fn
+    ),
+    texture_filename(
+        std::move(
+            std::make_optional(
+                std::move(texture_fn)
+            )
+        )
+    ),
+    color( color ) {}
+
+
+
+/** Groups **/
+
+Group::Group(unsigned nest_level) :
+    transforms(), models(), nest_level(nest_level) {}
+
+
+
+/** Lights **/
+
+Light::Light(){}
+
+
+
+PointLight::PointLight(const CartPoint3d& pos) :
+    pos(pos) {}
+
+LightType PointLight::get_type() const {
+    return LightType::point;
+}
+
+
+
+DirectionalLight::DirectionalLight(const CartPoint3d& dir) :
+    dir(dir) {}
+
+LightType DirectionalLight::get_type() const {
+    return LightType::directional;
+}
+
+
+
+Spotlight::Spotlight(const CartPoint3d &pos, const CartPoint3d &dir, unsigned cutoff) :
+    pos(pos), dir(dir), cutoff(cutoff) {}
+
+LightType Spotlight::get_type() const {
+    return LightType::spotlight;
+}

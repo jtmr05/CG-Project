@@ -13,6 +13,6 @@
 #include "filters.hpp"
 
 
-ErrorCode primitive_writer(const std::string[], const int);
+ErrorCode primitive_writer(int size, const std::string args[]);
 
 #endif
