@@ -19,20 +19,20 @@ BIN 			:= $(BIN_DIR)/engine
 
 
 #compiler flags
-CXXFLAGS		+= -I$(INC_DIR) -I$(UTILS_DIR)/include -I$(TINY_XML_DIR)/include
+CXXFLAGS		+= -I$(INC_DIR) -I$(UTILS_DIR)/include -I$(TINYXML_DIR)/include
 
 #linker flags
-LDFLAGS			:= -L$(UTILS_DIR)/lib -L$(TINY_XML_DIR)/lib
+LDFLAGS			:= -L$(UTILS_DIR)/lib -L$(TINYXML_DIR)/lib
 
 #linker libraries
 LDLIBS			:= -lutils -ltinyxml
 
 ifdef IS_WIN
-	CXXFLAGS 	+= -I$(FREEGLUT_DIR)/include -I$(GLEW_DIR)/include
-	LDFLAGS 	+= -L$(FREEGLUT_DIR)/lib/x64 -L$(GLEW_DIR)/lib/x64
-	LDLIBS		+= -lopengl32 -lfreeglut -lglu32 -lglew32
+	CXXFLAGS 	+= -I$(FREEGLUT_DIR)/include -I$(GLEW_DIR)/include -I$(DEVIL_DIR)/include
+	LDFLAGS 	+= -L$(FREEGLUT_DIR)/lib/x64 -L$(GLEW_DIR)/lib/x64 -L$(DEVIL_DIR)/lib
+	LDLIBS		+= -lopengl32 -lfreeglut -lglu32 -lglew32 -ldevil -lilu -lilut
 else
-	LDLIBS	 	+= -lGLU -lglut -lGL -lGLEW
+	LDLIBS	 	+= -lGLU -lGL -lglut -lGLEW -lILUT -lILU -lIL
 endif
 
 

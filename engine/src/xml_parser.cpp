@@ -39,12 +39,12 @@ static CameraSettings parse_camera_settings(TiXmlElement* const world_tag){
 
         TiXmlElement* projection_tag { camera_tag->FirstChildElement("projection") };
         if(projection_tag){
-            const double fov   { string_to_double(projection_tag->Attribute("fov")) };
-            const double near_ { string_to_double(projection_tag->Attribute("near")) };
-            const double far_  { string_to_double(projection_tag->Attribute("far")) };
+            const double fov  { string_to_double(projection_tag->Attribute("fov")) };
+            const double near { string_to_double(projection_tag->Attribute("near")) };
+            const double far  { string_to_double(projection_tag->Attribute("far")) };
             c.fov = fov;
-            c.near_ = near_;
-            c.far_ = far_;
+            c.near = near;
+            c.far = far;
         }
     }
 
@@ -311,8 +311,8 @@ static void parse_lights(TiXmlElement* const world_tag, vector<unique_ptr<Light>
 
             if(typeof_light == spotlight_s){
 
-                const unsigned cutoff {
-                    static_cast<unsigned>(string_to_uint(light_tag->Attribute("cutoff")))
+                const int cutoff {
+                    string_to_uint(light_tag->Attribute("cutoff"))
                 };
 
                 lights.push_back(
@@ -360,9 +360,9 @@ ErrorCode xml_parser(const string &xml_path, CameraSettings &c,
      * 3d files pathes specified in the XML should be relative to the XML itself
      * Therefore we need to yield the directory path
      */
-    const size_t last_slash_pos { xml_path.find_last_of("/") };
+    const size_t last_slash_pos { xml_path.find_last_of('/') };
     const string directory_path {
-        (last_slash_pos < std::string::npos)
+        (last_slash_pos < string::npos)
             ? std::move(xml_path.substr(0, last_slash_pos + 1))
             : ""
     };

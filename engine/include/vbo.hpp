@@ -24,7 +24,7 @@ class VBO{
          * For each model, map a pair containing its index and corresponding size,
          * i.e. the number of points to be drawn
          */
-        std::map<std::string, std::pair<unsigned, size_t>> model_index_mappings;
+        std::map<std::string, std::pair<unsigned, size_t>> model_info;
 
         VBO(const std::set<std::string> &model_fns);
 

@@ -30,7 +30,7 @@ static constexpr int BEZIER_ARGS { 5 };
 
 static Primitive from_string(const string &str){
 
-    static const map<string, Primitive> str_primitive_mapping {
+    static const map<string, Primitive> str_primitives {
         { "plane",  Primitive::plane  },
         { "box",    Primitive::box    },
         { "sphere", Primitive::sphere },
@@ -41,8 +41,8 @@ static Primitive from_string(const string &str){
 
     Primitive p { Primitive::__invalid };
 
-    if(str_primitive_mapping.count(str) > 0)
-        p = str_primitive_mapping.at(str);
+    if(str_primitives.count(str) > 0)
+        p = str_primitives.at(str);
 
     return p;
 }
@@ -139,8 +139,6 @@ static ErrorCode read_patch_file(const string &filename,
         return ErrorCode::invalid_file_formatting;
 
 
-
-    input_file.close();
 
     return ErrorCode::success;
 }
@@ -276,8 +274,6 @@ static ErrorCode bezier_writer(const string &out_fn, const string &in_fn, unsign
             }
     }
 
-    file.close();
-
     return ErrorCode::success;
 }
 
@@ -370,8 +366,6 @@ static ErrorCode torus_writer(const string &filename, int out_radius,
             file << neg_p3 << neg_p4 << neg_p2;
         }
 
-    file.close();
-
     return ErrorCode::success;
 }
 
@@ -438,8 +432,6 @@ static ErrorCode sphere_writer(const string &filename, int radius, int slices, i
             bp2 = next_bp2;
         }
     }
-
-    file.close();
 
     return ErrorCode::success;
 }
@@ -519,8 +511,6 @@ static ErrorCode cone_writer(const string &filename, int radius, int height, int
             bp2 = next_bp2;
         }
     }
-
-    file.close();
 
     return ErrorCode::success;
 }
@@ -616,8 +606,6 @@ static ErrorCode box_writer(const string &filename, int units, int grid_size){
         }
     }
 
-    file.close();
-
     return ErrorCode::success;
 }
 
@@ -652,8 +640,6 @@ static ErrorCode plane_writer(const string &filename, int length, int divs){
             file << p1 << p2 << p4;
         }
     }
-
-    file.close();
 
     return ErrorCode::success;
 }

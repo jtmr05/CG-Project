@@ -22,8 +22,6 @@ ErrorCode point_reader(const string &model_fn, vector<CartPoint3d> &vertexes
         vertexes.push_back(p3);
     }
 
-    file.close();
-
     //TODO
     return ErrorCode::success;
 }

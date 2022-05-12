@@ -11,8 +11,8 @@ int string_to_uint(const string &str){
 
     if(std::regex_match(str, pattern))
         return std::stoi(str);
-    else
-        return -1;
+
+    return -1;
 }
 
 //matches C-string with and converts to a double
@@ -26,8 +26,8 @@ double string_to_double(const string &str, double default_value){
 
     if(std::regex_match(str, pattern))
         return std::stod(str);
-    else
-        return default_value;
+
+    return default_value;
 }
 
 //matches C-string with and converts to a bool
@@ -47,8 +47,8 @@ bool string_to_bool(const std::string &str, bool default_value){
         return true;
     else if(std::regex_match(str, false_pattern))
         return false;
-    else
-        return default_value;
+
+    return default_value;
 }
 
 
@@ -75,4 +75,22 @@ bool has_patch_ext(const string &str){
     const std::regex pattern { "^(.+?)\\.patch$", std::regex_constants::ECMAScript };
 
     return std::regex_match(str, pattern);
+}
+
+
+
+// prefixing a dot in ext is optional
+string replace_extension(const string &str, const string &ext){
+
+    const size_t last_dot_pos { str.find_last_of('.') };
+    const string raw_filename {
+        (last_dot_pos < string::npos)
+            ? std::move(str.substr(0, last_dot_pos))
+            : str
+    };
+
+    if(ext.at(0) != '.')
+        return raw_filename + '.' + ext;
+
+    return raw_filename + ext;
 }

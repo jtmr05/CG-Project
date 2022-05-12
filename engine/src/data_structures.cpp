@@ -12,7 +12,7 @@ using std::optional;
 
 CameraSettings::CameraSettings() :
     position( {} ), look_at( {} ), up(0.0, 1.0, 0.0),
-    fov(60.0), near_(1.0), far_(1000.0) {}
+    fov(60.0), near(1.0), far(1000.0) {}
 
 
 
@@ -87,28 +87,38 @@ Color::Color(const RGB& diffuse, const RGB& ambient,
 
 
 Model::Model(string&& model_fn, const Color& color) :
-    model_filename(
-        model_fn
+    model_filename(model_fn),
+
+    normals_filename(
+        std::move(replace_extension(model_fn, "norm"))
     ),
+
+    texture_points_filename(
+        std::move(optional<string>{})
+    ),
+
     texture_filename(
-        std::move(
-            optional<string>{}
-        )
+        std::move(optional<string>{})
     ),
-    color( color ) {}
+
+    color(color) {}
 
 Model::Model(string&& model_fn, string&& texture_fn, const Color& color) :
-    model_filename(
-        model_fn
+    model_filename(model_fn),
+
+    normals_filename(
+        std::move(replace_extension(model_fn, "norm"))
     ),
+
+    texture_points_filename(
+        std::move(std::make_optional(std::move(replace_extension(model_fn, "text"))))
+    ),
+
     texture_filename(
-        std::move(
-            std::make_optional(
-                std::move(texture_fn)
-            )
-        )
+        std::move(std::make_optional(std::move(texture_fn)))
     ),
-    color( color ) {}
+
+    color(color) {}
 
 
 
@@ -143,8 +153,11 @@ LightType DirectionalLight::get_type() const {
 
 
 
-Spotlight::Spotlight(const CartPoint3d &pos, const CartPoint3d &dir, unsigned cutoff) :
-    pos(pos), dir(dir), cutoff(cutoff) {}
+Spotlight::Spotlight(const CartPoint3d &pos, const CartPoint3d &dir, int cutoff) :
+    pos(pos), dir(dir), cutoff(cutoff)
+{
+    assert((cutoff >= 0 && cutoff <= 90) || cutoff == 180);
+}
 
 LightType Spotlight::get_type() const {
     return LightType::spotlight;

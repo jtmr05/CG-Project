@@ -1,5 +1,12 @@
 #!/bin/bash
 
+
+# Used to benchmark the usage (or not) of
+# VBOS for different tesselation levels
+# supplied to the bezier primitive
+
+
+
 run(){
 
     if [[ -f bin/generator && -f bin/engine ]]

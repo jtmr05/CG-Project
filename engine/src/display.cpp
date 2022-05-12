@@ -12,14 +12,20 @@ using std::pair;
 CameraSettings cs {};
 
 static vector<unique_ptr<Group>> groups_to_draw {};
-static vector<unique_ptr<Light>> lights {};
 
 static Constant<VBO*> vbo_wrapper {};
 static Constant<int> tesselation {};
 static Constant<map<string, vector<CartPoint3d>>> points_to_draw {};
 static Constant<bool> as_vbo {};
 
-static const string TITLE { "CG Phase 3" };
+static const string TITLE { "CG Phase 4" };
+
+
+static vector<unique_ptr<Light>> lights {};
+static const array<unsigned, 8> gl_lights {
+    GL_LIGHT0, GL_LIGHT1, GL_LIGHT2, GL_LIGHT3,
+    GL_LIGHT4, GL_LIGHT5, GL_LIGHT6, GL_LIGHT7
+};
 
 
 
@@ -43,7 +49,7 @@ static void change_size(int w, int h){
     glViewport(0, 0, w, h);
 
     // Set perspective
-    gluPerspective(cs.fov, ratio, cs.near_, cs.far_);
+    gluPerspective(cs.fov, ratio, cs.near, cs.far);
 
     // return to the model view matrix mode
     glMatrixMode(GL_MODELVIEW);
@@ -71,18 +77,16 @@ static void cross(const array<double, 3> &a, const array<double, 3> &b, array<do
 static void normalize(array<double, 3> &a) {
 
     const double norm { std::sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]) };
-    a[0] = a[0] / norm;
-    a[1] = a[1] / norm;
-    a[2] = a[2] / norm;
+    a[0] /= norm;
+    a[1] /= norm;
+    a[2] /= norm;
 }
 
 
 template<size_t left_size, size_t inner_size, size_t right_size>
-static void mult_matrixes(
-    Matrix<double, left_size, inner_size> &m1,
-    Matrix<double, inner_size, right_size> &m2,
-    Matrix<double, left_size, right_size> &res
-){
+static void mult_matrixes(Matrix<double, left_size, inner_size>  &m1,
+                          Matrix<double, inner_size, right_size> &m2,
+                          Matrix<double, left_size, right_size>  &res){
 
     for(size_t l {}; l < left_size; ++l){
         for(size_t r {}; r < right_size; ++r){
@@ -97,15 +101,10 @@ static void mult_matrixes(
     }
 }
 
-static void get_catmull_rom_point(
-    double t,
-    const array<double, 3> &p0,
-    const array<double, 3> &p1,
-    const array<double, 3> &p2,
-    const array<double, 3> &p3,
-    Matrix<double, 1, 3> &pos,
-    Matrix<double, 1, 3> &deriv
-){
+static void get_catmull_rom_point(double t,
+                                  const array<double, 3> &p0, const array<double, 3> &p1,
+                                  const array<double, 3> &p2, const array<double, 3> &p3,
+                                  Matrix<double, 1, 3> &pos, Matrix<double, 1, 3> &deriv){
 
     // catmull-rom matrix
     Matrix<double, 4, 4> m {};
@@ -142,12 +141,8 @@ static void get_catmull_rom_point(
     mult_matrixes(t_vector_deriv, a, deriv);
 }
 
-static void get_global_catmull_rom_point(
-    const vector<CartPoint3d> &points,
-    double gt,
-    Matrix<double, 1, 3> &pos,
-    Matrix<double, 1, 3> &deriv
-){
+static void get_global_catmull_rom_point(const vector<CartPoint3d> &points, double gt,
+                                         Matrix<double, 1, 3> &pos, Matrix<double, 1, 3> &deriv){
 
     size_t const point_count { points.size() };
 
@@ -205,7 +200,7 @@ static inline void compute_fps(){
 #ifdef BENCH
     static array<double, 15> fps_values {};
     static auto fps_values_iter { fps_values.begin() };
-    static bool once { true };
+    //static bool once { true };
 #endif
 
     if(diff_millis > 1000){
@@ -228,9 +223,9 @@ static inline void compute_fps(){
 #ifdef BENCH
         if(fps_values_iter != fps_values.end())
             *fps_values_iter++ = fps;
-        else if(once){
+        else {
 
-            once = false;
+            //once = false;
 
             double const max { *(std::max_element(fps_values.begin(), fps_values.end())) };
             double const min { *(std::min_element(fps_values.begin(), fps_values.end())) };
@@ -250,6 +245,82 @@ static inline void compute_fps(){
     }
 }
 
+static inline void set_lights(){
+
+    for(unsigned i{}; i < lights.size(); ++i){
+
+        auto const& light { lights[i] };
+
+        switch (light->get_type()){
+
+        case LightType::spotlight: {
+
+            Spotlight const *sl { dynamic_cast<Spotlight*>(light.get()) };
+            assert(sl != nullptr);
+
+
+            const array<float, 4> pos {
+                static_cast<float>(sl->pos.x),
+                static_cast<float>(sl->pos.y),
+                static_cast<float>(sl->pos.z),
+                1.0f
+            };
+            glLightfv(gl_lights[i], GL_POSITION, pos.data());
+
+            const array<float, 3> dir {
+                static_cast<float>(sl->dir.x),
+                static_cast<float>(sl->dir.y),
+                static_cast<float>(sl->dir.z)
+            };
+            glLightfv(gl_lights[i], GL_SPOT_DIRECTION, dir.data());
+
+            glLighti(gl_lights[i], GL_SPOT_CUTOFF, sl->cutoff);
+
+            break;
+        }
+
+        case LightType::point: {
+
+            PointLight const *pl { dynamic_cast<PointLight*>(light.get()) };
+            assert(pl != nullptr);
+
+
+            const array<float, 4> pos {
+                static_cast<float>(pl->pos.x),
+                static_cast<float>(pl->pos.y),
+                static_cast<float>(pl->pos.z),
+                1.0f
+            };
+            glLightfv(gl_lights[i], GL_POSITION, pos.data());
+
+            break;
+        }
+
+        case LightType::directional: {
+
+            /**
+             * Light is directional is by default,
+             * i.e. pos w component is equal to 0.0
+             */
+
+            DirectionalLight const *dl { dynamic_cast<DirectionalLight*>(light.get()) };
+            assert(dl != nullptr);
+
+
+            const array<float, 3> dir {
+                static_cast<float>(dl->dir.x),
+                static_cast<float>(dl->dir.y),
+                static_cast<float>(dl->dir.z)
+            };
+            glLightfv(gl_lights[i], GL_SPOT_DIRECTION, dir.data());
+
+            break;
+        }
+
+        }
+    }
+}
+
 static void render_scene(){
 
     // clear buffers
@@ -263,6 +334,8 @@ static void render_scene(){
         cs.look_at.x,  cs.look_at.y,  cs.look_at.z,
         cs.up.x,       cs.up.y,       cs.up.z
     );
+
+    set_lights();
 
     // put drawing instructions here
     set_axis();
@@ -394,7 +467,9 @@ static void render_scene(){
         }
 
 
-        for(auto const& [model_fn, _, __] : group->models){
+        for(auto const& m : group->models){
+
+            const string& model_fn { m.model_filename };
 
             if(as_vbo.value())
                 vbo_wrapper.value()->render(model_fn);
@@ -429,7 +504,7 @@ static void render_scene(){
 
 
 
-static void glut_start(int argc, char** argv){
+static void gl_start(int argc, char** argv){
 
     // init GLUT and the window
     glutInit(&argc, argv);
@@ -455,31 +530,38 @@ static void glut_start(int argc, char** argv){
 
     if(!as_vbo.value()){
 
-        map<string, vector<CartPoint3d>> aux_points_to_draw {};
+        map<string, vector<CartPoint3d>> tmp_points_to_draw {};
 
         for(auto const& group : groups_to_draw)
 
-            for(auto const& [model_fn, _, __] : group->models)
+            for(auto const& m : group->models){
+
+                const string& model_fn { m.model_filename };
 
                 //count returns number of mappings for the given key
 
-                if(aux_points_to_draw.count(model_fn) == 0){
+                if(tmp_points_to_draw.count(model_fn) == 0){
                     vector<CartPoint3d> value {};
                     if(point_reader(model_fn, value) == ErrorCode::success)
-                        aux_points_to_draw.insert(
+                        tmp_points_to_draw.insert(
                             pair<string, vector<CartPoint3d>>(model_fn, std::move(value)));
                 }
+            }
 
-        points_to_draw = std::move(aux_points_to_draw);
+        points_to_draw = std::move(tmp_points_to_draw);
     }
     else{
 
         set<string> models_set {};
 
         for(auto const& group : groups_to_draw)
-            for(auto const& [model_fn, _, __] : group->models)
+            for(auto const& m : group->models){
+
+                const string& model_fn { m.model_filename };
+
                 if(has_3d_ext(model_fn))
                     models_set.insert(model_fn);
+            }
 
         vbo_wrapper = VBO::get_instance(models_set);
     }
@@ -487,6 +569,28 @@ static void glut_start(int argc, char** argv){
     // OpenGL settings
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
+
+
+
+    glEnable(GL_LIGHTING);
+
+    const array<float, 4> dark  { 0.2f, 0.2f, 0.2f, 1.0f };
+    const array<float, 4> white { 1.0f, 1.0f, 1.0f, 1.0f };
+    //const array<float, 4> black { 0.0f, 0.0f, 0.0f, 0.0f };
+
+    for(unsigned i {}; i < lights.size() && i < gl_lights.size(); ++i){
+
+        // enable each light as needed...
+        glEnable(gl_lights[i]);
+
+        // ...and set the colors
+        glLightfv(gl_lights[i], GL_AMBIENT,  dark.data());
+        glLightfv(gl_lights[i], GL_DIFFUSE,  white.data());
+        glLightfv(gl_lights[i], GL_SPECULAR, white.data());
+    }
+
+    // controls global ambient light
+    //glLightModelfv(GL_LIGHT_MODEL_AMBIENT, black.data());
 
     // enter GLUT's main cycle
     glutMainLoop();
@@ -529,7 +633,7 @@ ErrorCode start(int argc, char** argv){
 
     if(code == ErrorCode::success){
         interaction_init();
-        glut_start(argc, argv);
+        gl_start(argc, argv);
 
         if(vbo_wrapper.has_value())
             delete vbo_wrapper.value();

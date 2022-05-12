@@ -8,6 +8,7 @@
 #include <optional>
 
 #include "point.hpp"
+#include "filters.hpp"
 
 
 
@@ -16,7 +17,7 @@
 struct CameraSettings {
 
     CartPoint3d position, look_at, up;
-    double fov, near_, far_;
+    double fov, near, far;
 
     CameraSettings();
 };
@@ -135,8 +136,10 @@ struct Color {
 struct Model {
 
     std::string model_filename;
-    std::optional<std::string> texture_filename;
-    Color color;
+    std::string normals_filename;
+    std::optional<std::string> texture_points_filename; // even though the file will always
+    std::optional<std::string> texture_filename;        // exist, it will be ignored when
+    Color color;                                        // no texture file is provided
 
     Model(std::string&& model_fn, const Color& color);
     Model(std::string&& model_fn, std::string&& texture_fn, const Color& color);
@@ -195,9 +198,9 @@ class Spotlight : public Light {
     public:
         CartPoint3d pos;
         CartPoint3d dir;
-        unsigned cutoff;
+        int cutoff;
 
-        Spotlight(const CartPoint3d &pos, const CartPoint3d &dir, unsigned cutoff);
+        Spotlight(const CartPoint3d &pos, const CartPoint3d &dir, int cutoff);
         LightType get_type() const;
 };
 

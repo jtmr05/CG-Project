@@ -10,7 +10,7 @@ using std::pair;
 VBO* VBO::singleton { nullptr };
 
 VBO::VBO(const set<string> &model_fns) :
-    buffers( {} ), model_index_mappings( {} ){
+    buffers( {} ), model_info( {} ){
 
     glewInit();
     glEnableClientState(GL_VERTEX_ARRAY);
@@ -55,7 +55,7 @@ VBO::VBO(const set<string> &model_fns) :
         );
 
         const pair<string, pair<unsigned, size_t>> key_value { model_fn, { ind, points.size() } };
-        this->model_index_mappings.insert(key_value);
+        this->model_info.insert(key_value);
 
         ++ind;
     }
@@ -77,11 +77,11 @@ VBO* VBO::get_instance(const set<string> &model_fns){
 bool VBO::render(const string& model) const {
 
     //check number of mappings for this key
-    const bool has_value { this->model_index_mappings.count(model) > 0 };
+    const bool has_value { this->model_info.count(model) > 0 };
 
     if(has_value){
 
-        const auto& [index, size] = this->model_index_mappings.at(model);
+        const auto& [index, size] = this->model_info.at(model);
 
         glBindBuffer(GL_ARRAY_BUFFER, this->buffers.at(index));
         glVertexPointer(3, GL_DOUBLE, 0, 0);

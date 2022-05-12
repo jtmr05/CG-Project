@@ -16,10 +16,11 @@ LIB_DIR 		:= $(PWD)/lib
 
 UTILS_DIR		:= $(LIB_DIR)/utils
 FREEGLUT_DIR 	:= $(LIB_DIR)/freeglut
-TINY_XML_DIR 	:= $(LIB_DIR)/tinyxml
+TINYXML_DIR 	:= $(LIB_DIR)/tinyxml
 GLEW_DIR		:= $(LIB_DIR)/glew
+DEVIL_DIR		:= $(LIB_DIR)/devil
 
-export BIN_DIR UTILS_DIR FREEGLUT_DIR TINY_XML_DIR GLEW_DIR
+export BIN_DIR UTILS_DIR FREEGLUT_DIR TINYXML_DIR GLEW_DIR DEVIL_DIR
 
 
 
@@ -30,7 +31,8 @@ AR				:= ar -rcs
 CXX 			:= g++
 
 #compiler flags
-CXXFLAGS		:= -Wall -Wextra -Wsign-conversion -std=c++17 -g -O2 -DNDEBUG #-DBENCH
+CXXFLAGS		:= -Wall -Wextra -Wsign-conversion -std=c++17 -g -O2# -DNDEBUG
+CXXFLAGS		+= -DBENCH
 
 #Windows
 ifeq (Windows_NT, $(OS))
@@ -60,7 +62,7 @@ utils:
 
 .PHONY: tinyxml
 tinyxml:
-	make -C $(shell realpath --relative-to . $(TINY_XML_DIR))
+	make -C $(shell realpath --relative-to . $(TINYXML_DIR))
 
 
 
@@ -71,7 +73,7 @@ clean:
 	-make -C $(ENG_DIR) clean
 	-make -C $(GEN_DIR) clean
 	-make -C $(shell realpath --relative-to . $(UTILS_DIR)) clean
-	-make -C $(shell realpath --relative-to . $(TINY_XML_DIR)) clean
+	-make -C $(shell realpath --relative-to . $(TINYXML_DIR)) clean
 	-find $(RSR_DIR)/* | grep \.3d | xargs rm
 	-rm -f *.stackdump
 	-rm -rf $(BIN_DIR)
