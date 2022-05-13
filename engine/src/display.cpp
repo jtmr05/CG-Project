@@ -381,7 +381,7 @@ static void render_scene(){
         while(has_popped);
 
 
-        for(const auto &t : group->transforms)
+        for(auto const& t : group->transforms)
 
             switch(t->get_type()){
 
@@ -529,6 +529,7 @@ static void render_scene(){
             }
     }
 
+
     while(curr_nest_level > 0){
         glPopMatrix();
         --curr_nest_level;
@@ -611,7 +612,6 @@ static void gl_start(int argc, char** argv){
                 models_set.insert(m.model_filename);
 
 
-
         vbo_wrapper = VBO::get_instance(models_set);
     }
 
@@ -622,10 +622,11 @@ static void gl_start(int argc, char** argv){
 
 
     glEnable(GL_LIGHTING);
+    glEnable(GL_NORMALIZE);
 
     const array<float, 4> dark  { 0.2f, 0.2f, 0.2f, 1.0f };
     const array<float, 4> white { 1.0f, 1.0f, 1.0f, 1.0f };
-    //const array<float, 4> black { 0.0f, 0.0f, 0.0f, 0.0f };
+    const array<float, 4> black { 0.0f, 0.0f, 0.0f, 0.0f };
 
     for(unsigned i {}; i < lights.size() && i < gl_lights.size(); ++i){
 
@@ -639,7 +640,7 @@ static void gl_start(int argc, char** argv){
     }
 
     // controls global ambient light
-    //glLightModelfv(GL_LIGHT_MODEL_AMBIENT, black.data());
+    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, black.data());
 
     // enter GLUT's main cycle
     glutMainLoop();

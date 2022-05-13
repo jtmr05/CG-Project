@@ -202,6 +202,14 @@ static void parse_groups(TiXmlElement* const world_tag,
                     TiXmlElement* const emissive_tag { color_tag->FirstChildElement("emissive") };
                     TiXmlElement* const shininess_tag { color_tag->FirstChildElement("shininess") };
 
+                    assert(
+                        diffuse_tag   != nullptr &&
+                        ambient_tag   != nullptr &&
+                        specular_tag  != nullptr &&
+                        emissive_tag  != nullptr &&
+                        shininess_tag != nullptr
+                    );
+
                     c.diffuse = {
                         static_cast<uint8_t>(string_to_uint(diffuse_tag->Attribute("R"))),
                         static_cast<uint8_t>(string_to_uint(diffuse_tag->Attribute("G"))),

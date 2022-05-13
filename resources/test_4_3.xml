@@ -10,9 +10,9 @@
 		<light type="directional" dirx="-1" diry="0.7" dirz="0.5"/>
 	</lights>
 	<group>
-		<!--<group>
+		<group>
 			<models>
-				<model file="plane_nt.3d" >  generator plane 2 3 plane_nt.3d
+				<model file="plane_nt.3d" > <!-- generator plane 2 3 plane_nt.3d -->
 					<color>
 						<diffuse R="254" G="221" B="0" />
 						<ambient R="0" G="0" B="0" />
@@ -22,7 +22,7 @@
 					</color>
 				</model>
 			</models>
-		</group> -->
+		</group>
 		<group>
 			<transform>
 				<translate x = "-0.5" y = "0" z = "-0.5" />
@@ -64,7 +64,8 @@
 				<rotate angle="-90" x="1" y="0" z="0" />
 			</transform>
 			<models>
-				<model file="bezier_nt.3d" > <!-- generator patch teapot.patch 10 bezier_nt.3d -->
+				<!-- generator patch teapot.patch 10 bezier_nt.3d -->
+				<model file="bezier_nt.3d" >
 					<color>
 						<diffuse R="0" G="87" B="184" />
 						<ambient R="0" G="8" B="18" />
@@ -73,6 +74,15 @@
 						<shininess value="128" />
 					</color>
 				</model>
+				<!-- <model file="torus_nt.3d" >
+					<color>
+						<diffuse R="0" G="87" B="184" />
+						<ambient R="0" G="8" B="18" />
+						<specular R="255" G="255" B="255" />
+						<emissive R="0" G="0" B="0" />
+						<shininess value="128" />
+					</color>
+				</model> -->
 			</models>
 		</group>
 		<group>

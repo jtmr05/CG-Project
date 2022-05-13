@@ -158,3 +158,23 @@ std::istream& operator>>(std::istream& stream, CartPoint2d& p){
 
     return stream;
 }
+
+
+
+// https://www.khronos.org/opengl/wiki/Calculating_a_Surface_Normal
+
+CartPoint3d normal(const CartPoint3d &a, const CartPoint3d &b, const CartPoint3d &c) {
+
+    const CartPoint3d u { b.x - a.x, b.y - a.y, b.z - a.z };
+    const CartPoint3d v { c.x - a.x, c.y - a.y, c.z - a.z };
+
+    return CartPoint3d{
+        u.y * v.z - u.z * v.y,
+        u.z * v.x - u.x * v.z,
+        u.x * v.y - u.y * v.x
+    };
+}
+
+CartPoint3d normal(const PolarPoint3d &a, const PolarPoint3d &b, const PolarPoint3d &c){
+    return normal(polar_to_cart(a), polar_to_cart(b), polar_to_cart(c));
+}

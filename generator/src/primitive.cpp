@@ -139,7 +139,6 @@ static ErrorCode read_patch_file(const string &filename,
         return ErrorCode::invalid_file_formatting;
 
 
-
     return ErrorCode::success;
 }
 
@@ -160,7 +159,10 @@ static ErrorCode bezier_writer(const string &out_fn, const string &in_fn, unsign
     std::ofstream vertexes_file{};
     vertexes_file.open(out_fn, std::ios::out | std::ios::trunc);
 
-    if(!vertexes_file.is_open())
+    std::ofstream normals_file{};
+    normals_file.open(to_norm_extension(out_fn), std::ios::out | std::ios::trunc);
+
+    if(!vertexes_file.is_open() || !normals_file.is_open())
         return ErrorCode::io_error;
 
     /* tesselation_level is incremented
@@ -169,7 +171,7 @@ static ErrorCode bezier_writer(const string &out_fn, const string &in_fn, unsign
      */
     const double time_step { 1.0 / static_cast<double>(tesselation_level++) };
 
-    for(const auto& indexes_array : patch_indexes){
+    for(auto const& indexes_array : patch_indexes){
 
         vector<vector<CartPoint3d>> patch_matrix {};
         patch_matrix.reserve(tesselation_level);
@@ -264,13 +266,33 @@ static ErrorCode bezier_writer(const string &out_fn, const string &in_fn, unsign
         for(unsigned i{}; i < static_cast<size_t>(tesselation_level - 1); ++i)
             for(unsigned j{}; j < static_cast<size_t>(tesselation_level - 1); ++j){
 
+                const CartPoint3d normal1 {
+                    normal(
+                        patch_matrix[i][j],
+                        patch_matrix[i + 1][j],
+                        patch_matrix[i][j + 1]
+                    )
+                };
+
                 vertexes_file << patch_matrix[i][j]
                      << patch_matrix[i + 1][j]
                      << patch_matrix[i][j + 1];
 
+                normals_file << normal1 << normal1 << normal1;
+
+                const CartPoint3d normal2 {
+                    normal(
+                        patch_matrix[i + 1][j + 1],
+                        patch_matrix[i][j + 1],
+                        patch_matrix[i + 1][j]
+                    )
+                };
+
                 vertexes_file << patch_matrix[i + 1][j + 1]
                      << patch_matrix[i][j + 1]
                      << patch_matrix[i + 1][j];
+
+                normals_file << normal2 << normal2 << normal2;
             }
     }
 
@@ -283,13 +305,15 @@ static ErrorCode torus_writer(const string &filename, int out_radius,
     std::ofstream vertexes_file{};
     vertexes_file.open(filename, std::ios::out | std::ios::trunc);
 
-    if(!vertexes_file.is_open())
+    std::ofstream normals_file{};
+    normals_file.open(to_norm_extension(filename), std::ios::out | std::ios::trunc);
+
+    if(!vertexes_file.is_open() || !normals_file.is_open())
         return ErrorCode::io_error;
 
     const angle_t zOx_delta { 360.0 / static_cast<angle_t>(slices) };
     const angle_t yOp_delta { 180.0 / static_cast<angle_t>(stacks) };
     const double radius { static_cast<double>(out_radius - in_radius) / 2.0 };
-
 
 
     for(int sl{}; sl < slices; ++sl)
@@ -348,8 +372,14 @@ static ErrorCode torus_writer(const string &filename, int out_radius,
             };
             p4.zOx = static_cast<angle_t>(sl + 1) * zOx_delta;
 
+
+            const CartPoint3d normal1 { normal(p1, p2, p3) };
+            const CartPoint3d normal2 { normal(p2, p4, p3) };
+
             vertexes_file << p1 << p2 << p3;
+            normals_file << normal1 << normal1 << normal1;
             vertexes_file << p2 << p4 << p3;
+            normals_file << normal2 << normal2 << normal2;
 
 
             PolarPoint3d neg_p1 { p1 };
@@ -362,8 +392,13 @@ static ErrorCode torus_writer(const string &filename, int out_radius,
             neg_p3.yOp = 180.0 - neg_p3.yOp;
             neg_p4.yOp = 180.0 - neg_p4.yOp;
 
+            const CartPoint3d normal3 { normal(neg_p1, neg_p3, neg_p2) };
+            const CartPoint3d normal4 { normal(neg_p3, neg_p4, neg_p2) };
+
             vertexes_file << neg_p1 << neg_p3 << neg_p2;
+            normals_file << normal3 << normal3 << normal3;
             vertexes_file << neg_p3 << neg_p4 << neg_p2;
+            normals_file << normal4 << normal4 << normal4;
         }
 
     return ErrorCode::success;
@@ -384,8 +419,6 @@ static ErrorCode sphere_writer(const string &filename, int radius, int slices, i
     const angle_t yOp_delta { 90.0 / static_cast<angle_t>(stacks / 2) };
     const double radius_d { static_cast<double>(radius) };
 
-    vector<double> slopes {};
-    slopes.reserve(static_cast<unsigned>(stacks / 2));
 
     for(int sl{}; sl < slices; ++sl){
 
@@ -417,22 +450,13 @@ static ErrorCode sphere_writer(const string &filename, int radius, int slices, i
                 curr_yOp
             };
 
-
-            if(sl == 0){
-                auto const& [x1, y1, z1] { polar_to_cart(bp1) };
-                auto const& [x2, y2, z2] { polar_to_cart(next_bp1) };
-
-                const double slope { (y2 - y1) / (-z2 + z1) };
-                slopes.push_back(slope);
-            }
-
-            angle_t normal_vector_yOp { std::atan(slopes[static_cast<unsigned>(st)]) };
-            PolarPoint3d side_normal { 1.0, bp1.zOx + zOx_delta / 2.0, normal_vector_yOp };
+            const CartPoint3d normal1 { normal(bp1, bp2, next_bp1) };
+            const CartPoint3d normal2 { normal(next_bp1, bp2, next_bp2) };
 
             vertexes_file << bp1 << bp2 << next_bp1;
-            normals_file << side_normal << side_normal << side_normal;
+            normals_file << normal1 << normal1 << normal1;
             vertexes_file << next_bp1 << bp2 << next_bp2;
-            normals_file << side_normal << side_normal << side_normal;
+            normals_file << normal2 << normal2 << normal2;
 
             PolarPoint3d neg_bp1 { bp1 };
             PolarPoint3d neg_bp2 { bp2 };
@@ -444,13 +468,13 @@ static ErrorCode sphere_writer(const string &filename, int radius, int slices, i
             neg_next_bp1.yOp = 180.0 - neg_next_bp1.yOp;
             neg_next_bp2.yOp = 180.0 - neg_next_bp2.yOp;
 
-            side_normal.yOp = 180.0 - side_normal.yOp;
-
+            const CartPoint3d normal3 { normal(neg_next_bp1, neg_next_bp2, neg_bp1) };
+            const CartPoint3d normal4 { normal(neg_bp1, neg_next_bp2, neg_bp2) };
 
             vertexes_file << neg_next_bp1 << neg_next_bp2 << neg_bp1;
-            normals_file << side_normal << side_normal << side_normal;
+            normals_file << normal3 << normal3 << normal3;
             vertexes_file << neg_bp1 << neg_next_bp2 << neg_bp2;
-            normals_file << side_normal << side_normal << side_normal;
+            normals_file << normal4 << normal4 << normal4;
 
             bp1 = next_bp1;
             bp2 = next_bp2;
@@ -477,7 +501,6 @@ static ErrorCode cone_writer(const string &filename, int radius, int height, int
     const CartPoint3d origin{};
     const CartPoint3d base_normal { 0.0, -1.0, 0.0 };
 
-    angle_t normal_vector_yOp {};
 
     for(int sl{}; sl < slices; ++sl){
 
@@ -535,24 +558,17 @@ static ErrorCode cone_writer(const string &filename, int radius, int height, int
             };
 
 
-            if(sl == 0 && st == 0){
-
-                auto const& [x1, y1, z1] { polar_to_cart(bp1) };
-                auto const& [x2, y2, z2] { polar_to_cart(next_bp1) };
-
-                const double slope { (y2 - y1) / (-z2 + z1) };
-
-                normal_vector_yOp = std::atan(slope);
-            }
-
-            const PolarPoint3d side_normal { 1.0, bp1.zOx + zOx_delta / 2.0, normal_vector_yOp };
+            const CartPoint3d side_normal1 { normal(bp1, bp2, next_bp1) };
 
             vertexes_file << bp1 << bp2 << next_bp1;
-            normals_file << side_normal << side_normal << side_normal;
+            normals_file << side_normal1 << side_normal1 << side_normal1;
 
             if(st < stacks - 1){
+
+                const CartPoint3d side_normal2 { normal(next_bp1, bp2, next_bp2) };
+
                 vertexes_file << next_bp1 << bp2 << next_bp2;
-                normals_file << side_normal << side_normal << side_normal;
+                normals_file << side_normal2 << side_normal2 << side_normal2;
             }
 
             bp1 = next_bp1;

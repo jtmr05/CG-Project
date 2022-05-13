@@ -72,4 +72,7 @@ std::istream& operator>>(std::istream& stream, CartPoint3d& p);
 std::istream& operator>>(std::istream& stream, CartPoint2d& p);
 
 
+CartPoint3d normal(const CartPoint3d &a, const CartPoint3d &b, const CartPoint3d &c);
+CartPoint3d normal(const PolarPoint3d &a, const PolarPoint3d &b, const PolarPoint3d &c);
+
 #endif

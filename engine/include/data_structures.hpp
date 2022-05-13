@@ -106,11 +106,6 @@ class RGB {
 
     private:
         std::array<uint8_t, 3> arr;
-        enum RGBIndex { r = 0, g = 1, b = 2 };
-
-        constexpr uint8_t operator[](RGBIndex i) const {
-            return this->arr[static_cast<size_t>(i)];
-        }
 
     public:
         constexpr uint8_t operator[](size_t i) const {
