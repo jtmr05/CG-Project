@@ -343,11 +343,13 @@ static void render_scene(){
         cs.up.x,       cs.up.y,       cs.up.z
     );
 
-    set_lights();
-
-    glDisable(GL_LIGHTING);
     set_axis();
-    glEnable(GL_LIGHTING);
+
+    const bool lighting_enabled { set_lighting() };
+    if(lighting_enabled)
+        set_lights();
+    else
+        glColor3ub(255, 192, 203);
 
     set_polygon_mode();
 
@@ -480,7 +482,8 @@ static void render_scene(){
 
             for(auto const& m : group->models){
 
-                set_material_color(m.color);
+                if(lighting_enabled)
+                    set_material_color(m.color);
 
                 vbo_wrapper.value()->render(m.model_filename);
             }
@@ -491,7 +494,8 @@ static void render_scene(){
 
             for(auto const& m : group->models){
 
-                set_material_color(m.color);
+                if(lighting_enabled)
+                    set_material_color(m.color);
 
                 const string& model_fn { m.model_filename };
 
@@ -620,9 +624,6 @@ static void gl_start(int argc, char** argv){
     glEnable(GL_CULL_FACE);
 
 
-
-    glEnable(GL_LIGHTING);
-    glEnable(GL_NORMALIZE);
 
     const array<float, 4> dark  { 0.2f, 0.2f, 0.2f, 1.0f };
     const array<float, 4> white { 1.0f, 1.0f, 1.0f, 1.0f };

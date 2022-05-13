@@ -16,5 +16,6 @@ void mouse_event(int x, int y);
 
 void set_axis();
 void set_polygon_mode();
+bool set_lighting();
 
 #endif

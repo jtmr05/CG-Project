@@ -6,6 +6,7 @@ extern CameraSettings cs;
 
 static bool fill { true };
 static bool show_axis { false };
+static bool lighting_enabled { true };
 
 static CartPoint3d direction {};
 static bool first_person { false };
@@ -161,6 +162,10 @@ void keys_event(unsigned char key, int, int){
         fill = !fill;
         break;
 
+    case 'l':
+        lighting_enabled = !lighting_enabled;
+        break;
+
     case 'x':
         show_axis = !show_axis;
         break;
@@ -220,29 +225,47 @@ void mouse_event(int x, int y){
 
 void set_axis(){
 
+    glDisable(GL_LIGHTING);
+
     if(show_axis){
 
         glBegin(GL_LINES);
 
             // X axis in red
-            glColor3f(1.0f, 0.0f, 0.0f);
-            glVertex3f(-100.0f, 0.0f, 0.0f);
-            glVertex3f( 100.0f, 0.0f, 0.0f);
+            glColor3ub(255, 0, 0);
+            glVertex3f(-1000.0f, 0.0f, 0.0f);
+            glVertex3f( 1000.0f, 0.0f, 0.0f);
 
             // Y Axis in Green
-            glColor3f(0.0f, 1.0f, 0.0f);
-            glVertex3f(0.0f, -100.0f, 0.0f);
-            glVertex3f(0.0f, 100.0f, 0.0f);
+            glColor3ub(0, 255, 0);
+            glVertex3f(0.0f, -1000.0f, 0.0f);
+            glVertex3f(0.0f,  1000.0f, 0.0f);
 
             // Z Axis in Blue
-            glColor3f(0.0f, 0.0f, 1.0f);
-            glVertex3f(0.0f, 0.0f, -100.0f);
-            glVertex3f(0.0f, 0.0f, 100.0f);
+            glColor3ub(0, 0, 255);
+            glVertex3f(0.0f, 0.0f, -1000.0f);
+            glVertex3f(0.0f, 0.0f,  1000.0f);
 
         glEnd();
     }
+
+    if(lighting_enabled)
+        glEnable(GL_LIGHTING);
 }
 
 void set_polygon_mode(){
     glPolygonMode(GL_FRONT, fill ? GL_FILL : GL_LINE);
+}
+
+bool set_lighting(){
+    if(lighting_enabled){
+        glEnable(GL_LIGHTING);
+        glEnable(GL_NORMALIZE);
+    }
+    else {
+        glDisable(GL_LIGHTING);
+        glDisable(GL_NORMALIZE);
+    }
+
+    return lighting_enabled;
 }
