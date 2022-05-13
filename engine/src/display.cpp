@@ -16,6 +16,7 @@ static vector<unique_ptr<Group>> groups_to_draw {};
 static Constant<VBO*> vbo_wrapper {};
 static Constant<int> tesselation {};
 static Constant<map<string, vector<CartPoint3d>>> points_to_draw {};
+static Constant<map<string, vector<CartPoint3d>>> normals_to_draw {};
 static Constant<bool> as_vbo {};
 
 static const string TITLE { "CG Phase 4" };
@@ -148,14 +149,14 @@ static void get_global_catmull_rom_point(const vector<CartPoint3d> &points, doub
 
     double t { gt * static_cast<double>(point_count) }; // this is the real global t
     const unsigned index { static_cast<unsigned>(std::floor(t)) };  // which segment
-    t = t - static_cast<double>(index); // where within  the segment
+    t -= static_cast<double>(index); // where within the segment
 
     // indices store the points
     array<unsigned, 4> indices {};
-    indices[0] = (index + point_count - 1) % point_count;
-    indices[1] = (indices[0] + 1) % point_count;
-    indices[2] = (indices[1] + 1) % point_count;
-    indices[3] = (indices[2] + 1) % point_count;
+    indices[0] = (index + point_count - 1) % point_count; //point_count - 1
+    indices[1] = (indices[0] + 1) % point_count;          //0
+    indices[2] = (indices[1] + 1) % point_count;          //1
+    indices[3] = (indices[2] + 1) % point_count;          //2
 
     get_catmull_rom_point(
         t,
@@ -200,7 +201,6 @@ static inline void compute_fps(){
 #ifdef BENCH
     static array<double, 15> fps_values {};
     static auto fps_values_iter { fps_values.begin() };
-    //static bool once { true };
 #endif
 
     if(diff_millis > 1000){
@@ -224,8 +224,6 @@ static inline void compute_fps(){
         if(fps_values_iter != fps_values.end())
             *fps_values_iter++ = fps;
         else {
-
-            //once = false;
 
             double const max { *(std::max_element(fps_values.begin(), fps_values.end())) };
             double const min { *(std::min_element(fps_values.begin(), fps_values.end())) };
@@ -263,7 +261,7 @@ static inline void set_lights(){
                 static_cast<float>(sl->pos.x),
                 static_cast<float>(sl->pos.y),
                 static_cast<float>(sl->pos.z),
-                1.0f
+                1.f
             };
             glLightfv(gl_lights[i], GL_POSITION, pos.data());
 
@@ -289,7 +287,7 @@ static inline void set_lights(){
                 static_cast<float>(pl->pos.x),
                 static_cast<float>(pl->pos.y),
                 static_cast<float>(pl->pos.z),
-                1.0f
+                1.f
             };
             glLightfv(gl_lights[i], GL_POSITION, pos.data());
 
@@ -307,18 +305,28 @@ static inline void set_lights(){
             assert(dl != nullptr);
 
 
-            const array<float, 3> dir {
+            const array<float, 4> dir {
                 static_cast<float>(dl->dir.x),
                 static_cast<float>(dl->dir.y),
-                static_cast<float>(dl->dir.z)
+                static_cast<float>(dl->dir.z),
+                0.f
             };
-            glLightfv(gl_lights[i], GL_SPOT_DIRECTION, dir.data());
+            glLightfv(gl_lights[i], GL_POSITION, dir.data());
 
             break;
         }
 
         }
     }
+}
+
+static inline void set_material_color(const Color& color){
+
+    glMaterialfv(GL_FRONT, GL_DIFFUSE,  color.diffuse.as_float_array().data());
+    glMaterialfv(GL_FRONT, GL_AMBIENT,  color.ambient.as_float_array().data());
+    glMaterialfv(GL_FRONT, GL_SPECULAR, color.specular.as_float_array().data());
+    glMaterialfv(GL_FRONT, GL_EMISSION, color.emissive.as_float_array().data());
+    glMateriali(GL_FRONT, GL_SHININESS, static_cast<int>(color.shininess));
 }
 
 static void render_scene(){
@@ -337,9 +345,10 @@ static void render_scene(){
 
     set_lights();
 
-    // put drawing instructions here
+    glDisable(GL_LIGHTING);
     set_axis();
-    set_color();
+    glEnable(GL_LIGHTING);
+
     set_polygon_mode();
 
 
@@ -371,9 +380,8 @@ static void render_scene(){
         }
         while(has_popped);
 
-        //TODO
 
-        for(const auto &t : group->transforms){
+        for(const auto &t : group->transforms)
 
             switch(t->get_type()){
 
@@ -413,7 +421,7 @@ static void render_scene(){
 
                 angle_t const angle_delta { 360.0 / static_cast<angle_t>(dr->time * 1000) };
                 angle_t const angle {
-                    static_cast<angle_t>(
+                    static_cast<double>(
                         current_millis % static_cast<ssize_t>(dr->time * 1000)
                     )
                     * angle_delta
@@ -464,31 +472,61 @@ static void render_scene(){
             default:
                 break;
             }
-        }
 
 
-        for(auto const& m : group->models){
+        if(as_vbo.value()){
 
-            const string& model_fn { m.model_filename };
+            vbo_wrapper.value()->enable_client_state();
 
-            if(as_vbo.value())
-                vbo_wrapper.value()->render(model_fn);
+            for(auto const& m : group->models){
 
-            else if(points_to_draw.value().count(model_fn) > 0){
+                set_material_color(m.color);
 
-                const vector<CartPoint3d> points { points_to_draw.value().at(model_fn) };
-
-                glBegin(GL_TRIANGLES);
-
-                for(auto p { points.begin() }; p != points.end(); p += 3){
-                    glVertex3d(p[0].x, p[0].y, p[0].z);
-                    glVertex3d(p[1].x, p[1].y, p[1].z);
-                    glVertex3d(p[2].x, p[2].y, p[2].z);
-                }
-
-                glEnd();
+                vbo_wrapper.value()->render(m.model_filename);
             }
+
+            vbo_wrapper.value()->disable_client_state();
         }
+        else
+
+            for(auto const& m : group->models){
+
+                set_material_color(m.color);
+
+                const string& model_fn { m.model_filename };
+
+                if(points_to_draw.value().count(model_fn)  > 0 &&
+                   normals_to_draw.value().count(model_fn) > 0){
+
+                    const vector<CartPoint3d> vertexes {
+                        points_to_draw.value().at(model_fn)
+                    };
+
+                    const vector<CartPoint3d> normals {
+                        normals_to_draw.value().at(model_fn)
+                    };
+
+                    glBegin(GL_TRIANGLES);
+
+                    unsigned i{};
+                    while(i < vertexes.size()){
+
+                        glNormal3d(normals [i].x, normals [i].y, normals [i].z);
+                        glVertex3d(vertexes[i].x, vertexes[i].y, vertexes[i].z);
+                        ++i;
+
+                        glNormal3d(normals [i].x, normals [i].y, normals [i].z);
+                        glVertex3d(vertexes[i].x, vertexes[i].y, vertexes[i].z);
+                        ++i;
+
+                        glNormal3d(normals [i].x, normals [i].y, normals [i].z);
+                        glVertex3d(vertexes[i].x, vertexes[i].y, vertexes[i].z);
+                        ++i;
+                    }
+
+                    glEnd();
+                }
+            }
     }
 
     while(curr_nest_level > 0){
@@ -501,7 +539,6 @@ static void render_scene(){
     // End of frame
     glutSwapBuffers();
 }
-
 
 
 static void gl_start(int argc, char** argv){
@@ -523,14 +560,11 @@ static void gl_start(int argc, char** argv){
     glutSpecialFunc(special_keys_event);
     glutPassiveMotionFunc(mouse_event);
 
-    /**
-     * Avoid repeated elements i.e. multiples references
-     * to the same .3d file
-     */
 
     if(!as_vbo.value()){
 
         map<string, vector<CartPoint3d>> tmp_points_to_draw {};
+        map<string, vector<CartPoint3d>> tmp_normals_to_draw {};
 
         for(auto const& group : groups_to_draw)
 
@@ -540,28 +574,43 @@ static void gl_start(int argc, char** argv){
 
                 //count returns number of mappings for the given key
 
-                if(tmp_points_to_draw.count(model_fn) == 0){
-                    vector<CartPoint3d> value {};
-                    if(point_reader(model_fn, value) == ErrorCode::success)
+                if(tmp_points_to_draw.count(model_fn)  == 0 &&
+                   tmp_normals_to_draw.count(model_fn) == 0){
+
+                    vector<CartPoint3d> vertexes {};
+                    vector<CartPoint3d> normals {};
+
+                    if(files_reader(model_fn, vertexes, normals) == ErrorCode::success){
                         tmp_points_to_draw.insert(
-                            pair<string, vector<CartPoint3d>>(model_fn, std::move(value)));
+                            { model_fn, std::move(vertexes) }
+                        );
+
+                        tmp_normals_to_draw.insert(
+                            { model_fn, std::move(normals) }
+                        );
+                    }
                 }
             }
 
         points_to_draw = std::move(tmp_points_to_draw);
+        normals_to_draw = std::move(tmp_normals_to_draw);
     }
     else{
+
+        /**
+        * Avoid repeated elements i.e. multiples references
+        * to the same .3d file
+        */
 
         set<string> models_set {};
 
         for(auto const& group : groups_to_draw)
-            for(auto const& m : group->models){
 
-                const string& model_fn { m.model_filename };
+            for(auto const& m : group->models)
 
-                if(has_3d_ext(model_fn))
-                    models_set.insert(model_fn);
-            }
+                models_set.insert(m.model_filename);
+
+
 
         vbo_wrapper = VBO::get_instance(models_set);
     }

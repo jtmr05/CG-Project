@@ -6,6 +6,7 @@
 #include <memory>
 #include <array>
 #include <optional>
+#include <limits>
 
 #include "point.hpp"
 #include "filters.hpp"
@@ -100,23 +101,24 @@ class Scale : public Transform {
 
 /** Models **/
 
-enum RGBIndex { r = 0, g = 1, b = 2 };
 
 class RGB {
 
     private:
         std::array<uint8_t, 3> arr;
+        enum RGBIndex { r = 0, g = 1, b = 2 };
 
-    public:
-        constexpr uint8_t& operator[](size_t i){
-            return this->arr[i];
-        }
-
-        constexpr uint8_t& operator[](RGBIndex i){
+        constexpr uint8_t operator[](RGBIndex i) const {
             return this->arr[static_cast<size_t>(i)];
         }
 
+    public:
+        constexpr uint8_t operator[](size_t i) const {
+            return this->arr[i];
+        }
+
         RGB(uint8_t r, uint8_t g, uint8_t b);
+        std::array<float, 4> as_float_array() const;
 };
 
 struct Color {
@@ -136,10 +138,8 @@ struct Color {
 struct Model {
 
     std::string model_filename;
-    std::string normals_filename;
-    std::optional<std::string> texture_points_filename; // even though the file will always
-    std::optional<std::string> texture_filename;        // exist, it will be ignored when
-    Color color;                                        // no texture file is provided
+    std::optional<std::string> texture_filename;
+    Color color;
 
     Model(std::string&& model_fn, const Color& color);
     Model(std::string&& model_fn, std::string&& texture_fn, const Color& color);

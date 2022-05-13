@@ -80,7 +80,7 @@ bool has_patch_ext(const string &str){
 
 
 // prefixing a dot in ext is optional
-string replace_extension(const string &str, const string &ext){
+static string replace_extension(const string &str, const string &ext){
 
     const size_t last_dot_pos { str.find_last_of('.') };
     const string raw_filename {
@@ -93,4 +93,12 @@ string replace_extension(const string &str, const string &ext){
         return raw_filename + '.' + ext;
 
     return raw_filename + ext;
+}
+
+string to_norm_extension(const string &str){
+    return replace_extension(str, ".norm");
+}
+
+string to_text_extension(const string &str){
+    return replace_extension(str, ".text");
 }

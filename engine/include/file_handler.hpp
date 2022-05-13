@@ -7,14 +7,12 @@
 
 #include "error_handler.hpp"
 #include "point.hpp"
+#include "filters.hpp"
 
 
 
-ErrorCode point_reader(
-    const std::string &model_fn,
-    std::vector<CartPoint3d> &vertexes
-    /*std::vector<CartPoint3d> &normals,
-    std::vector<CartPoint3d> &text_coords*/
-);
+ErrorCode files_reader(const std::string &model_fn,
+                       std::vector<CartPoint3d> &vertexes,
+                       std::vector<CartPoint3d> &normals);
 
 #endif

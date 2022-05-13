@@ -12,6 +12,7 @@ bool has_3d_ext(const std::string &str);
 bool has_xml_ext(const std::string &str);
 bool has_patch_ext(const std::string &str);
 
-std::string replace_extension(const std::string &fn, const std::string &ext);
+std::string to_norm_extension(const std::string &str);
+std::string to_text_extension(const std::string &str);
 
 #endif

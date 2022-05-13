@@ -3,7 +3,6 @@
 using std::string;
 using std::vector;
 using std::set;
-using std::pair;
 
 
 
@@ -13,9 +12,8 @@ VBO::VBO(const set<string> &model_fns) :
     buffers( {} ), model_info( {} ){
 
     glewInit();
-    glEnableClientState(GL_VERTEX_ARRAY);
 
-    const size_t size { model_fns.size() };
+    const size_t size { model_fns.size() * 2 }; //space for normals as well
 
     /**
      * Reserve doesn't work as the vector merely holds enough memory for 'size' elements
@@ -42,22 +40,32 @@ VBO::VBO(const set<string> &model_fns) :
     for(auto const& model_fn : model_fns){
 
         vector<CartPoint3d> points {};
+        vector<CartPoint3d> normals {};
 
-        if(point_reader(model_fn, points) != ErrorCode::success)
-            continue;
+        if(files_reader(model_fn, points, normals) == ErrorCode::success){
 
-        glBindBuffer(GL_ARRAY_BUFFER, this->buffers.data()[ind]);
-        glBufferData(
-            GL_ARRAY_BUFFER,
-            static_cast<long>(points.size() * sizeof(*points.data())),
-            points.data(),
-            GL_STATIC_DRAW
-        );
+            glBindBuffer(GL_ARRAY_BUFFER, this->buffers.data()[ind]);
+            glBufferData(
+                GL_ARRAY_BUFFER,
+                static_cast<long>(points.size() * sizeof(*points.data())),
+                points.data(),
+                GL_STATIC_DRAW
+            );
 
-        const pair<string, pair<unsigned, size_t>> key_value { model_fn, { ind, points.size() } };
-        this->model_info.insert(key_value);
+            this->model_info.insert( { model_fn, { ind, points.size() } } );
+            ++ind;
 
-        ++ind;
+            glBindBuffer(GL_ARRAY_BUFFER, this->buffers.data()[ind]);
+            glBufferData(
+                GL_ARRAY_BUFFER,
+                static_cast<long>(normals.size() * sizeof(*normals.data())),
+                normals.data(),
+                GL_STATIC_DRAW
+            );
+
+            this->normal_info.insert( { model_fn, { ind, normals.size() } } );
+            ++ind;
+        }
     }
 
     if(ind < size){
@@ -74,21 +82,39 @@ VBO* VBO::get_instance(const set<string> &model_fns){
     return VBO::singleton;
 }
 
-bool VBO::render(const string& model) const {
+bool VBO::render(const string& model_fn) const {
 
     //check number of mappings for this key
-    const bool has_value { this->model_info.count(model) > 0 };
+    const bool has_value {
+        this->model_info.count(model_fn) > 0 &&
+        this->normal_info.count(model_fn) > 0
+    };
 
     if(has_value){
 
-        const auto& [index, size] = this->model_info.at(model);
+        const auto& [pindex, psize] { this->model_info.at(model_fn) };
+        const auto& [nindex, nsize] { this->normal_info.at(model_fn) };
 
-        glBindBuffer(GL_ARRAY_BUFFER, this->buffers.at(index));
+        glBindBuffer(GL_ARRAY_BUFFER, this->buffers.at(pindex));
         glVertexPointer(3, GL_DOUBLE, 0, 0);
-        glDrawArrays(GL_TRIANGLES, 0, size);
+
+        glBindBuffer(GL_ARRAY_BUFFER, this->buffers.at(nindex));
+        glNormalPointer(GL_DOUBLE, 0, 0);
+
+        glDrawArrays(GL_TRIANGLES, 0, psize);
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
     return has_value;
+}
+
+void VBO::enable_client_state() const {
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_NORMAL_ARRAY);
+}
+
+void VBO::disable_client_state() const {
+    glDisableClientState(GL_NORMAL_ARRAY);
+    glDisableClientState(GL_VERTEX_ARRAY);
 }

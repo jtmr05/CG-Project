@@ -4,10 +4,8 @@ extern CameraSettings cs;
 
 
 
-static bool fill { false };
+static bool fill { true };
 static bool show_axis { false };
-static GLubyte rgb[3] { 0, 255, 255};
-static GLubyte color_delta { 3 };
 
 static CartPoint3d direction {};
 static bool first_person { false };
@@ -163,36 +161,6 @@ void keys_event(unsigned char key, int, int){
         fill = !fill;
         break;
 
-    case '1':
-        if(rgb[0] <= 255 - color_delta)
-            rgb[0] += color_delta;
-        break;
-
-    case '2':
-        if(rgb[0] >= color_delta)
-            rgb[0] -= color_delta;
-        break;
-
-    case '3':
-        if(rgb[1] <= 255 - color_delta)
-            rgb[1] += color_delta;
-        break;
-
-    case '4':
-        if(rgb[1] >= color_delta)
-            rgb[1] -= color_delta;
-        break;
-
-    case '5':
-        if(rgb[2] <= 255 - color_delta)
-            rgb[2] += color_delta;
-        break;
-
-    case '6':
-        if(rgb[2] >= color_delta)
-            rgb[2] -= color_delta;
-        break;
-
     case 'x':
         show_axis = !show_axis;
         break;
@@ -251,6 +219,7 @@ void mouse_event(int x, int y){
 
 
 void set_axis(){
+
     if(show_axis){
 
         glBegin(GL_LINES);
@@ -272,10 +241,6 @@ void set_axis(){
 
         glEnd();
     }
-}
-
-void set_color(){
-    glColor3ub(rgb[0], rgb[1], rgb[2]);
 }
 
 void set_polygon_mode(){

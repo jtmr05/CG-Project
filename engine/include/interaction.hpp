@@ -15,7 +15,6 @@ void keys_event(unsigned char key, int, int);
 void mouse_event(int x, int y);
 
 void set_axis();
-void set_color();
 void set_polygon_mode();
 
 #endif

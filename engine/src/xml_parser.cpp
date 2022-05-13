@@ -291,7 +291,7 @@ static void parse_lights(TiXmlElement* const world_tag, vector<unique_ptr<Light>
             CartPoint3d pos {};
             CartPoint3d dir {};
 
-            if(typeof_light == point_s || typeof_light == directional_s){
+            if(typeof_light == point_s || typeof_light == spotlight_s){
 
                 const double x { string_to_double(light_tag->Attribute("posx")) };
                 const double y { string_to_double(light_tag->Attribute("posy")) };
@@ -375,6 +375,7 @@ ErrorCode xml_parser(const string &xml_path, CameraSettings &c,
     c = parse_camera_settings(world_tag);
     parse_groups(world_tag, directory_path, groups);
     parse_lights(world_tag, lights);
+
 
     return ErrorCode::success;
 }

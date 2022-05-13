@@ -72,6 +72,20 @@ TransformType Scale::get_type() const {
 RGB::RGB(uint8_t r, uint8_t g, uint8_t b) :
     arr( { r, g, b } ) {}
 
+array<float, 4> RGB::as_float_array() const {
+
+    constexpr float uint8_t_max_valuef { static_cast<float>(std::numeric_limits<uint8_t>::max()) };
+
+    return {
+        static_cast<float>(this->operator[](r)) / uint8_t_max_valuef,
+        static_cast<float>(this->operator[](g)) / uint8_t_max_valuef,
+        static_cast<float>(this->operator[](b)) / uint8_t_max_valuef,
+        1.f
+    };
+}
+
+
+
 Color::Color() :
     diffuse(200, 200, 200), ambient(50, 50, 50),
     specular(0, 0, 0), emissive(0, 0, 0),
@@ -89,14 +103,6 @@ Color::Color(const RGB& diffuse, const RGB& ambient,
 Model::Model(string&& model_fn, const Color& color) :
     model_filename(model_fn),
 
-    normals_filename(
-        std::move(replace_extension(model_fn, "norm"))
-    ),
-
-    texture_points_filename(
-        std::move(optional<string>{})
-    ),
-
     texture_filename(
         std::move(optional<string>{})
     ),
@@ -105,14 +111,6 @@ Model::Model(string&& model_fn, const Color& color) :
 
 Model::Model(string&& model_fn, string&& texture_fn, const Color& color) :
     model_filename(model_fn),
-
-    normals_filename(
-        std::move(replace_extension(model_fn, "norm"))
-    ),
-
-    texture_points_filename(
-        std::move(std::make_optional(std::move(replace_extension(model_fn, "text"))))
-    ),
 
     texture_filename(
         std::move(std::make_optional(std::move(texture_fn)))

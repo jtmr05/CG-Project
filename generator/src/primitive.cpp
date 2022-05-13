@@ -148,7 +148,7 @@ static ErrorCode bezier_writer(const string &out_fn, const string &in_fn, unsign
     vector<array<unsigned, NUM_OF_PATCH_POINTS>> patch_indexes;
     vector<CartPoint3d> ctrl_points;
 
-    const ErrorCode code { read_patch_file(in_fn, patch_indexes, ctrl_points) }; //runs fine
+    const ErrorCode code { read_patch_file(in_fn, patch_indexes, ctrl_points) };
     if(code != ErrorCode::success)
         return code;
 
@@ -157,10 +157,10 @@ static ErrorCode bezier_writer(const string &out_fn, const string &in_fn, unsign
      * Now it's time to treat them accordingly and take care of the output
      */
 
-    std::ofstream file{};
-    file.open(out_fn, std::ios::out | std::ios::trunc);
+    std::ofstream vertexes_file{};
+    vertexes_file.open(out_fn, std::ios::out | std::ios::trunc);
 
-    if(!file.is_open())
+    if(!vertexes_file.is_open())
         return ErrorCode::io_error;
 
     /* tesselation_level is incremented
@@ -264,11 +264,11 @@ static ErrorCode bezier_writer(const string &out_fn, const string &in_fn, unsign
         for(unsigned i{}; i < static_cast<size_t>(tesselation_level - 1); ++i)
             for(unsigned j{}; j < static_cast<size_t>(tesselation_level - 1); ++j){
 
-                file << patch_matrix[i][j]
+                vertexes_file << patch_matrix[i][j]
                      << patch_matrix[i + 1][j]
                      << patch_matrix[i][j + 1];
 
-                file << patch_matrix[i + 1][j + 1]
+                vertexes_file << patch_matrix[i + 1][j + 1]
                      << patch_matrix[i][j + 1]
                      << patch_matrix[i + 1][j];
             }
@@ -280,10 +280,10 @@ static ErrorCode bezier_writer(const string &out_fn, const string &in_fn, unsign
 static ErrorCode torus_writer(const string &filename, int out_radius,
                               int in_radius, int slices, int stacks){
 
-    std::ofstream file{};
-    file.open(filename, std::ios::out | std::ios::trunc);
+    std::ofstream vertexes_file{};
+    vertexes_file.open(filename, std::ios::out | std::ios::trunc);
 
-    if(!file.is_open())
+    if(!vertexes_file.is_open())
         return ErrorCode::io_error;
 
     const angle_t zOx_delta { 360.0 / static_cast<angle_t>(slices) };
@@ -348,8 +348,8 @@ static ErrorCode torus_writer(const string &filename, int out_radius,
             };
             p4.zOx = static_cast<angle_t>(sl + 1) * zOx_delta;
 
-            file << p1 << p2 << p3;
-            file << p2 << p4 << p3;
+            vertexes_file << p1 << p2 << p3;
+            vertexes_file << p2 << p4 << p3;
 
 
             PolarPoint3d neg_p1 { p1 };
@@ -362,8 +362,8 @@ static ErrorCode torus_writer(const string &filename, int out_radius,
             neg_p3.yOp = 180.0 - neg_p3.yOp;
             neg_p4.yOp = 180.0 - neg_p4.yOp;
 
-            file << neg_p1 << neg_p3 << neg_p2;
-            file << neg_p3 << neg_p4 << neg_p2;
+            vertexes_file << neg_p1 << neg_p3 << neg_p2;
+            vertexes_file << neg_p3 << neg_p4 << neg_p2;
         }
 
     return ErrorCode::success;
@@ -371,16 +371,21 @@ static ErrorCode torus_writer(const string &filename, int out_radius,
 
 static ErrorCode sphere_writer(const string &filename, int radius, int slices, int stacks){
 
-    std::ofstream file{};
-    file.open(filename, std::ios::out | std::ios::trunc);
+    std::ofstream vertexes_file{};
+    vertexes_file.open(filename, std::ios::out | std::ios::trunc);
 
-    if(!file.is_open())
+    std::ofstream normals_file{};
+    normals_file.open(to_norm_extension(filename), std::ios::out | std::ios::trunc);
+
+    if(!vertexes_file.is_open() || !normals_file.is_open())
         return ErrorCode::io_error;
 
     const angle_t zOx_delta { 360.0 / static_cast<angle_t>(slices) };
     const angle_t yOp_delta { 90.0 / static_cast<angle_t>(stacks / 2) };
     const double radius_d { static_cast<double>(radius) };
 
+    vector<double> slopes {};
+    slopes.reserve(static_cast<unsigned>(stacks / 2));
 
     for(int sl{}; sl < slices; ++sl){
 
@@ -412,8 +417,22 @@ static ErrorCode sphere_writer(const string &filename, int radius, int slices, i
                 curr_yOp
             };
 
-            file << bp1 << bp2 << next_bp1;
-            file << next_bp1 << bp2 << next_bp2;
+
+            if(sl == 0){
+                auto const& [x1, y1, z1] { polar_to_cart(bp1) };
+                auto const& [x2, y2, z2] { polar_to_cart(next_bp1) };
+
+                const double slope { (y2 - y1) / (-z2 + z1) };
+                slopes.push_back(slope);
+            }
+
+            angle_t normal_vector_yOp { std::atan(slopes[static_cast<unsigned>(st)]) };
+            PolarPoint3d side_normal { 1.0, bp1.zOx + zOx_delta / 2.0, normal_vector_yOp };
+
+            vertexes_file << bp1 << bp2 << next_bp1;
+            normals_file << side_normal << side_normal << side_normal;
+            vertexes_file << next_bp1 << bp2 << next_bp2;
+            normals_file << side_normal << side_normal << side_normal;
 
             PolarPoint3d neg_bp1 { bp1 };
             PolarPoint3d neg_bp2 { bp2 };
@@ -425,8 +444,13 @@ static ErrorCode sphere_writer(const string &filename, int radius, int slices, i
             neg_next_bp1.yOp = 180.0 - neg_next_bp1.yOp;
             neg_next_bp2.yOp = 180.0 - neg_next_bp2.yOp;
 
-            file << neg_next_bp1 << neg_next_bp2 << neg_bp1;
-            file << neg_bp1 << neg_next_bp2 << neg_bp2;
+            side_normal.yOp = 180.0 - side_normal.yOp;
+
+
+            vertexes_file << neg_next_bp1 << neg_next_bp2 << neg_bp1;
+            normals_file << side_normal << side_normal << side_normal;
+            vertexes_file << neg_bp1 << neg_next_bp2 << neg_bp2;
+            normals_file << side_normal << side_normal << side_normal;
 
             bp1 = next_bp1;
             bp2 = next_bp2;
@@ -438,16 +462,22 @@ static ErrorCode sphere_writer(const string &filename, int radius, int slices, i
 
 static ErrorCode cone_writer(const string &filename, int radius, int height, int slices, int stacks){
 
-    std::ofstream file{};
-    file.open(filename, std::ios::out | std::ios::trunc);
+    std::ofstream vertexes_file{};
+    vertexes_file.open(filename, std::ios::out | std::ios::trunc);
 
-    if(!file.is_open())
+    std::ofstream normals_file{};
+    normals_file.open(to_norm_extension(filename), std::ios::out | std::ios::trunc);
+
+    if(!vertexes_file.is_open() || !normals_file.is_open())
         return ErrorCode::io_error;
 
     const angle_t zOx_delta { 360.0 / static_cast<angle_t>(slices) };
     const double height_delta { static_cast<double>(height) / static_cast<double>(stacks) };
 
     const CartPoint3d origin{};
+    const CartPoint3d base_normal { 0.0, -1.0, 0.0 };
+
+    angle_t normal_vector_yOp {};
 
     for(int sl{}; sl < slices; ++sl){
 
@@ -463,7 +493,8 @@ static ErrorCode cone_writer(const string &filename, int radius, int height, int
             90.0
         };
 
-        file << bp1 << origin << bp2; //base
+        vertexes_file << bp1 << origin << bp2; //base
+        normals_file << base_normal << base_normal << base_normal;
 
 
 
@@ -500,12 +531,29 @@ static ErrorCode cone_writer(const string &filename, int radius, int height, int
             next_bp1.zOx = bp1.zOx;
 
             const PolarPoint3d next_bp2 {
-                next_bp1.radius, next_bp1.zOx + zOx_delta, next_bp1.yOp
+                next_bp1.radius, bp2.zOx, next_bp1.yOp
             };
 
-            file << bp1 << bp2 << next_bp1;
-            if(st < stacks - 1)
-                file << next_bp1 << bp2 << next_bp2;
+
+            if(sl == 0 && st == 0){
+
+                auto const& [x1, y1, z1] { polar_to_cart(bp1) };
+                auto const& [x2, y2, z2] { polar_to_cart(next_bp1) };
+
+                const double slope { (y2 - y1) / (-z2 + z1) };
+
+                normal_vector_yOp = std::atan(slope);
+            }
+
+            const PolarPoint3d side_normal { 1.0, bp1.zOx + zOx_delta / 2.0, normal_vector_yOp };
+
+            vertexes_file << bp1 << bp2 << next_bp1;
+            normals_file << side_normal << side_normal << side_normal;
+
+            if(st < stacks - 1){
+                vertexes_file << next_bp1 << bp2 << next_bp2;
+                normals_file << side_normal << side_normal << side_normal;
+            }
 
             bp1 = next_bp1;
             bp2 = next_bp2;
@@ -517,10 +565,13 @@ static ErrorCode cone_writer(const string &filename, int radius, int height, int
 
 static ErrorCode box_writer(const string &filename, int units, int grid_size){
 
-    std::ofstream file{};
-    file.open(filename, std::ios::out | std::ios::trunc);
+    std::ofstream vertexes_file{};
+    vertexes_file.open(filename, std::ios::out | std::ios::trunc);
 
-    if(!file.is_open())
+    std::ofstream normals_file{};
+    normals_file.open(to_norm_extension(filename), std::ios::out | std::ios::trunc);
+
+    if(!vertexes_file.is_open() || !normals_file.is_open())
         return ErrorCode::io_error;
 
     const double abs_max_coord { static_cast<double>(units) / 2.0 };
@@ -531,7 +582,11 @@ static ErrorCode box_writer(const string &filename, int units, int grid_size){
     double x {}, y {}, z {};
 
 
+
     x = abs_max_coord;
+
+    CartPoint3d normal1 { 0.0,  1.0, 0.0 };
+    CartPoint3d normal2 { 0.0, -1.0, 0.0 };
 
     for(int i{}; i < grid_size; ++i, x -= step){
 
@@ -546,17 +601,24 @@ static ErrorCode box_writer(const string &filename, int units, int grid_size){
             p3.x = x - step; p3.z = z;
             p4.x = x - step; p4.z = z - step;
 
-            file << p1 << p2 << p4;
-            file << p4 << p3 << p1;
+            vertexes_file << p1 << p2 << p4;
+            normals_file << normal1 << normal1 << normal1;
+            vertexes_file << p4 << p3 << p1;
+            normals_file << normal1 << normal1 << normal1;
 
             p1.y = p2.y = p3.y = p4.y = -abs_max_coord;
 
-            file << p1 << p3 << p2;
-            file << p2 << p3 << p4;
+            vertexes_file << p1 << p3 << p2;
+            normals_file << normal2 << normal2 << normal2;
+            vertexes_file << p2 << p3 << p4;
+            normals_file << normal2 << normal2 << normal2;
         }
     }
 
     y = abs_max_coord;
+
+    normal1 = { 1.0,  0.0, 0.0 };
+    normal2 = { -1.0, 0.0, 0.0 };
 
     for(int i{}; i < grid_size; ++i, y -= step){
 
@@ -571,17 +633,24 @@ static ErrorCode box_writer(const string &filename, int units, int grid_size){
             p3.y = y - step; p3.z = z;
             p4.y = y - step; p4.z = z - step;
 
-            file << p1 << p4 << p2;
-            file << p1 << p3 << p4;
+            vertexes_file << p1 << p4 << p2;
+            normals_file << normal1 << normal1 << normal1;
+            vertexes_file << p1 << p3 << p4;
+            normals_file << normal1 << normal1 << normal1;
 
             p1.x = p2.x = p3.x = p4.x = -abs_max_coord;
 
-            file << p1 << p2 << p3;
-            file << p2 << p4 << p3;
+            vertexes_file << p1 << p2 << p3;
+            normals_file << normal2 << normal2 << normal2;
+            vertexes_file << p2 << p4 << p3;
+            normals_file << normal2 << normal2 << normal2;
         }
     }
 
     y = abs_max_coord;
+
+    normal1 = { 0.0, 0.0, 1.0  };
+    normal2 = { 0.0, 0.0, -1.0 };
 
     for(int i{}; i < grid_size; i++, y -= step){
 
@@ -596,13 +665,17 @@ static ErrorCode box_writer(const string &filename, int units, int grid_size){
             p3.y = y - step; p3.x = x;
             p4.y = y - step; p4.x = x - step;
 
-            file << p1 << p2 << p4;
-            file << p1 << p4 << p3;
+            vertexes_file << p1 << p2 << p4;
+            normals_file << normal1 << normal1 << normal1;
+            vertexes_file << p1 << p4 << p3;
+            normals_file << normal1 << normal1 << normal1;
 
             p1.z = p2.z = p3.z = p4.z = -abs_max_coord;
 
-            file << p1 << p3 << p2;
-            file << p2 << p3 << p4;
+            vertexes_file << p1 << p3 << p2;
+            normals_file << normal2 << normal2 << normal2;
+            vertexes_file << p2 << p3 << p4;
+            normals_file << normal2 << normal2 << normal2;
         }
     }
 
@@ -611,17 +684,20 @@ static ErrorCode box_writer(const string &filename, int units, int grid_size){
 
 static ErrorCode plane_writer(const string &filename, int length, int divs){
 
-    std::ofstream file{};
-    file.open(filename, std::ios::out | std::ios::trunc);
+    std::ofstream vertexes_file{};
+    vertexes_file.open(filename, std::ios::out | std::ios::trunc);
 
-    if(!file.is_open())
+    std::ofstream normals_file{};
+    normals_file.open(to_norm_extension(filename), std::ios::out | std::ios::trunc);
+
+    if(!vertexes_file.is_open() || !normals_file.is_open())
         return ErrorCode::io_error;
 
     const double abs_max_coord { static_cast<double>(length) / 2.0 };
     const double step { static_cast<double>(length) / static_cast<double>(divs) };
 
     CartPoint3d p1 {}, p2 {}, p3 {}, p4 {};
-
+    const CartPoint3d normal { 0.0, 1.0, 0.0 };           //constant for all points of the plane
 
     double x { abs_max_coord };
 
@@ -636,8 +712,10 @@ static ErrorCode plane_writer(const string &filename, int length, int divs){
             p3.x = x - step; p3.z = z;
             p4.x = x - step; p4.z = z - step;
 
-            file << p1 << p4 << p3;
-            file << p1 << p2 << p4;
+            vertexes_file << p1 << p4 << p3;
+            normals_file << normal << normal << normal;
+            vertexes_file << p1 << p2 << p4;
+            normals_file << normal << normal << normal;
         }
     }
 

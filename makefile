@@ -32,7 +32,7 @@ CXX 			:= g++
 
 #compiler flags
 CXXFLAGS		:= -Wall -Wextra -Wsign-conversion -std=c++17 -g -O2# -DNDEBUG
-CXXFLAGS		+= -DBENCH
+#CXXFLAGS		+= -DBENCH
 
 #Windows
 ifeq (Windows_NT, $(OS))
@@ -74,6 +74,8 @@ clean:
 	-make -C $(GEN_DIR) clean
 	-make -C $(shell realpath --relative-to . $(UTILS_DIR)) clean
 	-make -C $(shell realpath --relative-to . $(TINYXML_DIR)) clean
-	-find $(RSR_DIR)/* | grep \.3d | xargs rm
+	-find $(RSR_DIR)/* | grep \.3d | xargs rm -f
+	-find $(RSR_DIR)/* | grep \.norm | xargs rm -f
+	-find $(RSR_DIR)/* | grep \.text | xargs rm -f
 	-rm -f *.stackdump
 	-rm -rf $(BIN_DIR)
