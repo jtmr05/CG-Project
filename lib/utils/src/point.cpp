@@ -26,6 +26,26 @@ array<double, 3> CartPoint3d::as_array() const {
     return { this->x, this->y, this->z };
 }
 
+CartPoint3d CartPoint3d::normalize() const {
+
+    const double norm {
+        std::sqrt(
+            this->x * this->x +
+            this->y * this->y +
+            this->z * this->z
+        )
+    };
+
+    if(norm == 0.0)
+        return { *this };
+
+    return {
+        this->x / norm,
+        this->y / norm,
+        this->z / norm,
+    };
+}
+
 
 
 CartPoint2d::CartPoint2d() :
@@ -44,6 +64,11 @@ PolarPoint3d::PolarPoint3d(double radius, angle_t zOx, angle_t yOp) :
 {
     assert(yOp >= 0.0 && yOp <= 180.0);
 }
+
+CartPoint3d PolarPoint3d::normalize() const {
+    return polar_to_cart(*this).normalize();
+}
+
 
 
 PolarPoint2d::PolarPoint2d() :
@@ -163,7 +188,7 @@ std::istream& operator>>(std::istream& stream, CartPoint2d& p){
 
 // https://www.khronos.org/opengl/wiki/Calculating_a_Surface_Normal
 
-CartPoint3d normal(const CartPoint3d &a, const CartPoint3d &b, const CartPoint3d &c) {
+CartPoint3d plane_normal(const CartPoint3d &a, const CartPoint3d &b, const CartPoint3d &c) {
 
     const CartPoint3d u { b.x - a.x, b.y - a.y, b.z - a.z };
     const CartPoint3d v { c.x - a.x, c.y - a.y, c.z - a.z };
@@ -175,6 +200,6 @@ CartPoint3d normal(const CartPoint3d &a, const CartPoint3d &b, const CartPoint3d
     };
 }
 
-CartPoint3d normal(const PolarPoint3d &a, const PolarPoint3d &b, const PolarPoint3d &c){
-    return normal(polar_to_cart(a), polar_to_cart(b), polar_to_cart(c));
+CartPoint3d plane_normal(const PolarPoint3d &a, const PolarPoint3d &b, const PolarPoint3d &c){
+    return plane_normal(polar_to_cart(a), polar_to_cart(b), polar_to_cart(c));
 }

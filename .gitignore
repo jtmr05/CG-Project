@@ -2,4 +2,6 @@
 *.o
 *.exe
 *.3d
+*.norm
+*.text
 *.stackdump

@@ -145,7 +145,7 @@ static void get_catmull_rom_point(double t,
 static void get_global_catmull_rom_point(const vector<CartPoint3d> &points, double gt,
                                          Matrix<double, 1, 3> &pos, Matrix<double, 1, 3> &deriv){
 
-    size_t const point_count { points.size() };
+    const size_t point_count { points.size() };
 
     double t { gt * static_cast<double>(point_count) }; // this is the real global t
     const unsigned index { static_cast<unsigned>(std::floor(t)) };  // which segment
@@ -153,10 +153,11 @@ static void get_global_catmull_rom_point(const vector<CartPoint3d> &points, doub
 
     // indices store the points
     array<unsigned, 4> indices {};
-    indices[0] = (index + point_count - 1) % point_count; //point_count - 1
-    indices[1] = (indices[0] + 1) % point_count;          //0
-    indices[2] = (indices[1] + 1) % point_count;          //1
-    indices[3] = (indices[2] + 1) % point_count;          //2
+    indices[0] = index % point_count;
+    indices[1] = (indices[0] + 1) % point_count;
+    indices[2] = (indices[1] + 1) % point_count;
+    indices[3] = (indices[2] + 1) % point_count;
+
 
     get_catmull_rom_point(
         t,
@@ -296,11 +297,6 @@ static inline void set_lights(){
 
         case LightType::directional: {
 
-            /**
-             * Light is directional is by default,
-             * i.e. pos w component is equal to 0.0
-             */
-
             DirectionalLight const *dl { dynamic_cast<DirectionalLight*>(light.get()) };
             assert(dl != nullptr);
 
@@ -354,7 +350,7 @@ static void render_scene(){
     set_polygon_mode();
 
 
-    unsigned int curr_nest_level { 0 };
+    unsigned curr_nest_level { 0 };
 
     for(auto const& group : groups_to_draw){
 
@@ -452,8 +448,8 @@ static void render_scene(){
                 glTranslated(pos[0][0], pos[0][1], pos[0][2]);
 
                 if(dt->align){
-                    static array<double, 3> Y { 0.0, 1.0, 0.0 };
 
+                    static array<double, 3> Y { 0.0, 1.0, 0.0 };
                     array<double, 3> X { deriv[0] }, Z {};
 
                     cross(X, Y, Z);

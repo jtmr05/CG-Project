@@ -20,6 +20,7 @@ struct CartPoint3d {
     CartPoint3d(double x, double y, double z);
 
     std::array<double, 3> as_array() const;
+    CartPoint3d normalize() const;
 };
 
 struct CartPoint2d {
@@ -40,6 +41,8 @@ struct PolarPoint3d {
 
     PolarPoint3d();
     PolarPoint3d(double radius, angle_t zOx, angle_t yOp);
+
+    CartPoint3d normalize() const;
 };
 
 struct PolarPoint2d {
@@ -72,7 +75,7 @@ std::istream& operator>>(std::istream& stream, CartPoint3d& p);
 std::istream& operator>>(std::istream& stream, CartPoint2d& p);
 
 
-CartPoint3d normal(const CartPoint3d &a, const CartPoint3d &b, const CartPoint3d &c);
-CartPoint3d normal(const PolarPoint3d &a, const PolarPoint3d &b, const PolarPoint3d &c);
+CartPoint3d plane_normal(const CartPoint3d &a, const CartPoint3d &b, const CartPoint3d &c);
+CartPoint3d plane_normal(const PolarPoint3d &a, const PolarPoint3d &b, const PolarPoint3d &c);
 
 #endif
