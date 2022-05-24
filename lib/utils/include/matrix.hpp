@@ -52,8 +52,8 @@ public:
 
 template<size_t left_size, size_t inner_size, size_t right_size>
 Matrix<double,left_size, right_size>
-mult_matrixes(const Matrix<double, left_size, inner_size>  &m1,
-              const Matrix<double, inner_size, right_size> &m2){
+operator*(const Matrix<double, left_size, inner_size>  &m1,
+          const Matrix<double, inner_size, right_size> &m2){
 
     Matrix<double, left_size, right_size> res {};
 
@@ -74,8 +74,8 @@ mult_matrixes(const Matrix<double, left_size, inner_size>  &m1,
 
 template<size_t left_size, size_t inner_size, size_t right_size>
 Matrix<CartPoint3d, left_size, right_size>
-mult_matrixes(const Matrix<CartPoint3d, left_size, inner_size>  &m1,
-              const Matrix<double, inner_size, right_size> &m2){
+operator*(const Matrix<CartPoint3d, left_size, inner_size>  &m1,
+          const Matrix<double, inner_size, right_size> &m2){
 
     Matrix<CartPoint3d, left_size, right_size> res {};
 
@@ -96,8 +96,8 @@ mult_matrixes(const Matrix<CartPoint3d, left_size, inner_size>  &m1,
 
 template<size_t left_size, size_t inner_size, size_t right_size>
 Matrix<CartPoint3d, left_size, right_size>
-mult_matrixes(const Matrix<double, left_size, inner_size> &m1,
-              const Matrix<CartPoint3d, inner_size, right_size> &m2){
+operator*(const Matrix<double, left_size, inner_size> &m1,
+          const Matrix<CartPoint3d, inner_size, right_size> &m2){
 
     Matrix<CartPoint3d, left_size, right_size> res {};
 

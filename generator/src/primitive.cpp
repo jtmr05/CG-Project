@@ -203,13 +203,7 @@ static ErrorCode bezier_writer(const string &out_fn, const string &in_fn, unsign
         };
 
         const auto inner_partial_matrix {
-            mult_matrixes(
-                mult_matrixes(
-                    coeffs_matrix,
-                    point_matrix
-                ),
-                t_coeffs_matrix
-            )
+            coeffs_matrix * point_matrix * t_coeffs_matrix
         };
 
         for(unsigned u{}; u < tesselation_level; ++u){
@@ -260,33 +254,15 @@ static ErrorCode bezier_writer(const string &out_fn, const string &in_fn, unsign
                 };
 
                 const Matrix<CartPoint3d, 1, 1> vertex {
-                    mult_matrixes(
-                        mult_matrixes(
-                            u_vector,
-                            inner_partial_matrix
-                        ),
-                        v_vector
-                    )
+                    u_vector * inner_partial_matrix * v_vector
                 };
 
                 const Matrix<CartPoint3d, 1, 1> tangent1 {
-                    mult_matrixes(
-                        mult_matrixes(
-                            u_vector_deriv,
-                            inner_partial_matrix
-                        ),
-                        v_vector
-                    )
+                    u_vector_deriv * inner_partial_matrix * v_vector
                 };
 
                 const Matrix<CartPoint3d, 1, 1> tangent2 {
-                    mult_matrixes(
-                        mult_matrixes(
-                            u_vector,
-                            inner_partial_matrix
-                        ),
-                        v_vector_deriv
-                    )
+                    u_vector * inner_partial_matrix * v_vector_deriv
                 };
 
                 vertex_row.push_back(vertex.at(0, 0));
@@ -294,7 +270,7 @@ static ErrorCode bezier_writer(const string &out_fn, const string &in_fn, unsign
                     cross_product(
                         tangent2.at(0, 0),
                         tangent1.at(0, 0)
-                    )
+                    ).normalize()
                 );
             }
 

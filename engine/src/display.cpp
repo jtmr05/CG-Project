@@ -105,7 +105,7 @@ static void get_catmull_rom_point(double t,
 
     // Compute A = M * P
     // M is 4x4, P is 4x3, therefore A is 4x3
-    const Matrix<double, 4, 3> a { mult_matrixes(m, p) };
+    const Matrix<double, 4, 3> a { m * p };
 
 
 
@@ -114,7 +114,7 @@ static void get_catmull_rom_point(double t,
         array{ t * t * t, t * t, t, 1.0 }
     };
 
-    pos = mult_matrixes(t_vector, a);
+    pos = t_vector * a;
 
 
 
@@ -123,7 +123,7 @@ static void get_catmull_rom_point(double t,
         array{ 3.0 * t * t, 2.0 * t, 1.0, 0.0 }
     };
 
-    deriv = mult_matrixes(t_vector_deriv, a);
+    deriv = t_vector_deriv * a;
 }
 
 static void get_global_catmull_rom_point(const vector<CartPoint3d> &points, double gt,
