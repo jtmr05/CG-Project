@@ -15,6 +15,7 @@
 #include "file_handler.hpp"
 #include "vbo.hpp"
 #include "data_structures.hpp"
+#include "matrix.hpp"
 #include "interaction.hpp" //must be below vbo.hpp !!
 
 #include <GL/glut.h>

@@ -10,6 +10,7 @@
 
 #include "error_handler.hpp"
 #include "point.hpp"
+#include "matrix.hpp"
 #include "filters.hpp"
 
 

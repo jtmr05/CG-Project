@@ -75,7 +75,11 @@ std::istream& operator>>(std::istream& stream, CartPoint3d& p);
 std::istream& operator>>(std::istream& stream, CartPoint2d& p);
 
 
-CartPoint3d plane_normal(const CartPoint3d &a, const CartPoint3d &b, const CartPoint3d &c);
-CartPoint3d plane_normal(const PolarPoint3d &a, const PolarPoint3d &b, const PolarPoint3d &c);
+CartPoint3d operator*(const CartPoint3d &p, double d);
+CartPoint3d operator*(double d, const CartPoint3d &p);
+CartPoint3d operator+(const CartPoint3d &p1, const CartPoint3d &p2);
+void operator+=(CartPoint3d &p1, const CartPoint3d &p2);
+
+CartPoint3d cross_product(const CartPoint3d &p1, const CartPoint3d &p2);
 
 #endif

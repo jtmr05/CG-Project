@@ -83,63 +83,47 @@ static void normalize(array<double, 3> &a) {
     a[2] /= norm;
 }
 
-
-template<size_t left_size, size_t inner_size, size_t right_size>
-static void mult_matrixes(Matrix<double, left_size, inner_size>  &m1,
-                          Matrix<double, inner_size, right_size> &m2,
-                          Matrix<double, left_size, right_size>  &res){
-
-    for(size_t l {}; l < left_size; ++l){
-        for(size_t r {}; r < right_size; ++r){
-
-            double value {};
-
-            for(size_t i {}; i < inner_size; ++i)
-                value += m1[l][i] * m2[i][r];
-
-            res[l][r] = value;
-        }
-    }
-}
-
 static void get_catmull_rom_point(double t,
                                   const array<double, 3> &p0, const array<double, 3> &p1,
                                   const array<double, 3> &p2, const array<double, 3> &p3,
                                   Matrix<double, 1, 3> &pos, Matrix<double, 1, 3> &deriv){
 
     // catmull-rom matrix
-    Matrix<double, 4, 4> m {};
-    m[0] = {-0.5,  1.5, -1.5,  0.5};
-    m[1] = { 1.0, -2.5,  2.0, -0.5};
-    m[2] = {-0.5,  0.0,  0.5,  0.0};
-    m[3] = { 0.0,  1.0,  0.0,  0.0};
+    const Matrix<double, 4, 4> m {
+        array{ -0.5,  1.5, -1.5,  0.5 },
+        array{  1.0, -2.5,  2.0, -0.5 },
+        array{ -0.5,  0.0,  0.5,  0.0 },
+        array{  0.0,  1.0,  0.0,  0.0 }
+    };
 
-    Matrix<double, 4, 3> p {};
-    p[0] = {p0[0], p0[1], p0[2]};
-    p[1] = {p1[0], p1[1], p1[2]};
-    p[2] = {p2[0], p2[1], p2[2]};
-    p[3] = {p3[0], p3[1], p3[2]};
+    const Matrix<double, 4, 3> p {
+        array{ p0[0], p0[1], p0[2] },
+        array{ p1[0], p1[1], p1[2] },
+        array{ p2[0], p2[1], p2[2] },
+        array{ p3[0], p3[1], p3[2] }
+    };
 
     // Compute A = M * P
     // M is 4x4, P is 4x3, therefore A is 4x3
-    Matrix<double, 4, 3> a {};
-    mult_matrixes(m, p, a);
+    const Matrix<double, 4, 3> a { mult_matrixes(m, p) };
 
 
 
     // Compute pos = T * A
-    Matrix<double, 1, 4> t_vector {};
-    t_vector[0] = { t * t * t, t * t, t, 1.0 };
+    const Matrix<double, 1, 4> t_vector {
+        array{ t * t * t, t * t, t, 1.0 }
+    };
 
-    mult_matrixes(t_vector, a, pos);
+    pos = mult_matrixes(t_vector, a);
 
 
 
     // compute deriv = T' * A
-    Matrix<double, 1, 4> t_vector_deriv {};
-    t_vector_deriv[0] = { 3.0 * t * t, 2.0 * t, 1.0, 0.0 };
+    const Matrix<double, 1, 4> t_vector_deriv {
+        array{ 3.0 * t * t, 2.0 * t, 1.0, 0.0 }
+    };
 
-    mult_matrixes(t_vector_deriv, a, deriv);
+    deriv = mult_matrixes(t_vector_deriv, a);
 }
 
 static void get_global_catmull_rom_point(const vector<CartPoint3d> &points, double gt,
@@ -345,7 +329,7 @@ static void render_scene(){
     if(lighting_enabled)
         set_lights();
     else
-        glColor3ub(255, 192, 203);
+        glColor3ub(0, 255, 255);
 
     set_polygon_mode();
 

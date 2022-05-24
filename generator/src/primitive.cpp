@@ -54,10 +54,10 @@ static inline CartPoint3d get_cubic_bezier_curve_point(const array<CartPoint3d, 
 
     double x{}, y{}, z{};
 
-    for(unsigned i{}; i < binomial_coeffs.size(); ++i){
-        x += binomial_coeffs[i] * ctrl_points[ctrl_points.size() - 1 - i].x;
-        y += binomial_coeffs[i] * ctrl_points[ctrl_points.size() - 1 - i].y;
-        z += binomial_coeffs[i] * ctrl_points[ctrl_points.size() - 1 - i].z;
+    for(unsigned i{}; i < 4; ++i){
+        x += binomial_coeffs[i] * ctrl_points[i].x;
+        y += binomial_coeffs[i] * ctrl_points[i].y;
+        z += binomial_coeffs[i] * ctrl_points[i].z;
     }
 
     return { x, y, z };
@@ -171,128 +171,170 @@ static ErrorCode bezier_writer(const string &out_fn, const string &in_fn, unsign
      */
     const double time_step { 1.0 / static_cast<double>(tesselation_level++) };
 
+    const Matrix<double, 4, 4> coeffs_matrix {
+        array{ -1.0,  3.0, -3.0, 1.0 },
+        array{  3.0, -6.0,  3.0, 0.0 },
+        array{ -3.0,  3.0,  0.0, 0.0 },
+        array{  1.0,  0.0,  0.0, 0.0 }
+    };
+    const Matrix<double, 4, 4> t_coeffs_matrix { coeffs_matrix.transpose() };
+
     for(auto const& indexes_array : patch_indexes){
 
-        vector<vector<CartPoint3d>> patch_matrix {};
-        patch_matrix.reserve(tesselation_level);
+        vector<vector<CartPoint3d>> vertex_matrix {};
+        vertex_matrix.reserve(tesselation_level);
+
+        vector<vector<CartPoint3d>> normals_matrix {};
+        normals_matrix.reserve(tesselation_level);
+
+
+        auto iter { indexes_array.begin() };
+        const Matrix<CartPoint3d, 4, 4> point_matrix {
+            array{
+                ctrl_points[*iter++],
+                ctrl_points[*iter++],
+                ctrl_points[*iter++],
+                ctrl_points[*iter++]
+            },
+            array{
+                ctrl_points[*iter++],
+                ctrl_points[*iter++],
+                ctrl_points[*iter++],
+                ctrl_points[*iter++]
+            },
+            array{
+                ctrl_points[*iter++],
+                ctrl_points[*iter++],
+                ctrl_points[*iter++],
+                ctrl_points[*iter++]
+            },
+            array{
+                ctrl_points[*iter++],
+                ctrl_points[*iter++],
+                ctrl_points[*iter++],
+                ctrl_points[*iter]
+            }
+        };
+
+        const auto inner_partial_matrix {
+            mult_matrixes(
+                mult_matrixes(
+                    coeffs_matrix,
+                    point_matrix
+                ),
+                t_coeffs_matrix
+            )
+        };
 
         for(unsigned u{}; u < tesselation_level; ++u){
 
-            vector<CartPoint3d> patch_row {};
-            patch_row.reserve(tesselation_level);
+            vector<CartPoint3d> vertex_row {};
+            vertex_row.reserve(tesselation_level);
 
-            const double utime { time_step * static_cast<double>(u) };
-            const double ucompl { 1.0 - utime };
-            const array<double, 4> u_binomial_coeffs { //Bernstein polynomials definiton
-                utime * utime * utime,
-                3.0 * utime * utime * ucompl,
-                3.0 * utime * ucompl * ucompl,
-                1.0 * ucompl * ucompl * ucompl
+            vector<CartPoint3d> normals_row {};
+            normals_row.reserve(tesselation_level);
+
+
+            const double u_time { time_step * static_cast<double>(u) };
+
+            const Matrix<double, 1, 4> u_vector { //Bernstein polynomials definiton
+                array{
+                    u_time * u_time * u_time,
+                    u_time * u_time,
+                    u_time,
+                    1.0
+                }
             };
 
-            auto iter { indexes_array.begin() };
-
-            const CartPoint3d new_p0 {
-                get_cubic_bezier_curve_point(
-                    {
-                        ctrl_points[*iter++],
-                        ctrl_points[*iter++],
-                        ctrl_points[*iter++],
-                        ctrl_points[*iter++],
-                    },
-                    u_binomial_coeffs
-                )
-            };
-
-            const CartPoint3d new_p1 {
-                get_cubic_bezier_curve_point(
-                    {
-                        ctrl_points[*iter++],
-                        ctrl_points[*iter++],
-                        ctrl_points[*iter++],
-                        ctrl_points[*iter++],
-                    },
-                    u_binomial_coeffs
-                )
-            };
-
-            const CartPoint3d new_p2 {
-                get_cubic_bezier_curve_point(
-                    {
-                        ctrl_points[*iter++],
-                        ctrl_points[*iter++],
-                        ctrl_points[*iter++],
-                        ctrl_points[*iter++],
-                    },
-                    u_binomial_coeffs
-                )
-            };
-
-            const CartPoint3d new_p3 {
-                get_cubic_bezier_curve_point(
-                    {
-                        ctrl_points[*iter++],
-                        ctrl_points[*iter++],
-                        ctrl_points[*iter++],
-                        ctrl_points[*iter],
-                    },
-                    u_binomial_coeffs
-                )
+            const Matrix<double, 1, 4> u_vector_deriv {
+                array{
+                    3.0 * u_time * u_time,
+                    2.0 * u_time,
+                    1.0,
+                    0.0
+                }
             };
 
             for(unsigned v{}; v < tesselation_level; ++v){
 
-                const double vtime { time_step * static_cast<double>(v) };
-                const double vcompl { 1.0 - vtime };
-                const array<double, 4> v_binomial_coeffs { //Bernstein polynomials definiton
-                    vtime * vtime * vtime,
-                    3.0 * vtime * vtime * vcompl,
-                    3.0 * vtime * vcompl * vcompl,
-                    1.0 * vcompl * vcompl * vcompl
+                const double v_time { time_step * static_cast<double>(v) };
+
+                const Matrix<double, 4, 1> v_vector {
+                    array{ v_time * v_time * v_time},
+                    array{ v_time * v_time },
+                    array{ v_time },
+                    array{ 1.0 }
                 };
 
-                const CartPoint3d pt {
-                    get_cubic_bezier_curve_point(
-                        { new_p0, new_p1, new_p2, new_p3 }, v_binomial_coeffs
+                const Matrix<double, 4, 1> v_vector_deriv {
+                    array{ 3.0 * v_time * v_time },
+                    array{ 2.0 * v_time },
+                    array{ 1.0 },
+                    array{ 0.0 }
+                };
+
+                const Matrix<CartPoint3d, 1, 1> vertex {
+                    mult_matrixes(
+                        mult_matrixes(
+                            u_vector,
+                            inner_partial_matrix
+                        ),
+                        v_vector
                     )
                 };
 
-                patch_row.push_back(pt);
+                const Matrix<CartPoint3d, 1, 1> tangent1 {
+                    mult_matrixes(
+                        mult_matrixes(
+                            u_vector_deriv,
+                            inner_partial_matrix
+                        ),
+                        v_vector
+                    )
+                };
+
+                const Matrix<CartPoint3d, 1, 1> tangent2 {
+                    mult_matrixes(
+                        mult_matrixes(
+                            u_vector,
+                            inner_partial_matrix
+                        ),
+                        v_vector_deriv
+                    )
+                };
+
+                vertex_row.push_back(vertex.at(0, 0));
+                normals_row.push_back(
+                    cross_product(
+                        tangent2.at(0, 0),
+                        tangent1.at(0, 0)
+                    )
+                );
             }
 
-            patch_matrix.push_back(std::move(patch_row));
+            vertex_matrix.push_back(std::move(vertex_row));
+            normals_matrix.push_back(std::move(normals_row));
         }
 
         for(unsigned i{}; i < static_cast<size_t>(tesselation_level - 1); ++i)
             for(unsigned j{}; j < static_cast<size_t>(tesselation_level - 1); ++j){
 
-                const CartPoint3d normal1 {
-                    plane_normal(
-                        patch_matrix[i][j],
-                        patch_matrix[i + 1][j],
-                        patch_matrix[i][j + 1]
-                    )
-                };
+                vertexes_file << vertex_matrix[i][j]
+                              << vertex_matrix[i][j + 1]
+                              << vertex_matrix[i + 1][j];
 
-                vertexes_file << patch_matrix[i][j]
-                     << patch_matrix[i + 1][j]
-                     << patch_matrix[i][j + 1];
+                vertexes_file << vertex_matrix[i + 1][j + 1]
+                              << vertex_matrix[i + 1][j]
+                              << vertex_matrix[i][j + 1];
 
-                normals_file << normal1 << normal1 << normal1;
 
-                const CartPoint3d normal2 {
-                    plane_normal(
-                        patch_matrix[i + 1][j + 1],
-                        patch_matrix[i][j + 1],
-                        patch_matrix[i + 1][j]
-                    )
-                };
+                normals_file << normals_matrix[i][j]
+                             << normals_matrix[i][j + 1]
+                             << normals_matrix[i + 1][j];
 
-                vertexes_file << patch_matrix[i + 1][j + 1]
-                     << patch_matrix[i][j + 1]
-                     << patch_matrix[i + 1][j];
-
-                normals_file << normal2 << normal2 << normal2;
+                normals_file << normals_matrix[i + 1][j + 1]
+                             << normals_matrix[i + 1][j]
+                             << normals_matrix[i][j + 1];
             }
     }
 

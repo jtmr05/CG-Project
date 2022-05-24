@@ -3,7 +3,7 @@
 using std::array;
 
 //arbitrary number of decimal places output to a file when using << operator
-static const int PRECISION { 30 };
+static constexpr int PRECISION { 30 };
 
 
 angle_t degree_to_radian(angle_t degree){
@@ -185,21 +185,29 @@ std::istream& operator>>(std::istream& stream, CartPoint2d& p){
 }
 
 
-
-// https://www.khronos.org/opengl/wiki/Calculating_a_Surface_Normal
-
-CartPoint3d plane_normal(const CartPoint3d &a, const CartPoint3d &b, const CartPoint3d &c) {
-
-    const CartPoint3d u { b.x - a.x, b.y - a.y, b.z - a.z };
-    const CartPoint3d v { c.x - a.x, c.y - a.y, c.z - a.z };
-
-    return CartPoint3d{
-        u.y * v.z - u.z * v.y,
-        u.z * v.x - u.x * v.z,
-        u.x * v.y - u.y * v.x
-    };
+CartPoint3d operator*(const CartPoint3d &p, double d){
+    return { p.x * d, p.y * d, p.z * d };
 }
 
-CartPoint3d plane_normal(const PolarPoint3d &a, const PolarPoint3d &b, const PolarPoint3d &c){
-    return plane_normal(polar_to_cart(a), polar_to_cart(b), polar_to_cart(c));
+CartPoint3d operator*(double d, const CartPoint3d &p){
+    return p * d;
+}
+
+CartPoint3d operator+(const CartPoint3d &p1, const CartPoint3d &p2){
+    return { p1.x + p2.x, p1.y + p2.y, p1.z + p2.z };
+}
+
+void operator+=(CartPoint3d &p1, const CartPoint3d &p2){
+    p1.x += p2.x;
+    p1.y += p2.y;
+    p1.z += p2.z;
+}
+
+
+CartPoint3d cross_product(const CartPoint3d &p1, const CartPoint3d &p2){
+    return {
+        p1.y * p2.z - p1.z * p2.y,
+        p1.z * p2.x - p1.x * p2.z,
+        p1.x * p2.y - p1.y * p2.x
+    };
 }

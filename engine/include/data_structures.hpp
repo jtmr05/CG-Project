@@ -37,64 +37,64 @@ enum TransformType {
 
 class Transform {
 
-    public:
-        Transform();
-        virtual TransformType get_type() const = 0;
+public:
+    Transform();
+    virtual TransformType get_type() const = 0;
 };
 
 
 
 class StaticRotate : public Transform {
 
-    public:
-        angle_t angle;
-        CartPoint3d point;
+public:
+    angle_t angle;
+    CartPoint3d point;
 
-        StaticRotate(angle_t angle, const CartPoint3d &point);
-        TransformType get_type() const;
+    StaticRotate(angle_t angle, const CartPoint3d &point);
+    TransformType get_type() const;
 };
 
 class DynamicRotate : public Transform {
 
-    public:
-        unsigned time;
-        CartPoint3d point;
+public:
+    unsigned time;
+    CartPoint3d point;
 
-        DynamicRotate(unsigned time, const CartPoint3d &point);
-        TransformType get_type() const;
+    DynamicRotate(unsigned time, const CartPoint3d &point);
+    TransformType get_type() const;
 };
 
 class StaticTranslate : public Transform {
 
-    public:
-        CartPoint3d point;
+public:
+    CartPoint3d point;
 
-        StaticTranslate(const CartPoint3d &point);
-        TransformType get_type() const;
+    StaticTranslate(const CartPoint3d &point);
+    TransformType get_type() const;
 };
 
 class DynamicTranslate : public Transform {
 
-    public:
-        unsigned time;
-        bool align;
-        std::unique_ptr<std::vector<CartPoint3d>> points;
+public:
+    unsigned time;
+    bool align;
+    std::unique_ptr<std::vector<CartPoint3d>> points;
 
-        DynamicTranslate(
-            unsigned time, bool align,
-            std::unique_ptr<std::vector<CartPoint3d>> &points
-        );
+    DynamicTranslate(
+        unsigned time, bool align,
+        std::unique_ptr<std::vector<CartPoint3d>> &points
+    );
 
-        TransformType get_type() const;
+    TransformType get_type() const;
 };
 
 class Scale : public Transform {
 
-    public:
-        CartPoint3d point;
+public:
+    CartPoint3d point;
 
-        Scale(const CartPoint3d &point);
-        TransformType get_type() const;
+    Scale(const CartPoint3d &point);
+    TransformType get_type() const;
 };
 
 
@@ -104,16 +104,16 @@ class Scale : public Transform {
 
 class RGB {
 
-    private:
-        std::array<uint8_t, 3> arr;
+private:
+    std::array<uint8_t, 3> arr;
 
-    public:
-        constexpr uint8_t operator[](size_t i) const {
-            return this->arr[i];
-        }
+public:
+    constexpr uint8_t operator[](size_t i) const {
+        return this->arr[i];
+    }
 
-        RGB(uint8_t r, uint8_t g, uint8_t b);
-        std::array<float, 4> as_float_array() const;
+    RGB(uint8_t r, uint8_t g, uint8_t b);
+    std::array<float, 4> as_float_array() const;
 };
 
 struct Color {
@@ -165,52 +165,38 @@ enum LightType {
 
 class Light {
 
-    public:
-        Light();
-        virtual LightType get_type() const = 0;
+public:
+    Light();
+    virtual LightType get_type() const = 0;
 };
 
 class PointLight : public Light {
 
-    public:
-        CartPoint3d pos;
+public:
+    CartPoint3d pos;
 
-        PointLight(const CartPoint3d &pos);
-        LightType get_type() const;
+    PointLight(const CartPoint3d &pos);
+    LightType get_type() const;
 };
 
 class DirectionalLight : public Light {
 
-    public:
-        CartPoint3d dir;
+public:
+    CartPoint3d dir;
 
-        DirectionalLight(const CartPoint3d &dir);
-        LightType get_type() const;
+    DirectionalLight(const CartPoint3d &dir);
+    LightType get_type() const;
 };
 
 class Spotlight : public Light {
 
-    public:
-        CartPoint3d pos;
-        CartPoint3d dir;
-        int cutoff;
+public:
+    CartPoint3d pos;
+    CartPoint3d dir;
+    int cutoff;
 
-        Spotlight(const CartPoint3d &pos, const CartPoint3d &dir, int cutoff);
-        LightType get_type() const;
-};
-
-
-
-/** Matrix **/
-
-template<class T, size_t rows, size_t columns>
-struct Matrix {
-
-    std::array<std::array<T, columns>, rows> m;
-
-    constexpr std::array<T, columns>& operator[](size_t i){
-        return this->m[i];
-    }
+    Spotlight(const CartPoint3d &pos, const CartPoint3d &dir, int cutoff);
+    LightType get_type() const;
 };
 
 
