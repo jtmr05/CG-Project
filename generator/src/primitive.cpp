@@ -49,20 +49,6 @@ static Primitive from_string(const string &str){
 
 
 
-static inline CartPoint3d get_cubic_bezier_curve_point(const array<CartPoint3d, 4> &ctrl_points,
-                                                       const array<double, 4> &binomial_coeffs){
-
-    double x{}, y{}, z{};
-
-    for(unsigned i{}; i < 4; ++i){
-        x += binomial_coeffs[i] * ctrl_points[i].x;
-        y += binomial_coeffs[i] * ctrl_points[i].y;
-        z += binomial_coeffs[i] * ctrl_points[i].z;
-    }
-
-    return { x, y, z };
-}
-
 static ErrorCode read_patch_file(const string &filename,
                                  vector<array<unsigned, NUM_OF_PATCH_POINTS>> &patch_indexes,
                                  vector<CartPoint3d> &ctrl_points){
