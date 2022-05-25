@@ -22,7 +22,13 @@ static constexpr float speed { 0.1f };
 
 
 
-void interaction_init(){
+void interaction_init(bool lighting_available){
+
+    if(!lighting_available){
+        lighting_enabled = false;
+        fill = false;
+    }
+
     const double dx { cs.position.x - cs.look_at.x };
     const double dy { cs.position.y - cs.look_at.y };
     const double dz { cs.position.z - cs.look_at.z };
@@ -42,7 +48,7 @@ void special_keys_event(int key_code, int, int){
 
     if(!first_person){
 
-        const auto& [px, py, pz] = cs.position;
+        const auto& [px, py, pz] { cs.position };
         double radius { std::sqrt(pz * pz + px * px + py * py) };
 
         switch (key_code){
@@ -140,9 +146,9 @@ void keys_event(unsigned char key, int, int){
 
     case 'p':
         if(first_person) {
-            cs.look_at.x = 0.0f;
-            cs.look_at.y = 0.0f;
-            cs.look_at.z = 0.0f;
+            cs.look_at.x = 0.0;
+            cs.look_at.y = 0.0;
+            cs.look_at.z = 0.0;
 
             const double dz { cs.position.z - cs.look_at.z };
             const double dy { cs.position.y - cs.look_at.y };

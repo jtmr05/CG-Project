@@ -663,7 +663,7 @@ ErrorCode start(int argc, char** argv){
     const ErrorCode code { xml_parser(filename, cs, groups_to_draw, lights) };
 
     if(code == ErrorCode::success){
-        interaction_init();
+        interaction_init(lights.size() > 0);
         gl_start(argc, argv);
 
         if(vbo_wrapper.has_value())

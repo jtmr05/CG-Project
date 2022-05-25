@@ -8,7 +8,7 @@
 #include <GL/freeglut.h>
 
 
-void interaction_init();
+void interaction_init(bool lighting_available);
 
 void special_keys_event(int key_code, int, int);
 void keys_event(unsigned char key, int, int);

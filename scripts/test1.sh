@@ -1,14 +1,19 @@
 #!/bin/bash
 
-run(){
+DIR=$(dirname $BASH_SOURCE)
 
-    if [[ -f bin/engine ]]
+ENG=$DIR/../bin/engine
+RESOURCES=$DIR/../resources
+
+main(){
+
+    if [[ -f $ENG ]]
     then
 
-        for test_file in resources/*.xml
+        for test_file in $RESOURCES/test_1*.xml
         do
             echo "Running bin/engine $test_file..."
-            bin/engine $test_file y 100
+            $ENG $test_file y 100
 
             if [[ $? -eq 1 ]]
             then
@@ -26,4 +31,4 @@ run(){
     fi
 }
 
-run
+main

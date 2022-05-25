@@ -33,7 +33,22 @@ public:
     }
 
     constexpr const T at(size_t i, size_t j) const {
-        return this->m.at(i).at(j);
+
+        if(i >= rows)
+            std::__throw_out_of_range_fmt(
+                "Matrix::at: i (which is %zu) >= rows (which is %zu)",
+                i,
+                rows
+            );
+
+        if(j >= columns)
+            std::__throw_out_of_range_fmt(
+                "Matrix::at: j (which is %zu) >= columns (which is %zu)",
+                j,
+                columns
+            );
+
+        return this->m[i][j];
     }
 
     Matrix<T, columns, rows> transpose() const {
@@ -51,7 +66,7 @@ public:
 
 
 template<size_t left_size, size_t inner_size, size_t right_size>
-Matrix<double,left_size, right_size>
+Matrix<double, left_size, right_size>
 operator*(const Matrix<double, left_size, inner_size>  &m1,
           const Matrix<double, inner_size, right_size> &m2){
 

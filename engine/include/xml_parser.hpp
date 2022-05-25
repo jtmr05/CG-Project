@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "point.hpp"
-#include "tinyxml.h"
+#include "tinyxml.hpp"
 #include "error_handler.hpp"
 #include "filters.hpp"
 #include "data_structures.hpp"

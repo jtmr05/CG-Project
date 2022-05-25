@@ -1,32 +1,35 @@
 #!/bin/bash
 
-
 # Used to benchmark the usage (or not) of
 # VBOS for different tesselation levels
 # supplied to the bezier primitive
 
+DIR=$(dirname $BASH_SOURCE)
 
+GEN=$DIR/../bin/generator
+ENG=$DIR/../bin/engine
+RESOURCES=$DIR/../resources
 
-run(){
+main(){
 
-    if [[ -f bin/generator && -f bin/engine ]]
+    if [[ -f $GEN && -f $ENG ]]
     then
         for (( i=8; i < 128; i *= 2 ));
         do
             echo "tesselation level: $i"
-            bin/generator bezier resources/teapot.patch $i resources/bezier.3d
+            $GEN bezier $RESOURCES/teapot.patch $i $RESOURCES/bezier.3d
 
-            bin/engine resources/test_3_1.xml n
+            $ENG $RESOURCES/test_3_1.xml n
             if [[ $? -eq 1 ]]
             then
-                echo "bin/engine exited with error code"
+                echo "engine exited with error code"
                 return 1
             fi
 
-            bin/engine resources/test_3_1.xml y
+            $ENG $RESOURCES/test_3_1.xml y
             if [[ $? -eq 1 ]]
             then
-                echo "bin/engine exited with error code"
+                echo "engine exited with error code"
                 return 1
             fi
         done
@@ -37,4 +40,4 @@ run(){
     fi
 }
 
-run
+main
