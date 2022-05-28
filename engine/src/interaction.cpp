@@ -48,7 +48,7 @@ void special_keys_event(int key_code, int, int){
 
     if(!first_person){
 
-        const auto& [px, py, pz] { cs.position };
+        auto const& [px, py, pz] { cs.position };
         double radius { std::sqrt(pz * pz + px * px + py * py) };
 
         switch (key_code){
@@ -264,14 +264,11 @@ void set_polygon_mode(){
 }
 
 bool set_lighting(){
-    if(lighting_enabled){
+
+    if(lighting_enabled)
         glEnable(GL_LIGHTING);
-        glEnable(GL_NORMALIZE);
-    }
-    else {
+    else
         glDisable(GL_LIGHTING);
-        glDisable(GL_NORMALIZE);
-    }
 
     return lighting_enabled;
 }

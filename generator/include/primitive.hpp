@@ -7,6 +7,7 @@
 #include <map>
 #include <array>
 #include <vector>
+#include <tuple>
 
 #include "error_handler.hpp"
 #include "point.hpp"

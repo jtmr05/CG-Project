@@ -4,29 +4,34 @@ using std::vector;
 using std::string;
 using std::set;
 using std::unique_ptr;
+using std::shared_ptr;
 using std::array;
 using std::map;
 using std::pair;
+using std::optional;
 
 
 CameraSettings cs {};
 
-static vector<unique_ptr<Group>> groups_to_draw {};
+static Constant<vector<unique_ptr<Group>>> groups {};
 
-static Constant<VBO*> vbo_wrapper {};
+static Constant<bool> as_vbo {};
+static Constant<shared_ptr<VBO>> vbo_wrapper {};
+
 static Constant<int> tesselation {};
+
 static Constant<map<string, vector<CartPoint3d>>> points_to_draw {};
 static Constant<map<string, vector<CartPoint3d>>> normals_to_draw {};
-static Constant<bool> as_vbo {};
-
-static const string TITLE { "CG Phase 4" };
+static Constant<map<string, vector<CartPoint2d>>> text_coords_to_draw {};
 
 
-static vector<unique_ptr<Light>> lights {};
-static const array<unsigned, 8> gl_lights {
+static Constant<vector<unique_ptr<Light>>> lights {};
+static constexpr array<unsigned, 8> gl_lights {
     GL_LIGHT0, GL_LIGHT1, GL_LIGHT2, GL_LIGHT3,
     GL_LIGHT4, GL_LIGHT5, GL_LIGHT6, GL_LIGHT7
 };
+
+static const string TITLE { "CG Phase 4" };
 
 
 
@@ -230,9 +235,9 @@ static inline void compute_fps(){
 
 static inline void set_lights(){
 
-    for(unsigned i{}; i < lights.size(); ++i){
+    for(unsigned i{}; i < lights.value().size(); ++i){
 
-        auto const& light { lights[i] };
+        auto const& light { lights.value()[i] };
 
         switch (light->get_type()){
 
@@ -336,7 +341,7 @@ static void render_scene(){
 
     unsigned curr_nest_level { 0 };
 
-    for(auto const& group : groups_to_draw){
+    for(auto const& group : groups.value()){
 
         /**
          * After popping something, curr_nest_level < g->nest_level (second nested loop condition).
@@ -479,40 +484,49 @@ static void render_scene(){
 
                 const string& model_fn { m.model_filename };
 
-                if(points_to_draw.value().count(model_fn)  > 0 &&
-                   normals_to_draw.value().count(model_fn) > 0){
+                const bool has_vertexes { points_to_draw.value().count(model_fn) > 0 };
+                if(has_vertexes){
 
-                    const vector<CartPoint3d> vertexes {
+                    const bool has_normals { normals_to_draw.value().count(model_fn) > 0 };
+                    const bool has_texture { text_coords_to_draw.value().count(model_fn) > 0 };
+
+                    const vector<CartPoint3d>& vertexes {
                         points_to_draw.value().at(model_fn)
                     };
 
-                    const vector<CartPoint3d> normals {
-                        normals_to_draw.value().at(model_fn)
-                    };
+                    optional<vector<CartPoint3d> const*> normals {};
+                    if(has_normals)
+                        normals = std::make_optional(&(normals_to_draw.value().at(model_fn)));
+
+                    optional<vector<CartPoint2d> const*> text_coords {};
+                    if(has_texture)
+                        text_coords = std::make_optional(&(text_coords_to_draw.value().at(model_fn)));
+
 
                     glBegin(GL_TRIANGLES);
 
-                    unsigned i{};
-                    while(i < vertexes.size()){
+                    for(unsigned i{}; i < vertexes.size(); ++i){
 
-                        glNormal3d(normals [i].x, normals [i].y, normals [i].z);
-                        glVertex3d(vertexes[i].x, vertexes[i].y, vertexes[i].z);
-                        ++i;
+                        if(normals.has_value())
+                            glNormal3d(
+                                (*(normals.value()))[i].x,
+                                (*(normals.value()))[i].y,
+                                (*(normals.value()))[i].z
+                            );
 
-                        glNormal3d(normals [i].x, normals [i].y, normals [i].z);
-                        glVertex3d(vertexes[i].x, vertexes[i].y, vertexes[i].z);
-                        ++i;
+                        if(text_coords.has_value())
+                            glTexCoord2d(
+                                (*(text_coords.value()))[i].x,
+                                (*(text_coords.value()))[i].y
+                            );
 
-                        glNormal3d(normals [i].x, normals [i].y, normals [i].z);
                         glVertex3d(vertexes[i].x, vertexes[i].y, vertexes[i].z);
-                        ++i;
                     }
 
                     glEnd();
                 }
             }
     }
-
 
     while(curr_nest_level > 0){
         glPopMatrix();
@@ -550,8 +564,9 @@ static void gl_start(int argc, char** argv){
 
         map<string, vector<CartPoint3d>> tmp_points_to_draw {};
         map<string, vector<CartPoint3d>> tmp_normals_to_draw {};
+        map<string, vector<CartPoint2d>> tmp_text_coords_to_draw {};
 
-        for(auto const& group : groups_to_draw)
+        for(auto const& group : groups.value())
 
             for(auto const& m : group->models){
 
@@ -562,23 +577,29 @@ static void gl_start(int argc, char** argv){
                 if(tmp_points_to_draw.count(model_fn)  == 0 &&
                    tmp_normals_to_draw.count(model_fn) == 0){
 
-                    vector<CartPoint3d> vertexes {};
-                    vector<CartPoint3d> normals {};
+                    auto const& [code, vertexes, normals, text_coords] { files_reader(model_fn) };
 
-                    if(files_reader(model_fn, vertexes, normals) == ErrorCode::success){
+                    if(code == ErrorCode::success){
                         tmp_points_to_draw.insert(
                             { model_fn, std::move(vertexes) }
                         );
 
-                        tmp_normals_to_draw.insert(
-                            { model_fn, std::move(normals) }
-                        );
+                        if(normals.size() > 0)
+                            tmp_normals_to_draw.insert(
+                                { model_fn, std::move(normals) }
+                            );
+
+                        if(text_coords.size() > 0)
+                            tmp_text_coords_to_draw.insert(
+                                { model_fn, std::move(text_coords) }
+                            );
                     }
                 }
             }
 
-        points_to_draw = std::move(tmp_points_to_draw);
+        points_to_draw  = std::move(tmp_points_to_draw);
         normals_to_draw = std::move(tmp_normals_to_draw);
+        text_coords_to_draw = std::move(tmp_text_coords_to_draw);
     }
     else{
 
@@ -589,12 +610,11 @@ static void gl_start(int argc, char** argv){
 
         set<string> models_set {};
 
-        for(auto const& group : groups_to_draw)
+        for(auto const& group : groups.value())
 
             for(auto const& m : group->models)
 
                 models_set.insert(m.model_filename);
-
 
         vbo_wrapper = VBO::get_instance(models_set);
     }
@@ -602,6 +622,8 @@ static void gl_start(int argc, char** argv){
     // OpenGL settings
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
+    glEnable(GL_NORMALIZE);
+    glEnable(GL_TEXTURE_2D);
 
 
 
@@ -609,7 +631,7 @@ static void gl_start(int argc, char** argv){
     const array<float, 4> white { 1.0f, 1.0f, 1.0f, 1.0f };
     const array<float, 4> black { 0.0f, 0.0f, 0.0f, 0.0f };
 
-    for(unsigned i {}; i < lights.size() && i < gl_lights.size(); ++i){
+    for(unsigned i {}; i < lights.value().size() && i < gl_lights.size(); ++i){
 
         // enable each light as needed...
         glEnable(gl_lights[i]);
@@ -659,15 +681,14 @@ ErrorCode start(int argc, char** argv){
         tesselation = 100;
 
 
-    //'groups_to_draw', 'lights' and 'cs' are global
-    const ErrorCode code { xml_parser(filename, cs, groups_to_draw, lights) };
+    auto&& [code, cs_tmp, groups_tmp, lights_tmp] { xml_parser(filename) };
 
     if(code == ErrorCode::success){
-        interaction_init(lights.size() > 0);
+        cs = cs_tmp;
+        groups = std::move(groups_tmp);
+        lights = std::move(lights_tmp);
+        interaction_init(lights.value().size() > 0); //are there lights?
         gl_start(argc, argv);
-
-        if(vbo_wrapper.has_value())
-            delete vbo_wrapper.value();
     }
 
     return code;

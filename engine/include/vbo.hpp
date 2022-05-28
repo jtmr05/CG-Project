@@ -17,7 +17,7 @@
 class VBO{
 
 private:
-    static VBO* singleton;
+    static std::shared_ptr<VBO> singleton;
     std::vector<unsigned> buffers;
 
     /**
@@ -25,13 +25,15 @@ private:
      * i.e. the number of points to be drawn
      */
     std::map<std::string, std::pair<unsigned, size_t>> model_info;
-    std::map<std::string, std::pair<unsigned, size_t>> normal_info;
+    std::map<std::string, std::pair<unsigned, size_t>> normals_info;
+    std::map<std::string, std::pair<unsigned, size_t>> text_coords_info;
 
 
     VBO(const std::set<std::string> &model_fns);
 
 public:
-    static VBO* get_instance(const std::set<std::string> &model_fns);
+    static std::shared_ptr<VBO> get_instance(const std::set<std::string> &model_fns);
+    //static VBO* get_instance(const std::set<std::string> &model_fns);
     bool render(const std::string &model_fn) const;
 
     void enable_client_state() const;

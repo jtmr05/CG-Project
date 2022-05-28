@@ -3,6 +3,7 @@
 using std::string;
 using std::vector;
 using std::unique_ptr;
+using std::tuple;
 
 
 
@@ -51,8 +52,11 @@ static CameraSettings parse_camera_settings(TiXmlElement* const world_tag){
     return c;
 }
 
-static inline bool parse_dynamic_translate(TiXmlElement* const generic_transform_tag,
-                                           unique_ptr<vector<CartPoint3d>> &points){
+static inline
+tuple<bool, vector<CartPoint3d>>
+parse_dynamic_translate(TiXmlElement* const generic_transform_tag){
+
+    vector<CartPoint3d> points {};
 
     TiXmlElement* point_tag { generic_transform_tag->FirstChildElement("point") };
     while(point_tag){
@@ -61,17 +65,15 @@ static inline bool parse_dynamic_translate(TiXmlElement* const generic_transform
         const double y { string_to_double(point_tag->Attribute("y")) };
         const double z { string_to_double(point_tag->Attribute("z")) };
 
-        points->push_back( { x, y, z } );
+        points.push_back( { x, y, z } );
 
         point_tag = point_tag->NextSiblingElement("point");
     }
 
-    return points->size() >= 4;
+    return { points.size() >= 4, points };
 }
 
-static void parse_groups(TiXmlElement* const world_tag,
-                         const string &dir,
-                         vector<unique_ptr<Group>> &groups){
+static vector<unique_ptr<Group>> parse_groups(TiXmlElement* const world_tag, const string &dir){
 
     const string rotate_s { "rotate" };
     const string translate_s { "translate" };
@@ -80,6 +82,7 @@ static void parse_groups(TiXmlElement* const world_tag,
     std::stack<TiXmlElement*> group_rollback {};
     unsigned nest_level { 1 };
 
+    vector<unique_ptr<Group>> groups {};
     TiXmlElement* group_tag { world_tag->FirstChildElement("group") };
     while(group_tag){
 
@@ -132,11 +135,14 @@ static void parse_groups(TiXmlElement* const world_tag,
                 }
                 else if(tag_name == translate_s){
                     if(time){
-                        unique_ptr<vector<CartPoint3d>> points { new vector<CartPoint3d>() };
 
-                        if(parse_dynamic_translate(generic_transform_tag, points)){
+                        auto const& [ok, points] { parse_dynamic_translate(generic_transform_tag) };
+                        if(ok){
 
                             int const itime { string_to_uint(time) };
+                            unique_ptr<vector<CartPoint3d>> points_ptr {
+                                std::make_unique<vector<CartPoint3d>>(std::move(points))
+                            };
 
                             if(itime > 0)
                                 g->transforms.push_back(
@@ -144,7 +150,7 @@ static void parse_groups(TiXmlElement* const world_tag,
                                         new DynamicTranslate {
                                             static_cast<unsigned>(itime),
                                             string_to_bool(align),
-                                            points
+                                            points_ptr
                                         }
                                     }
                                 );
@@ -281,15 +287,18 @@ static void parse_groups(TiXmlElement* const world_tag,
             }
         }
     }
+
+    return groups;
 }
 
-static void parse_lights(TiXmlElement* const world_tag, vector<unique_ptr<Light>> &lights){
+static vector<unique_ptr<Light>> parse_lights(TiXmlElement* const world_tag){
 
     const string point_s { "point" };
     const string directional_s { "directional" };
     const string spotlight_s { "spotlight" };
 
     TiXmlElement* const lights_tag { world_tag->FirstChildElement("lights") };
+    vector<unique_ptr<Light>> lights {};
     if(lights_tag){
 
         TiXmlElement* light_tag { lights_tag->FirstChildElement() };
@@ -348,21 +357,35 @@ static void parse_lights(TiXmlElement* const world_tag, vector<unique_ptr<Light>
             light_tag = light_tag->NextSiblingElement("light");
         }
     }
+
+    return lights;
 }
 
-ErrorCode xml_parser(const string &xml_path, CameraSettings &c,
-                     vector<unique_ptr<Group>> &groups,
-                     vector<unique_ptr<Light>> &lights){
+tuple<ErrorCode, CameraSettings, vector<unique_ptr<Group>>, vector<unique_ptr<Light>>>
+xml_parser(const string &xml_path){
+
+    CameraSettings c {};
+    vector<unique_ptr<Group>> groups {};
+    vector<unique_ptr<Light>> lights {};
 
     if(!has_xml_ext(xml_path))
-        return ErrorCode::invalid_file_extension;
+        return {
+            ErrorCode::invalid_file_extension,
+            c,
+            std::move(groups),
+            std::move(lights)
+        };
 
     TiXmlDocument doc {};
 
     // Load the XML file into the Doc instance
     if(!doc.LoadFile(xml_path.c_str(), TIXML_ENCODING_UTF8))
-        return ErrorCode::io_error;
-
+        return {
+            ErrorCode::io_error,
+            c,
+            std::move(groups),
+            std::move(lights)
+        };
 
     /**
      * 3d files pathes specified in the XML should be relative to the XML itself
@@ -378,14 +401,24 @@ ErrorCode xml_parser(const string &xml_path, CameraSettings &c,
     // Get root Element
     TiXmlElement* const world_tag { doc.RootElement() };
     if(world_tag == nullptr)
-        return ErrorCode::invalid_file_formatting;
+        return {
+            ErrorCode::invalid_file_formatting,
+            c,
+            std::move(groups),
+            std::move(lights)
+        };
 
     c = parse_camera_settings(world_tag);
-    parse_groups(world_tag, directory_path, groups);
-    parse_lights(world_tag, lights);
+    groups = parse_groups(world_tag, directory_path);
+    lights = parse_lights(world_tag);
 
 
-    return ErrorCode::success;
+    return {
+        ErrorCode::success,
+        c,
+        std::move(groups),
+        std::move(lights)
+    };
 }
 
 

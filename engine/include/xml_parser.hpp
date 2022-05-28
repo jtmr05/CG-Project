@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <tuple>
 
 #include "point.hpp"
 #include "tinyxml.hpp"
@@ -12,11 +13,11 @@
 
 
 
-ErrorCode xml_parser(
-    const std::string &path,
-    CameraSettings &c,
-    std::vector<std::unique_ptr<Group>> &groups,
-    std::vector<std::unique_ptr<Light>> &lights
-);
+std::tuple<
+    ErrorCode,
+    CameraSettings,
+    std::vector<std::unique_ptr<Group>>,
+    std::vector<std::unique_ptr<Light>>>
+xml_parser(const std::string &xml_path);
 
 #endif

@@ -4,6 +4,7 @@ using std::string;
 using std::vector;
 using std::map;
 using std::array;
+using std::tuple;
 
 enum Primitive {
     plane,
@@ -49,22 +50,33 @@ static Primitive from_string(const string &str){
 
 
 
-static ErrorCode read_patch_file(const string &filename,
-                                 vector<array<unsigned, NUM_OF_PATCH_POINTS>> &patch_indexes,
-                                 vector<CartPoint3d> &ctrl_points){
+static
+tuple<ErrorCode, vector<array<unsigned, NUM_OF_PATCH_POINTS>>, vector<CartPoint3d>>
+read_patch_file(const string &filename){
 
     std::ifstream input_file{};
     input_file.open(filename, std::ios::in);
 
+    vector<array<unsigned, NUM_OF_PATCH_POINTS>> patch_indexes {};
+    vector<CartPoint3d> ctrl_points {};
+
     if(!input_file.is_open())
-        return ErrorCode::io_error;
+        return {
+            ErrorCode::io_error,
+            std::move(patch_indexes),
+            std::move(ctrl_points)
+        };
 
 
 
     size_t num_of_patches {};
 
     if(!(input_file >> num_of_patches))
-        return ErrorCode::invalid_file_formatting;
+        return {
+            ErrorCode::invalid_file_formatting,
+            std::move(patch_indexes),
+            std::move(ctrl_points)
+        };
 
     patch_indexes.reserve(num_of_patches);
 
@@ -88,7 +100,11 @@ static ErrorCode read_patch_file(const string &filename,
 
             const int index { string_to_uint(line.substr(start, end - start)) };
             if(index < 0)
-                return ErrorCode::invalid_file_formatting;
+                return {
+                    ErrorCode::invalid_file_formatting,
+                    std::move(patch_indexes),
+                    std::move(ctrl_points)
+                };
 
             *elem_iter = static_cast<unsigned>(index);
             ++elem_iter;
@@ -99,20 +115,32 @@ static ErrorCode read_patch_file(const string &filename,
         while(end < std::string::npos && elem_iter != elem.end());
 
         if(elem_iter != elem.end())
-            return ErrorCode::invalid_file_formatting;
+            return {
+                ErrorCode::invalid_file_formatting,
+                std::move(patch_indexes),
+                std::move(ctrl_points)
+            };
 
         patch_indexes.push_back(std::move(elem));
         ++patch_count;
     }
 
     if(patch_count != num_of_patches)
-        return ErrorCode::invalid_file_formatting;
+        return {
+            ErrorCode::invalid_file_formatting,
+            std::move(patch_indexes),
+            std::move(ctrl_points)
+        };
 
 
     size_t num_of_ctrl_points {};
 
     if(!(input_file >> num_of_ctrl_points))
-        return ErrorCode::invalid_file_formatting;
+        return {
+            ErrorCode::invalid_file_formatting,
+            std::move(patch_indexes),
+            std::move(ctrl_points)
+        };
 
     ctrl_points.reserve(num_of_ctrl_points);
 
@@ -122,18 +150,26 @@ static ErrorCode read_patch_file(const string &filename,
         ctrl_points.push_back(point);
 
     if(ctrl_points.size() != num_of_ctrl_points)
-        return ErrorCode::invalid_file_formatting;
+        return {
+            ErrorCode::invalid_file_formatting,
+            std::move(patch_indexes),
+            std::move(ctrl_points)
+        };
 
 
-    return ErrorCode::success;
+    return {
+        ErrorCode::success,
+        std::move(patch_indexes),
+        std::move(ctrl_points)
+    };
 }
 
 static ErrorCode bezier_writer(const string &out_fn, const string &in_fn, unsigned tesselation_level){
 
-    vector<array<unsigned, NUM_OF_PATCH_POINTS>> patch_indexes;
-    vector<CartPoint3d> ctrl_points;
+    //vector<array<unsigned, NUM_OF_PATCH_POINTS>> patch_indexes;
+    //vector<CartPoint3d> ctrl_points;
 
-    const ErrorCode code { read_patch_file(in_fn, patch_indexes, ctrl_points) };
+    auto const& [code, patch_indexes, ctrl_points] { read_patch_file(in_fn) };
     if(code != ErrorCode::success)
         return code;
 
@@ -202,7 +238,7 @@ static ErrorCode bezier_writer(const string &out_fn, const string &in_fn, unsign
             }
         };
 
-        const auto inner_partial_matrix {
+        auto const inner_partial_matrix {
             coeffs_matrix * point_matrix * t_coeffs_matrix
         };
 
@@ -590,16 +626,19 @@ static ErrorCode box_writer(const string &filename, int units, int grid_size){
     std::ofstream normals_file{};
     normals_file.open(to_norm_extension(filename), std::ios::out | std::ios::trunc);
 
-    if(!vertexes_file.is_open() || !normals_file.is_open())
+    std::ofstream text_file{};
+    text_file.open(to_text_extension(filename), std::ios::out | std::ios::trunc);
+
+    if(!vertexes_file.is_open() || !normals_file.is_open() || !text_file.is_open())
         return ErrorCode::io_error;
 
     const double abs_max_coord { static_cast<double>(units) / 2.0 };
     const double step { static_cast<double>(units) / static_cast<double>(grid_size) };
+    const double text_step { 1.0 / static_cast<double>(grid_size) };
 
 
     CartPoint3d p1 {}, p2 {}, p3 {}, p4 {};
     double x {}, y {}, z {};
-
 
 
     x = abs_max_coord;
@@ -607,11 +646,18 @@ static ErrorCode box_writer(const string &filename, int units, int grid_size){
     CartPoint3d normal1 { 0.0,  1.0, 0.0 };
     CartPoint3d normal2 { 0.0, -1.0, 0.0 };
 
-    for(int i{}; i < grid_size; ++i, x -= step){
+    CartPoint2d t1 {}, t2 {}, t3 {}, t4 {};
+    double s {}, t {};  //coordinates in texture space
+
+
+    s = 1.0;
+
+    for(int i{}; i < grid_size; ++i, x -= step, s -= text_step){
 
         z = abs_max_coord;
+        t = 1.0;
 
-        for(int j{}; j < grid_size; ++j, z -= step){
+        for(int j{}; j < grid_size; ++j, z -= step, t -= text_step){
 
             p1.y = p2.y = p3.y = p4.y = abs_max_coord;
 
@@ -623,16 +669,29 @@ static ErrorCode box_writer(const string &filename, int units, int grid_size){
             vertexes_file << p1 << p2 << p4;
             vertexes_file << p4 << p3 << p1;
 
-            normals_file << normal1 << normal1 << normal1;
-            normals_file << normal1 << normal1 << normal1;
-
             p1.y = p2.y = p3.y = p4.y = -abs_max_coord;
 
             vertexes_file << p1 << p3 << p2;
             vertexes_file << p2 << p3 << p4;
 
+
+            normals_file << normal1 << normal1 << normal1;
+            normals_file << normal1 << normal1 << normal1;
+
             normals_file << normal2 << normal2 << normal2;
             normals_file << normal2 << normal2 << normal2;
+
+
+            t1.x = s; t1.y = t;
+            t2.x = s; t2.y = t - text_step;
+            t3.x = s - text_step; t3.y = t;
+            t4.x = s - text_step; t4.y = t - text_step;
+
+            text_file << t1 << t2 << t4;
+            text_file << t4 << t3 << t1;
+
+            text_file << t1 << t3 << t2;
+            text_file << t2 << t3 << t4;
         }
     }
 
@@ -641,11 +700,14 @@ static ErrorCode box_writer(const string &filename, int units, int grid_size){
     normal1 = { 1.0,  0.0, 0.0 };
     normal2 = { -1.0, 0.0, 0.0 };
 
-    for(int i{}; i < grid_size; ++i, y -= step){
+    s = 1.0;
+
+    for(int i{}; i < grid_size; ++i, y -= step, s -= text_step){
 
         z = abs_max_coord;
+        t = 1.0;
 
-        for(int j{}; j < grid_size; ++j, z -= step){
+        for(int j{}; j < grid_size; ++j, z -= step, t -= text_step){
 
             p1.x = p2.x = p3.x = p4.x = abs_max_coord;
 
@@ -657,16 +719,29 @@ static ErrorCode box_writer(const string &filename, int units, int grid_size){
             vertexes_file << p1 << p4 << p2;
             vertexes_file << p1 << p3 << p4;
 
-            normals_file << normal1 << normal1 << normal1;
-            normals_file << normal1 << normal1 << normal1;
-
             p1.x = p2.x = p3.x = p4.x = -abs_max_coord;
 
             vertexes_file << p1 << p2 << p3;
             vertexes_file << p2 << p4 << p3;
 
+
+            normals_file << normal1 << normal1 << normal1;
+            normals_file << normal1 << normal1 << normal1;
+
             normals_file << normal2 << normal2 << normal2;
             normals_file << normal2 << normal2 << normal2;
+
+
+            t1.x = s; t1.y = t;
+            t2.x = s; t2.y = t - text_step;
+            t3.x = s - text_step; t3.y = t;
+            t4.x = s - text_step; t4.y = t - text_step;
+
+            text_file << t1 << t4 << t2;
+            text_file << t1 << t3 << t4;
+
+            text_file << t1 << t2 << t3;
+            text_file << t2 << t4 << t3;
         }
     }
 
@@ -675,11 +750,14 @@ static ErrorCode box_writer(const string &filename, int units, int grid_size){
     normal1 = { 0.0, 0.0, 1.0  };
     normal2 = { 0.0, 0.0, -1.0 };
 
-    for(int i{}; i < grid_size; i++, y -= step){
+    s = 1.0;
+
+    for(int i{}; i < grid_size; i++, y -= step, s -= text_step){
 
         x = abs_max_coord;
+        t = 1.0;
 
-        for(int j{}; j < grid_size; j++, x -= step){
+        for(int j{}; j < grid_size; j++, x -= step, t -= text_step){
 
             p1.z = p2.z = p3.z = p4.z = abs_max_coord;
 
@@ -691,16 +769,29 @@ static ErrorCode box_writer(const string &filename, int units, int grid_size){
             vertexes_file << p1 << p2 << p4;
             vertexes_file << p1 << p4 << p3;
 
-            normals_file << normal1 << normal1 << normal1;
-            normals_file << normal1 << normal1 << normal1;
-
             p1.z = p2.z = p3.z = p4.z = -abs_max_coord;
 
             vertexes_file << p1 << p3 << p2;
             vertexes_file << p2 << p3 << p4;
 
+
+            normals_file << normal1 << normal1 << normal1;
+            normals_file << normal1 << normal1 << normal1;
+
             normals_file << normal2 << normal2 << normal2;
             normals_file << normal2 << normal2 << normal2;
+
+
+            t1.x = s; t1.y = t;
+            t2.x = s; t2.y = t - text_step;
+            t3.x = s - text_step; t3.y = t;
+            t4.x = s - text_step; t4.y = t - text_step;
+
+            text_file << t1 << t2 << t4;
+            text_file << t1 << t4 << t3;
+
+            text_file << t1 << t3 << t2;
+            text_file << t2 << t3 << t4;
         }
     }
 
@@ -715,22 +806,29 @@ static ErrorCode plane_writer(const string &filename, int length, int divs){
     std::ofstream normals_file{};
     normals_file.open(to_norm_extension(filename), std::ios::out | std::ios::trunc);
 
-    if(!vertexes_file.is_open() || !normals_file.is_open())
+    std::ofstream text_file{};
+    text_file.open(to_text_extension(filename), std::ios::out | std::ios::trunc);
+
+    if(!vertexes_file.is_open() || !normals_file.is_open() || !text_file.is_open())
         return ErrorCode::io_error;
 
     const double abs_max_coord { static_cast<double>(length) / 2.0 };
     const double step { static_cast<double>(length) / static_cast<double>(divs) };
+    const double text_step { 1.0 / static_cast<double>(divs) };
 
     CartPoint3d p1 {}, p2 {}, p3 {}, p4 {};
     const CartPoint3d normal { 0.0, 1.0, 0.0 };           //constant for all points of the plane
+    CartPoint2d t1 {}, t2 {}, t3 {}, t4 {};
 
     double x { abs_max_coord };
+    double s { 1.0 };
 
-    for(int i{}; i < divs; ++i, x -= step){
+    for(int i{}; i < divs; ++i, x -= step, s -= text_step){
 
         double z { abs_max_coord };
+        double t { 1.0 };
 
-        for(int j{}; j < divs; ++j, z -= step){
+        for(int j{}; j < divs; ++j, z -= step, t -= text_step){
 
             p1.x = x; p1.z = z;
             p2.x = x; p2.z = z - step;
@@ -740,8 +838,18 @@ static ErrorCode plane_writer(const string &filename, int length, int divs){
             vertexes_file << p1 << p4 << p3;
             vertexes_file << p1 << p2 << p4;
 
+
             normals_file << normal << normal << normal;
             normals_file << normal << normal << normal;
+
+
+            t1.x = s; t1.y = t;
+            t2.x = s; t2.y = t - text_step;
+            t3.x = s - text_step; t3.y = t;
+            t4.x = s - text_step; t4.y = t - text_step;
+
+            text_file << t1 << t4 << t3;
+            text_file << t1 << t2 << t4;
         }
     }
 
@@ -849,7 +957,7 @@ ErrorCode primitive_writer(int size, const string args[]){
             return ErrorCode::not_enough_args;
 
         const int out_radius { string_to_uint(args[args_index++]) };
-        const int in_radius { string_to_uint(args[args_index++]) };
+        const int in_radius  { string_to_uint(args[args_index++]) };
         const int slices { string_to_uint(args[args_index++]) };
         const int stacks { string_to_uint(args[args_index++]) };
         const string filename { args[args_index] };

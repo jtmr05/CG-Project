@@ -51,7 +51,7 @@ public:
     CartPoint3d point;
 
     StaticRotate(angle_t angle, const CartPoint3d &point);
-    TransformType get_type() const;
+    TransformType get_type() const override;
 };
 
 class DynamicRotate : public Transform {
@@ -61,7 +61,7 @@ public:
     CartPoint3d point;
 
     DynamicRotate(unsigned time, const CartPoint3d &point);
-    TransformType get_type() const;
+    TransformType get_type() const override;
 };
 
 class StaticTranslate : public Transform {
@@ -70,7 +70,7 @@ public:
     CartPoint3d point;
 
     StaticTranslate(const CartPoint3d &point);
-    TransformType get_type() const;
+    TransformType get_type() const override;
 };
 
 class DynamicTranslate : public Transform {
@@ -85,7 +85,7 @@ public:
         std::unique_ptr<std::vector<CartPoint3d>> &points
     );
 
-    TransformType get_type() const;
+    TransformType get_type() const override;
 };
 
 class Scale : public Transform {
@@ -94,7 +94,7 @@ public:
     CartPoint3d point;
 
     Scale(const CartPoint3d &point);
-    TransformType get_type() const;
+    TransformType get_type() const override;
 };
 
 
@@ -176,7 +176,7 @@ public:
     CartPoint3d pos;
 
     PointLight(const CartPoint3d &pos);
-    LightType get_type() const;
+    LightType get_type() const override;
 };
 
 class DirectionalLight : public Light {
@@ -185,7 +185,7 @@ public:
     CartPoint3d dir;
 
     DirectionalLight(const CartPoint3d &dir);
-    LightType get_type() const;
+    LightType get_type() const override;
 };
 
 class Spotlight : public Light {
@@ -196,7 +196,7 @@ public:
     int cutoff;
 
     Spotlight(const CartPoint3d &pos, const CartPoint3d &dir, int cutoff);
-    LightType get_type() const;
+    LightType get_type() const override;
 };
 
 
@@ -224,6 +224,15 @@ class Constant {
         Constant& operator=(const T& x){
             if (!this->v.has_value())
                 this->v = std::make_optional<T>(x);
+            else
+                throw InvalidAssignment{};
+
+            return *this;
+        }
+
+        Constant& operator=(T&& x){
+            if (!this->v.has_value())
+                this->v = std::make_optional<T>(std::move(x));
             else
                 throw InvalidAssignment{};
 

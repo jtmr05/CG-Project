@@ -32,7 +32,7 @@ public:
         return this->m[i];
     }
 
-    constexpr const T at(size_t i, size_t j) const {
+    constexpr const T& at(size_t i, size_t j) const {
 
         if(i >= rows)
             std::__throw_out_of_range_fmt(

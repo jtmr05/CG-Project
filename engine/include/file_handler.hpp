@@ -4,15 +4,15 @@
 #include <vector>
 #include <string>
 #include <fstream>
+#include <tuple>
+#include <iostream>
 
 #include "error_handler.hpp"
 #include "point.hpp"
 #include "filters.hpp"
 
 
-
-ErrorCode files_reader(const std::string &model_fn,
-                       std::vector<CartPoint3d> &vertexes,
-                       std::vector<CartPoint3d> &normals);
+std::tuple<ErrorCode, std::vector<CartPoint3d>, std::vector<CartPoint3d>, std::vector<CartPoint2d>>
+files_reader(const std::string &model_fn);
 
 #endif
