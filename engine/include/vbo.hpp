@@ -18,8 +18,8 @@ class VBO{
 
 private:
     static std::shared_ptr<VBO> singleton;
-    std::vector<unsigned> buffers;
 
+    std::vector<unsigned> buffers;
     /**
      * For each model, map a pair containing its index and corresponding size,
      * i.e. the number of points to be drawn
@@ -33,7 +33,7 @@ private:
 
 public:
     static std::shared_ptr<VBO> get_instance(const std::set<std::string> &model_fns);
-    //static VBO* get_instance(const std::set<std::string> &model_fns);
+
     bool render(const std::string &model_fn) const;
 
     void enable_client_state() const;

@@ -11,7 +11,7 @@ using std::optional;
 /** Camera **/
 
 CameraSettings::CameraSettings() :
-    position( {} ), look_at( {} ), up(0.0, 1.0, 0.0),
+    position(), look_at(), up(0.0, 1.0, 0.0),
     fov(60.0), near(1.0), far(1000.0) {}
 
 
@@ -113,7 +113,7 @@ Model::Model(string&& model_fn, string&& texture_fn, const Color& color) :
     model_filename(model_fn),
 
     texture_filename(
-        std::move(std::make_optional(std::move(texture_fn)))
+        std::make_optional(std::move(texture_fn))
     ),
 
     color(color) {}

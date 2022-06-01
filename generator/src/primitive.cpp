@@ -166,9 +166,6 @@ read_patch_file(const string &filename){
 
 static ErrorCode bezier_writer(const string &out_fn, const string &in_fn, unsigned tesselation_level){
 
-    //vector<array<unsigned, NUM_OF_PATCH_POINTS>> patch_indexes;
-    //vector<CartPoint3d> ctrl_points;
-
     auto const& [code, patch_indexes, ctrl_points] { read_patch_file(in_fn) };
     if(code != ErrorCode::success)
         return code;
@@ -732,9 +729,9 @@ static ErrorCode box_writer(const string &filename, int units, int grid_size){
             normals_file << normal2 << normal2 << normal2;
 
 
-            t1.x = s; t1.y = t;
-            t2.x = s; t2.y = t - text_step;
-            t3.x = s - text_step; t3.y = t;
+            t1.x = s; t1.y = t;   // t -> y; s -> z
+            t2.x = s - text_step; t2.y = t;
+            t3.x = s; t3.y = t - text_step;
             t4.x = s - text_step; t4.y = t - text_step;
 
             text_file << t1 << t4 << t2;
@@ -782,9 +779,9 @@ static ErrorCode box_writer(const string &filename, int units, int grid_size){
             normals_file << normal2 << normal2 << normal2;
 
 
-            t1.x = s; t1.y = t;
-            t2.x = s; t2.y = t - text_step;
-            t3.x = s - text_step; t3.y = t;
+            t1.x = s; t1.y = t; //t -> y; s -> x
+            t2.x = s - text_step; t2.y = t;
+            t3.x = s; t3.y = t - text_step;
             t4.x = s - text_step; t4.y = t - text_step;
 
             text_file << t1 << t2 << t4;
@@ -843,10 +840,15 @@ static ErrorCode plane_writer(const string &filename, int length, int divs){
             normals_file << normal << normal << normal;
 
 
-            t1.x = s; t1.y = t;
-            t2.x = s; t2.y = t - text_step;
-            t3.x = s - text_step; t3.y = t;
-            t4.x = s - text_step; t4.y = t - text_step;
+            //t1.x = s; t1.y = t;
+            //t2.x = s; t2.y = t - text_step;
+            //t3.x = s - text_step; t3.y = t;
+            //t4.x = s - text_step; t4.y = t - text_step;
+
+            t1.x = p1.x; t1.y = p1.z;
+            t2.x = p2.x; t2.y = p2.z;
+            t3.x = p3.x; t3.y = p3.z;
+            t4.x = p4.x; t4.y = p4.z;
 
             text_file << t1 << t4 << t3;
             text_file << t1 << t2 << t4;

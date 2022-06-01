@@ -205,7 +205,7 @@ public:
 
 class InvalidAssignment : public std::exception {
 
-    virtual const char* what() const throw(){
+    const char* what() const throw() override {
         return "Illegal assignment";
     }
 };

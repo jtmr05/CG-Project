@@ -9,6 +9,7 @@ using std::array;
 using std::map;
 using std::pair;
 using std::optional;
+using std::tuple;
 
 
 CameraSettings cs {};
@@ -17,6 +18,8 @@ static Constant<vector<unique_ptr<Group>>> groups {};
 
 static Constant<bool> as_vbo {};
 static Constant<shared_ptr<VBO>> vbo_wrapper {};
+
+static Constant<shared_ptr<TexturesHandler>> textures_wrapper {};
 
 static Constant<int> tesselation {};
 
@@ -61,23 +64,29 @@ static void change_size(int w, int h){
     glMatrixMode(GL_MODELVIEW);
 }
 
-static void build_rotation_matrix(
-    const array<double, 3> &x,
-    const array<double, 3> &y,
-    const array<double, 3> &z,
-    array<double, 16> &m) {
+static array<double, 16> build_rotation_matrix(const array<double, 3> &x,
+                                               const array<double, 3> &y,
+                                               const array<double, 3> &z){
 
-        m[0]  = x[0]; m[1]  = x[1]; m[2]  = x[2]; m[3]  = 0;
-        m[4]  = y[0]; m[5]  = y[1]; m[6]  = y[2]; m[7]  = 0;
-        m[8]  = z[0]; m[9]  = z[1]; m[10] = z[2]; m[11] = 0;
-        m[12] = 0;    m[13] = 0;    m[14] = 0;    m[15] = 1;
+    array<double, 16> m {};
+
+    m[0]  = x[0]; m[1]  = x[1]; m[2]  = x[2]; m[3]  = 0;
+    m[4]  = y[0]; m[5]  = y[1]; m[6]  = y[2]; m[7]  = 0;
+    m[8]  = z[0]; m[9]  = z[1]; m[10] = z[2]; m[11] = 0;
+    m[12] = 0;    m[13] = 0;    m[14] = 0;    m[15] = 1;
+
+    return m;
 }
 
-static void cross(const array<double, 3> &a, const array<double, 3> &b, array<double, 3> &res) {
+static array<double, 3> cross(const array<double, 3> &a, const array<double, 3> &b){
+
+    array<double, 3> res {};
 
     res[0] = a[1] * b[2] - a[2] * b[1];
     res[1] = a[2] * b[0] - a[0] * b[2];
     res[2] = a[0] * b[1] - a[1] * b[0];
+
+    return res;
 }
 
 static void normalize(array<double, 3> &a) {
@@ -88,10 +97,10 @@ static void normalize(array<double, 3> &a) {
     a[2] /= norm;
 }
 
-static void get_catmull_rom_point(double t,
-                                  const array<double, 3> &p0, const array<double, 3> &p1,
-                                  const array<double, 3> &p2, const array<double, 3> &p3,
-                                  Matrix<double, 1, 3> &pos, Matrix<double, 1, 3> &deriv){
+static
+tuple<Matrix<double, 1, 3>, Matrix<double, 1, 3>>
+get_catmull_rom_point(double t, const array<double, 3> &p0, const array<double, 3> &p1,
+                                const array<double, 3> &p2, const array<double, 3> &p3){
 
     // catmull-rom matrix
     const Matrix<double, 4, 4> m {
@@ -114,25 +123,22 @@ static void get_catmull_rom_point(double t,
 
 
 
-    // Compute pos = T * A
     const Matrix<double, 1, 4> t_vector {
         array{ t * t * t, t * t, t, 1.0 }
     };
 
-    pos = t_vector * a;
-
-
-
-    // compute deriv = T' * A
     const Matrix<double, 1, 4> t_vector_deriv {
         array{ 3.0 * t * t, 2.0 * t, 1.0, 0.0 }
     };
 
-    deriv = t_vector_deriv * a;
+    // Compute pos = T * A and
+    // Compute deriv = T' * A
+    return { t_vector * a, t_vector_deriv * a };
 }
 
-static void get_global_catmull_rom_point(const vector<CartPoint3d> &points, double gt,
-                                         Matrix<double, 1, 3> &pos, Matrix<double, 1, 3> &deriv){
+static
+tuple<Matrix<double, 1, 3>, Matrix<double, 1, 3>>
+get_global_catmull_rom_point(const vector<CartPoint3d> &points, double gt){
 
     const size_t point_count { points.size() };
 
@@ -148,26 +154,24 @@ static void get_global_catmull_rom_point(const vector<CartPoint3d> &points, doub
     indices[3] = (indices[2] + 1) % point_count;
 
 
-    get_catmull_rom_point(
+    return get_catmull_rom_point(
         t,
         points[indices[0]].as_array(),
         points[indices[1]].as_array(),
         points[indices[2]].as_array(),
-        points[indices[3]].as_array(),
-        pos, deriv
+        points[indices[3]].as_array()
     );
 }
 
 static void render_catmull_rom_curve(const vector<CartPoint3d> &points){
 
-    Matrix<double, 1, 3> pos {}, deriv {};
     const double step { 1.0 / static_cast<double>(tesselation.value()) };
 
     glBegin(GL_LINE_LOOP);
 
         for(double gt {}; gt < 1.0; gt += step){
 
-            get_global_catmull_rom_point(points, gt, pos, deriv);
+            auto&& [pos, _] { get_global_catmull_rom_point(points, gt) };
             glVertex3d(pos[0][0], pos[0][1], pos[0][2]);
         }
 
@@ -430,26 +434,23 @@ static void render_scene(){
                     static_cast<double>(dt->time * 1000)
                 };
 
-                Matrix<double, 1, 3> pos {};
-                Matrix<double, 1, 3> deriv {};
-                get_global_catmull_rom_point(*(dt->points), t, pos, deriv);
+                const auto& [pos, deriv] { get_global_catmull_rom_point(*(dt->points), t) };
 
-                glTranslated(pos[0][0], pos[0][1], pos[0][2]);
+                glTranslated(pos.at(0, 0), pos.at(0, 1), pos.at(0, 2));
 
                 if(dt->align){
 
                     static array<double, 3> Y { 0.0, 1.0, 0.0 };
-                    array<double, 3> X { deriv[0] }, Z {};
+                    array<double, 3> X { deriv.at(0, 0), deriv.at(0, 1), deriv.at(0, 2) };
+                    array<double, 3> Z { cross(X, Y)};
 
-                    cross(X, Y, Z);
-                    cross(Z, X, Y);
+                    Y = cross(Z, X);
 
                     normalize(X);
                     normalize(Y);
                     normalize(Z);
 
-                    array<double, 16> m {};
-                    build_rotation_matrix(X, Y, Z, m);
+                    const array<double, 16> m { build_rotation_matrix(X, Y, Z) };
                     glMultMatrixd(m.data());
                 }
 
@@ -469,6 +470,8 @@ static void render_scene(){
 
                 if(lighting_enabled)
                     set_material_color(m.color);
+
+                textures_wrapper.value()->bind(m.texture_filename.value_or(""));
 
                 vbo_wrapper.value()->render(m.model_filename);
             }
@@ -514,11 +517,15 @@ static void render_scene(){
                                 (*(normals.value()))[i].z
                             );
 
-                        if(text_coords.has_value())
+                        if(text_coords.has_value()){
+
+                            textures_wrapper.value()->bind(m.texture_filename.value_or(""));
+
                             glTexCoord2d(
                                 (*(text_coords.value()))[i].x,
                                 (*(text_coords.value()))[i].y
                             );
+                        }
 
                         glVertex3d(vertexes[i].x, vertexes[i].y, vertexes[i].z);
                     }
@@ -539,7 +546,6 @@ static void render_scene(){
     glutSwapBuffers();
 }
 
-
 static void gl_start(int argc, char** argv){
 
     // init GLUT and the window
@@ -559,6 +565,9 @@ static void gl_start(int argc, char** argv){
     glutSpecialFunc(special_keys_event);
     glutPassiveMotionFunc(mouse_event);
 
+
+
+     set<string> images_set {};
 
     if(!as_vbo.value()){
 
@@ -595,6 +604,9 @@ static void gl_start(int argc, char** argv){
                             );
                     }
                 }
+
+                if(m.texture_filename.has_value())
+                    images_set.insert(m.texture_filename.value());
             }
 
         points_to_draw  = std::move(tmp_points_to_draw);
@@ -612,12 +624,19 @@ static void gl_start(int argc, char** argv){
 
         for(auto const& group : groups.value())
 
-            for(auto const& m : group->models)
+            for(auto const& m : group->models){
 
                 models_set.insert(m.model_filename);
 
+                if(m.texture_filename.has_value())
+                    images_set.insert(m.texture_filename.value());
+            }
+
         vbo_wrapper = VBO::get_instance(models_set);
     }
+
+    textures_wrapper = TexturesHandler::get_instance(images_set);
+
 
     // OpenGL settings
     glEnable(GL_DEPTH_TEST);

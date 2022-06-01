@@ -136,7 +136,7 @@ static vector<unique_ptr<Group>> parse_groups(TiXmlElement* const world_tag, con
                 else if(tag_name == translate_s){
                     if(time){
 
-                        auto const& [ok, points] { parse_dynamic_translate(generic_transform_tag) };
+                        auto&& [ok, points] { parse_dynamic_translate(generic_transform_tag) };
                         if(ok){
 
                             int const itime { string_to_uint(time) };
@@ -251,7 +251,7 @@ static vector<unique_ptr<Group>> parse_groups(TiXmlElement* const world_tag, con
                         g->models.push_back(
                             Model{
                                 dir + model_fn,
-                                texture_fn,
+                                dir + texture_fn,
                                 c
                             }
                         );

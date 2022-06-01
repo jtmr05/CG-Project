@@ -16,16 +16,13 @@ private:
     std::array<std::array<T, columns>, rows> m;
 
 public:
-    Matrix(std::initializer_list<std::array<T, columns>> list){
+    Matrix(std::initializer_list<std::array<T, columns>> list) : m(){
+
+        assert(list.size() <= rows);
 
         auto iter { list.begin() };
-
-        for(size_t i{}; iter != list.end(); ++i, ++iter){
-
-            assert(i < rows);
-
+        for(size_t i{}; iter != list.end(); ++i, ++iter)
             this->m[i] = *iter;
-        }
     }
 
     constexpr std::array<T, columns>& operator[](size_t i){

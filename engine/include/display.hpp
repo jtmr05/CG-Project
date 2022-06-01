@@ -17,6 +17,7 @@
 #include "data_structures.hpp"
 #include "matrix.hpp"
 #include "interaction.hpp" //must be below vbo.hpp !!
+#include "textures.hpp"
 
 #include <GL/glut.h>
 

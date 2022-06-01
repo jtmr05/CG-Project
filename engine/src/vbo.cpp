@@ -6,10 +6,11 @@ using std::set;
 using std::shared_ptr;
 
 
+
 shared_ptr<VBO> VBO::singleton { nullptr };
 
 VBO::VBO(const set<string> &model_fns) :
-    buffers( {} ), model_info( {} ), normals_info( {} ), text_coords_info( {} ){
+    buffers(), model_info(), normals_info(), text_coords_info(){
 
     glewInit();
 
