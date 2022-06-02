@@ -181,7 +181,10 @@ static ErrorCode bezier_writer(const string &out_fn, const string &in_fn, unsign
     std::ofstream normals_file{};
     normals_file.open(to_norm_extension(out_fn), std::ios::out | std::ios::trunc);
 
-    if(!vertexes_file.is_open() || !normals_file.is_open())
+    std::ofstream text_file{};
+    text_file.open(to_text_extension(out_fn), std::ios::out | std::ios::trunc);
+
+    if(!vertexes_file.is_open() || !normals_file.is_open() || !text_file.is_open())
         return ErrorCode::io_error;
 
     /* tesselation_level is incremented
@@ -205,6 +208,9 @@ static ErrorCode bezier_writer(const string &out_fn, const string &in_fn, unsign
 
         vector<vector<CartPoint3d>> normals_matrix {};
         normals_matrix.reserve(tesselation_level);
+
+        vector<vector<CartPoint2d>> text_matrix {};
+        text_matrix.reserve(tesselation_level);
 
 
         auto iter { indexes_array.begin() };
@@ -235,7 +241,7 @@ static ErrorCode bezier_writer(const string &out_fn, const string &in_fn, unsign
             }
         };
 
-        auto const inner_partial_matrix {
+        const Matrix<CartPoint3d, 4, 4> inner_partial_matrix {
             coeffs_matrix * point_matrix * t_coeffs_matrix
         };
 
@@ -246,6 +252,9 @@ static ErrorCode bezier_writer(const string &out_fn, const string &in_fn, unsign
 
             vector<CartPoint3d> normals_row {};
             normals_row.reserve(tesselation_level);
+
+            vector<CartPoint2d> text_row {};
+            text_row.reserve(tesselation_level);
 
 
             const double u_time { time_step * static_cast<double>(u) };
@@ -298,6 +307,7 @@ static ErrorCode bezier_writer(const string &out_fn, const string &in_fn, unsign
                     u_vector * inner_partial_matrix * v_vector_deriv
                 };
 
+
                 vertex_row.push_back(vertex.at(0, 0));
                 normals_row.push_back(
                     cross_product(
@@ -305,10 +315,12 @@ static ErrorCode bezier_writer(const string &out_fn, const string &in_fn, unsign
                         tangent1.at(0, 0)
                     ).normalize()
                 );
+                text_row.push_back( { u_time, v_time } );
             }
 
             vertex_matrix.push_back(std::move(vertex_row));
             normals_matrix.push_back(std::move(normals_row));
+            text_matrix.push_back(std::move(text_row));
         }
 
         for(unsigned i{}; i < static_cast<size_t>(tesselation_level - 1); ++i)
@@ -330,6 +342,15 @@ static ErrorCode bezier_writer(const string &out_fn, const string &in_fn, unsign
                 normals_file << normals_matrix[i + 1][j + 1]
                              << normals_matrix[i + 1][j]
                              << normals_matrix[i][j + 1];
+
+
+                text_file << text_matrix[i][j]
+                          << text_matrix[i][j + 1]
+                          << text_matrix[i + 1][j];
+
+                text_file << text_matrix[i + 1][j + 1]
+                          << text_matrix[i + 1][j]
+                          << text_matrix[i][j + 1];
             }
     }
 
