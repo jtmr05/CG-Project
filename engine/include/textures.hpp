@@ -8,6 +8,7 @@
 #include <vector>
 
 #include <IL/il.h>
+#include <IL/ilu.h>
 #include <GL/gl.h>
 
 

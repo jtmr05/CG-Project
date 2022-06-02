@@ -36,17 +36,22 @@ TexturesHandler::TexturesHandler(const set<string>& texture_fns) :
 
         ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE);
 
-        const unsigned char* const image_data { ilGetData() };
+        ILinfo image_info {};
+        iluGetImageInfo(&image_info);
+        if(image_info.Origin == IL_ORIGIN_UPPER_LEFT)
+            iluFlipImage();
+
 
         glGenTextures(1, this->images.data() + image_count);
 
-        glBindTexture(GL_TEXTURE_2D, this->images.at(image_count));
 
+        glBindTexture(GL_TEXTURE_2D, this->images.at(image_count));
 	    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
+        unsigned char const* const image_data { ilGetData() };
 	    glTexImage2D(
             GL_TEXTURE_2D, 0, GL_RGBA,
             width, height, 0, GL_RGBA,
@@ -54,7 +59,6 @@ TexturesHandler::TexturesHandler(const set<string>& texture_fns) :
         );
 
         this->image_info.insert( { texture_fn, image_count } );
-
         ++image_count;
     }
 

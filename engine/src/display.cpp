@@ -338,7 +338,7 @@ static void render_scene(){
     if(lighting_enabled)
         set_lights();
     else
-        glColor3ub(0, 255, 255);
+        glColor3ub(255, 255, 255);
 
     set_polygon_mode();
 
