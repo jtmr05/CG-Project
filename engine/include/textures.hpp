@@ -21,10 +21,11 @@ private:
     std::map<std::string, unsigned> image_info;
 
 
-    TexturesHandler(const std::set<std::string> &texture_fns);
+    TexturesHandler(const std::set<std::string> &textures_fns);
 
 public:
-    static std::shared_ptr<TexturesHandler> get_instance(const std::set<std::string> &texture_fns);
+    static void init(const std::set<std::string> &textures_fns);
+    static std::shared_ptr<TexturesHandler> get_instance();
 
     bool bind(const std::string& texture_fn) const;
     void clear() const;

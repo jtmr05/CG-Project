@@ -333,12 +333,11 @@ static void render_scene(){
     );
 
     set_axis();
+    glColor3ub(255, 255, 255);
 
     const bool lighting_enabled { set_lighting() };
     if(lighting_enabled)
         set_lights();
-    else
-        glColor3ub(255, 255, 255);
 
     set_polygon_mode();
 
@@ -471,7 +470,10 @@ static void render_scene(){
                 if(lighting_enabled)
                     set_material_color(m.color);
 
-                textures_wrapper.value()->bind(m.texture_filename.value_or(""));
+                if(vbo_wrapper.value()->has_texture(m.model_filename))
+                    textures_wrapper.value()->bind(m.texture_filename.value_or(""));
+                else
+                    textures_wrapper.value()->clear();
 
                 vbo_wrapper.value()->render(m.model_filename);
             }
@@ -491,43 +493,42 @@ static void render_scene(){
                 if(has_vertexes){
 
                     const bool has_normals { normals_to_draw.value().count(model_fn) > 0 };
-                    const bool has_texture { text_coords_to_draw.value().count(model_fn) > 0 };
+                    const bool has_text_coords { text_coords_to_draw.value().count(model_fn) > 0 };
 
                     const vector<CartPoint3d>& vertexes {
                         points_to_draw.value().at(model_fn)
                     };
 
-                    optional<vector<CartPoint3d> const*> normals {};
-                    if(has_normals)
-                        normals = std::make_optional(&(normals_to_draw.value().at(model_fn)));
 
-                    optional<vector<CartPoint2d> const*> text_coords {};
-                    if(has_texture)
-                        text_coords = std::make_optional(&(text_coords_to_draw.value().at(model_fn)));
+                    if(has_text_coords)
+                        textures_wrapper.value()->bind(m.texture_filename.value_or(""));
+                    else
+                        textures_wrapper.value()->clear();
 
 
                     glBegin(GL_TRIANGLES);
 
                     for(unsigned i{}; i < vertexes.size(); ++i){
 
-                        if(normals.has_value())
-                            glNormal3d(
-                                (*(normals.value()))[i].x,
-                                (*(normals.value()))[i].y,
-                                (*(normals.value()))[i].z
-                            );
+                        if(has_text_coords){
 
-                        if(text_coords.has_value()){
+                            const vector<CartPoint2d>& text_coords {
+                                text_coords_to_draw.value().at(model_fn)
+                            };
 
-                            textures_wrapper.value()->bind(m.texture_filename.value_or(""));
-
-                            glTexCoord2d(
-                                (*(text_coords.value()))[i].x,
-                                (*(text_coords.value()))[i].y
-                            );
+                            glTexCoord2d(text_coords.at(i).x, text_coords.at(i).y);
                         }
 
-                        glVertex3d(vertexes[i].x, vertexes[i].y, vertexes[i].z);
+                        if(has_normals){
+
+                            const vector<CartPoint3d>& normals {
+                                normals_to_draw.value().at(model_fn)
+                            };
+
+                            glNormal3d(normals.at(i).x, normals.at(i).y, normals.at(i).z);
+                        }
+
+                        glVertex3d(vertexes.at(i).x, vertexes.at(i).y, vertexes.at(i).z);
                     }
 
                     glEnd();
@@ -632,10 +633,12 @@ static void gl_start(int argc, char** argv){
                     images_set.insert(m.texture_filename.value());
             }
 
-        vbo_wrapper = VBO::get_instance(models_set);
+        VBO::init(models_set);
+        vbo_wrapper = VBO::get_instance();
     }
 
-    textures_wrapper = TexturesHandler::get_instance(images_set);
+    TexturesHandler::init(images_set);
+    textures_wrapper = TexturesHandler::get_instance();
 
 
     // OpenGL settings

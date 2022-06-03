@@ -366,6 +366,9 @@ static ErrorCode torus_writer(const string &filename, int out_radius,
     std::ofstream normals_file{};
     normals_file.open(to_norm_extension(filename), std::ios::out | std::ios::trunc);
 
+    std::ofstream text_file{};
+    text_file.open(to_text_extension(filename), std::ios::out | std::ios::trunc);
+
     if(!vertexes_file.is_open() || !normals_file.is_open())
         return ErrorCode::io_error;
 
@@ -373,6 +376,8 @@ static ErrorCode torus_writer(const string &filename, int out_radius,
     const angle_t yOp_delta { 180.0 / static_cast<angle_t>(stacks) };
     const double diff_radius { static_cast<double>(out_radius - in_radius) / 2.0 };
 
+    const double t_step { 1.0 / static_cast<double>(stacks) };
+    const double s_step { 1.0 / static_cast<double>(slices) };
 
     for(int sl{}; sl < slices; ++sl)
 
@@ -386,8 +391,8 @@ static ErrorCode torus_writer(const string &filename, int out_radius,
             /**
              * If yOp ever becomes negative, rotate zOx by 180
              * and negate yOp
-             * That way the same point is represented
-             * by this combo of angles
+             * That way the same point is
+             * represented by this combo of angles
              */
 
             if(bottom_yOp < 0.0){
@@ -403,12 +408,12 @@ static ErrorCode torus_writer(const string &filename, int out_radius,
             CartPoint3d bottom_starting_p {
                 polar_to_cart( { diff_radius, bottom_zOx_offset, bottom_yOp } )
             };
-            bottom_starting_p.z += static_cast<double>(in_radius) + diff_radius;
+            bottom_starting_p.z += static_cast<angle_t>(in_radius) + diff_radius;
 
             CartPoint3d top_starting_p {
                 polar_to_cart( { diff_radius, top_zOx_offset, top_yOp } )
             };
-            top_starting_p.z += static_cast<double>(in_radius) + diff_radius;
+            top_starting_p.z += static_cast<angle_t>(in_radius) + diff_radius;
 
 
             PolarPoint3d p1 {
@@ -458,6 +463,35 @@ static ErrorCode torus_writer(const string &filename, int out_radius,
 
             normals_file << neg_normal1 << neg_normal3 << neg_normal2;
             normals_file << neg_normal3 << neg_normal4 << neg_normal2;
+
+
+            const CartPoint2d t1 {
+                s_step * static_cast<double>(sl),
+                0.5 + t_step * static_cast<double>(st)
+            };
+            const CartPoint2d t2 {
+                s_step * static_cast<double>(sl + 1),
+                0.5 + t_step * static_cast<double>(st)
+            };
+            const CartPoint2d t3 {
+                s_step * static_cast<double>(sl),
+                0.5 + t_step * static_cast<double>(st + 1)
+            };
+            const CartPoint2d t4 {
+                s_step * static_cast<double>(sl + 1),
+                0.5 + t_step * static_cast<double>(st + 1)
+            };
+
+            text_file << t1 << t2 << t3;
+            text_file << t2 << t4 << t3;
+
+            const CartPoint2d neg_t1 { t1.x, 1.0 - t1.y };
+            const CartPoint2d neg_t2 { t2.x, 1.0 - t2.y };
+            const CartPoint2d neg_t3 { t3.x, 1.0 - t3.y };
+            const CartPoint2d neg_t4 { t4.x, 1.0 - t4.y };
+
+            text_file << neg_t1 << neg_t3 << neg_t2;
+            text_file << neg_t3 << neg_t4 << neg_t2;
         }
 
     return ErrorCode::success;

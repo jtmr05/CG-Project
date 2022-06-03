@@ -31,7 +31,7 @@ AR				:= ar -rcs
 CXX 			:= g++
 
 #compiler flags
-CXXFLAGS		:= -Wall -Wextra -Wsign-conversion -std=c++17 -g -O2# -DNDEBUG
+CXXFLAGS		:= -Wall -Wextra -Wsign-conversion -std=c++17 -O2 #-g -DNDEBUG
 #CXXFLAGS		+= -DBENCH
 
 #Windows

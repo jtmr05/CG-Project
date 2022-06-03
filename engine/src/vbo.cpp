@@ -90,11 +90,12 @@ VBO::VBO(const set<string> &model_fns) :
     }
 }
 
-shared_ptr<VBO> VBO::get_instance(const set<string> &model_fns){
-
+void VBO::init(const std::set<std::string> &model_fns){
     if(VBO::singleton == nullptr)
         VBO::singleton = std::make_shared<VBO>(std::move<VBO>( { model_fns } ));
+}
 
+shared_ptr<VBO> VBO::get_instance(){
     return VBO::singleton;
 }
 
@@ -103,7 +104,7 @@ bool VBO::render(const string& model_fn) const {
     //check number of mappings for this key
     const bool has_vertexes { this->model_info.count(model_fn) > 0 };
     const bool has_normals { this->normals_info.count(model_fn) > 0 };
-    const bool has_texture { this->text_coords_info.count(model_fn) > 0 };
+    const bool has_texture { this->has_texture(model_fn) };
 
     if(!has_normals)
         glDisableClientState(GL_NORMAL_ARRAY);
@@ -140,6 +141,10 @@ bool VBO::render(const string& model_fn) const {
         glEnableClientState(GL_NORMAL_ARRAY);
 
     return has_vertexes;
+}
+
+bool VBO::has_texture(const string &model_fn) const {
+    return this->text_coords_info.count(model_fn) > 0;
 }
 
 void VBO::enable_client_state() const {

@@ -208,41 +208,38 @@ static vector<unique_ptr<Group>> parse_groups(TiXmlElement* const world_tag, con
                     TiXmlElement* const emissive_tag { color_tag->FirstChildElement("emissive") };
                     TiXmlElement* const shininess_tag { color_tag->FirstChildElement("shininess") };
 
-                    assert(
-                        diffuse_tag   != nullptr &&
-                        ambient_tag   != nullptr &&
-                        specular_tag  != nullptr &&
-                        emissive_tag  != nullptr &&
-                        shininess_tag != nullptr
-                    );
+                    if(diffuse_tag)
+                        c.diffuse = {
+                            static_cast<uint8_t>(string_to_uint(diffuse_tag->Attribute("R"))),
+                            static_cast<uint8_t>(string_to_uint(diffuse_tag->Attribute("G"))),
+                            static_cast<uint8_t>(string_to_uint(diffuse_tag->Attribute("B"))),
+                        };
 
-                    c.diffuse = {
-                        static_cast<uint8_t>(string_to_uint(diffuse_tag->Attribute("R"))),
-                        static_cast<uint8_t>(string_to_uint(diffuse_tag->Attribute("G"))),
-                        static_cast<uint8_t>(string_to_uint(diffuse_tag->Attribute("B"))),
-                    };
+                    if(ambient_tag)
+                        c.ambient = {
+                            static_cast<uint8_t>(string_to_uint(ambient_tag->Attribute("R"))),
+                            static_cast<uint8_t>(string_to_uint(ambient_tag->Attribute("G"))),
+                            static_cast<uint8_t>(string_to_uint(ambient_tag->Attribute("B"))),
+                        };
 
-                    c.ambient = {
-                        static_cast<uint8_t>(string_to_uint(ambient_tag->Attribute("R"))),
-                        static_cast<uint8_t>(string_to_uint(ambient_tag->Attribute("G"))),
-                        static_cast<uint8_t>(string_to_uint(ambient_tag->Attribute("B"))),
-                    };
+                    if(specular_tag)
+                        c.specular = {
+                            static_cast<uint8_t>(string_to_uint(specular_tag->Attribute("R"))),
+                            static_cast<uint8_t>(string_to_uint(specular_tag->Attribute("G"))),
+                            static_cast<uint8_t>(string_to_uint(specular_tag->Attribute("B"))),
+                        };
 
-                    c.specular = {
-                        static_cast<uint8_t>(string_to_uint(specular_tag->Attribute("R"))),
-                        static_cast<uint8_t>(string_to_uint(specular_tag->Attribute("G"))),
-                        static_cast<uint8_t>(string_to_uint(specular_tag->Attribute("B"))),
-                    };
+                    if(emissive_tag)
+                        c.emissive = {
+                            static_cast<uint8_t>(string_to_uint(emissive_tag->Attribute("R"))),
+                            static_cast<uint8_t>(string_to_uint(emissive_tag->Attribute("G"))),
+                            static_cast<uint8_t>(string_to_uint(emissive_tag->Attribute("B"))),
+                        };
 
-                    c.emissive = {
-                        static_cast<uint8_t>(string_to_uint(emissive_tag->Attribute("R"))),
-                        static_cast<uint8_t>(string_to_uint(emissive_tag->Attribute("G"))),
-                        static_cast<uint8_t>(string_to_uint(emissive_tag->Attribute("B"))),
-                    };
-
-                    c.shininess = {
-                        static_cast<unsigned>(string_to_uint(shininess_tag->Attribute("value")))
-                    };
+                    if(shininess_tag)
+                        c.shininess = {
+                            static_cast<unsigned>(string_to_uint(shininess_tag->Attribute("value")))
+                        };
                 }
 
 

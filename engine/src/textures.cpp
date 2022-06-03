@@ -2,11 +2,10 @@
 
 using std::set;
 using std::string;
-using std::wstring;
 using std::shared_ptr;
 
 
-
+#include <iostream>
 shared_ptr<TexturesHandler> TexturesHandler::singleton { nullptr };
 
 TexturesHandler::TexturesHandler(const set<string>& texture_fns) :
@@ -26,7 +25,8 @@ TexturesHandler::TexturesHandler(const set<string>& texture_fns) :
 
         ilBindImage(this->images[image_count]);
 
-        ilLoadImage(texture_fn.c_str()); //bruh??
+        if(ilLoadImage(texture_fn.c_str()) == IL_FALSE) //bruh??
+            continue;
 
         const int width { ilGetInteger(IL_IMAGE_WIDTH) };
         const int height { ilGetInteger(IL_IMAGE_HEIGHT) };
@@ -68,8 +68,7 @@ TexturesHandler::TexturesHandler(const set<string>& texture_fns) :
     }
 }
 
-shared_ptr<TexturesHandler> TexturesHandler::get_instance(const set<string> &textures_fns){
-
+void TexturesHandler::init(const std::set<std::string> &textures_fns){
     if(TexturesHandler::singleton == nullptr)
         TexturesHandler::singleton =
             std::make_shared<TexturesHandler>(
@@ -77,21 +76,20 @@ shared_ptr<TexturesHandler> TexturesHandler::get_instance(const set<string> &tex
                     { textures_fns }
                 )
             );
+}
 
+shared_ptr<TexturesHandler> TexturesHandler::get_instance(){
     return TexturesHandler::singleton;
 }
 
 bool TexturesHandler::bind(const std::string& texture_fn) const {
 
-    if(texture_fn == "")
-        return false;
+    const bool has_value { texture_fn != "" && this->image_info.count(texture_fn) > 0 };
 
-    const bool has_value { this->image_info.count(texture_fn) > 0};
-
-    if(has_value){
-        unsigned index { this->image_info.at(texture_fn) };
-        glBindTexture(GL_TEXTURE_2D, this->images.at(index));
-    }
+    if(has_value)
+        glBindTexture(GL_TEXTURE_2D, this->images.at(this->image_info.at(texture_fn)));
+    else
+        this->clear();
 
     return has_value;
 }

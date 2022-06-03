@@ -46,14 +46,8 @@
 				<scale x="0.1" y="0.1" z="0.1" />
 			</transform>
 			<models>
-				<model file="torus_nt.3d" > <!-- generator sphere 1 10 10 sphere_nt.3d -->
-					<color>
-						<diffuse R="0" G="87" B="184" />
-						<ambient R="0" G="8" B="18" />
-						<specular R="255" G="255" B="255" />
-						<emissive R="0" G="0" B="0" />
-						<shininess value="128" />
-					</color>
+				<model file="torus_nt.3d" > <!-- generator torus 2 1 20 20 torus_nt.3d -->
+					<texture file = "cone.jpg" />
 				</model>
 			</models>
 		</group>
@@ -63,7 +57,7 @@
 				<scale x="0.2" y="0.2" z="0.2" />
 			</transform>
 			<models>
-				 <model file="sphere_nt.3d" > <!-- generator torus 2 1 20 20 torus_nt.3d -->
+				 <model file="sphere_nt.3d" > <!-- generator sphere 1 10 10 sphere_nt.3d -->
 					<color>
 						<diffuse R="0" G="87" B="184" />
 						<ambient R="0" G="8" B="18" />
@@ -71,7 +65,7 @@
 						<emissive R="0" G="0" B="0" />
 						<shininess value="128" />
 					</color>
-				</model> -
+				</model>
 			</models>
 		</group>
 		<group>

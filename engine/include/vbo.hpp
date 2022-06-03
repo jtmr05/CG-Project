@@ -32,9 +32,12 @@ private:
     VBO(const std::set<std::string> &model_fns);
 
 public:
-    static std::shared_ptr<VBO> get_instance(const std::set<std::string> &model_fns);
+    static void init(const std::set<std::string> &model_fns);
+    static std::shared_ptr<VBO> get_instance();
 
     bool render(const std::string &model_fn) const;
+
+    bool has_texture(const std::string &model_fn) const;
 
     void enable_client_state() const;
     void disable_client_state() const;
