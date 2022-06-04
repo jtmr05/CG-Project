@@ -26,11 +26,11 @@ main(){
 
     if [[ -f $ENG ]]
     then
-
+        
         run $DIR/test1.sh
         run $DIR/test2.sh
-        run $DIR/test3.sh
-        run $DIR/test4.sh
+        run $DIR/test3.sh  
+        run $DIR/test4.sh   
 
         for test_file in $RESOURCES/solar*.xml
         do

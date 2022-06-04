@@ -1,0 +1,794 @@
+<world>
+    <camera>
+	    <position x="-35" y="30" z="35" />
+	    <lookAt x="40" y="0" z="0" />
+	    <up x="0" y="1" z="0" />
+        <projection fov="60" near="1" far="1000" />
+    </camera>
+
+    <lights>
+		<light type="directional" dirx="-1" diry="0.7" dirz="0.5"/>
+	</lights>
+
+    <group>
+        <group>
+            <model file="plane_nt.3d"  > 
+					<texture file="relva.jpg" /> <!--trocar para stars.jpg-->
+					<color>
+						<diffuse R="200" G="200" B="200" />
+						<ambient R="50" G="50" B="50" />
+						<specular R="0" G="0" B="0" />
+						<emissive R="0" G="0" B="0" />
+						<shininess value="0" />
+					</color>
+			</model>
+        </group>
+
+        <!--Sol-->
+        <group>
+            <transform>
+                <scale x="6" y="6" z="6" />
+            	<rotate time="8" x="0" y="1" z="0" />
+            </transform>
+            <models>
+                <model file="sphere_nt2.3d"  > 
+					<texture file="sun.jpg" /> 
+					<color>
+						<diffuse R="200" G="200" B="200" />
+						<ambient R="50" G="50" B="50" />
+						<specular R="0" G="0" B="0" />
+						<emissive R="0" G="0" B="0" />
+						<shininess value="0" />
+					</color>
+				</model>
+            </models>
+        </group>
+
+        <!--Mercurio-->
+        <group>
+            <transform>
+                <translate time = "7" align ="false">
+                    <point x="18.000000" y="0.000000" z="-0.000000" />
+                    <point x="16.629831" y="0.000000" z="-6.888302" />
+                    <point x="12.727922" y="0.000000" z="-12.727922" />
+                    <point x="6.888302" y="0.000000" z="-16.629831" />
+                    <point x="-0.000000" y="0.000000" z="-18.000000" />
+                    <point x="-6.888302" y="0.000000" z="-16.629831" />
+                    <point x="-12.727922" y="0.000000" z="-12.727922" />
+                    <point x="-16.629831" y="0.000000" z="-6.888302" />
+                    <point x="-18.000000" y="0.000000" z="0.000000" />
+                    <point x="-16.629831" y="0.000000" z="6.888302" />
+                    <point x="-12.727922" y="0.000000" z="12.727922" />
+                    <point x="-6.888302" y="0.000000" z="16.629831" />
+                    <point x="0.000000" y="0.000000" z="18.000000" />
+                    <point x="6.888302" y="0.000000" z="16.629831" />
+                    <point x="12.727922" y="0.000000" z="12.727922" />
+                    <point x="16.629831" y="0.000000" z="6.888302" />
+                </translate>
+
+                <rotate time="17" x="0" y="-1" z="0" />
+                <scale x="0.4" y="0.4" z="0.4" />
+            </transform>
+
+			<models>
+				<model file="sphere_nt2.3d"  > 
+					<texture file="mercury.jpg" /> 
+					<color>
+						<diffuse R="200" G="200" B="200" />
+						<ambient R="50" G="50" B="50" />
+						<specular R="0" G="0" B="0" />
+						<emissive R="0" G="0" B="0" />
+						<shininess value="0" />
+					</color>
+				</model>
+			</models>
+
+		</group>
+
+        <!--Venus-->
+        <group>
+            <transform>
+                <translate time = "18" align ="false">
+                    <point x="28.000000" y="0.000000" z="-0.000000" />
+                    <point x="25.868628" y="0.000000" z="-10.715137" />
+                    <point x="19.798990" y="0.000000" z="-19.798990" />
+                    <point x="10.715137" y="0.000000" z="-25.868628" />
+                    <point x="-0.000000" y="0.000000" z="-28.000000" />
+                    <point x="-10.715137" y="0.000000" z="-25.868628" />
+                    <point x="-19.798990" y="0.000000" z="-19.798990" />
+                    <point x="-25.868628" y="0.000000" z="-10.715137" />
+                    <point x="-28.000000" y="0.000000" z="0.000000" />
+                    <point x="-25.868628" y="0.000000" z="10.715137" />
+                    <point x="-19.798990" y="0.000000" z="19.798990" />
+                    <point x="-10.715137" y="0.000000" z="25.868628" />
+                    <point x="0.000000" y="0.000000" z="28.000000" />
+                    <point x="10.715137" y="0.000000" z="25.868628" />
+                    <point x="19.798990" y="0.000000" z="19.798990" />
+                    <point x="25.868628" y="0.000000" z="10.715137" />
+                </translate>
+
+                <rotate angle="3" x="0" y="0" z="1" />
+                <rotate time="70" x="0" y="1" z="0" />
+                <scale x="0.5" y="0.5" z="0.5" />
+            </transform>
+
+			<models>
+				<model file="sphere_nt2.3d"  > 
+					<texture file="venus.jpg" /> 
+					<color>
+						<diffuse R="200" G="200" B="200" />
+						<ambient R="50" G="50" B="50" />
+						<specular R="0" G="0" B="0" />
+						<emissive R="0" G="0" B="0" />
+						<shininess value="0" />
+					</color>
+				</model>
+			</models>
+        </group>
+
+        <!--Terra e Lua-->
+        <group>
+            <transform>
+                <translate time="30" align="false">
+                    <point x="40.000000" y="0.000000" z="-0.000000" />
+                    <point x="36.955181" y="0.000000" z="-15.307338" />
+                    <point x="28.284271" y="0.000000" z="-28.284271" />
+                    <point x="15.307338" y="0.000000" z="-36.955181" />
+                    <point x="-0.000000" y="0.000000" z="-40.000000" />
+                    <point x="-15.307338" y="0.000000" z="-36.955181" />
+                    <point x="-28.284271" y="0.000000" z="-28.284271" />
+                    <point x="-36.955181" y="0.000000" z="-15.307338" />
+                    <point x="-40.000000" y="0.000000" z="0.000000" />
+                    <point x="-36.955181" y="0.000000" z="15.307338" />
+                    <point x="-28.284271" y="0.000000" z="28.284271" />
+                    <point x="-15.307338" y="0.000000" z="36.955181" />
+                    <point x="0.000000" y="0.000000" z="40.000000" />
+                    <point x="15.307338" y="0.000000" z="36.955181" />
+                    <point x="28.284271" y="0.000000" z="28.284271" />
+                    <point x="36.955181" y="0.000000" z="15.307338" />
+                </translate>
+
+                <rotate angle="20" x="0" y="0" z="1" />
+                <scale x="0.5" y="0.5" z="0.5" />
+            </transform>
+
+            <models>
+                <model file="sphere_nt2.3d"  > 
+					<texture file="earth.jpg" /> 
+					<color>
+						<diffuse R="200" G="200" B="200" />
+						<ambient R="50" G="50" B="50" />
+						<specular R="0" G="0" B="0" />
+						<emissive R="0" G="0" B="0" />
+						<shininess value="0" />
+					</color>
+				</model>
+            </models>
+
+            <group>
+                <transform>
+                    <translate time="5" align="false" >
+                        <point x="3.000000" y="0.000000" z="-0.000000" />
+                        <point x="2.771639" y="0.000000" z="-1.148050" />
+                        <point x="2.121320" y="0.000000" z="-2.121320" />
+                        <point x="1.148050" y="0.000000" z="-2.771639" />
+                        <point x="-0.000000" y="0.000000" z="-3.000000" />
+                        <point x="-1.148050" y="0.000000" z="-2.771639" />
+                        <point x="-2.121320" y="0.000000" z="-2.121320" />
+                        <point x="-2.771639" y="0.000000" z="-1.148050" />
+                        <point x="-3.000000" y="0.000000" z="0.000000" />
+                        <point x="-2.771639" y="0.000000" z="1.148050" />
+                        <point x="-2.121320" y="0.000000" z="2.121320" />
+                        <point x="-1.148050" y="0.000000" z="2.771639" />
+                        <point x="0.000000" y="0.000000" z="3.000000" />
+                        <point x="1.148050" y="0.000000" z="2.771639" />
+                        <point x="2.121320" y="0.000000" z="2.121320" />
+                        <point x="2.771639" y="0.000000" z="1.148050" />
+                    </translate>
+
+                    <rotate time="12" x="0" y="-1" z="0" />
+                    <scale x="0.3" y="0.3" z="0.3" />
+                </transform>
+
+                <models>
+                    <model file="sphere_nt2.3d"  > 
+                        <texture file="moon.jpg" /> 
+                        <color>
+                            <diffuse R="200" G="200" B="200" />
+                            <ambient R="50" G="50" B="50" />
+                            <specular R="0" G="0" B="0" />
+                            <emissive R="0" G="0" B="0" />
+                            <shininess value="0" />
+                        </color>
+				    </model>
+                </models>
+            </group>
+        </group>
+
+        <!--Marte, Fobos e Deimos-->
+        <group>
+            <transform>
+                <translate time="56" align="false">
+                    <point x="50.000000" y="0.000000" z="-0.000000" />
+                    <point x="46.193977" y="0.000000" z="-19.134172" />
+                    <point x="35.355339" y="0.000000" z="-35.355339" />
+                    <point x="19.134172" y="0.000000" z="-46.193977" />
+                    <point x="-0.000000" y="0.000000" z="-50.000000" />
+                    <point x="-19.134172" y="0.000000" z="-46.193977" />
+                    <point x="-35.355339" y="0.000000" z="-35.355339" />
+                    <point x="-46.193977" y="0.000000" z="-19.134172" />
+                    <point x="-50.000000" y="0.000000" z="0.000000" />
+                    <point x="-46.193977" y="0.000000" z="19.134172" />
+                    <point x="-35.355339" y="0.000000" z="35.355339" />
+                    <point x="-19.134172" y="0.000000" z="46.193977" />
+                    <point x="0.000000" y="0.000000" z="50.000000" />
+                    <point x="19.134172" y="0.000000" z="46.193977" />
+                    <point x="35.355339" y="0.000000" z="35.355339" />
+                    <point x="46.193977" y="0.000000" z="19.134172" />
+                </translate>
+
+                <scale x="0.3" y="0.3" z="0.3" />
+                <rotate angle="25" x="0" y="0" z="1" />
+            </transform>
+
+            <models>
+                <model file="sphere_nt2.3d"  > 
+					<texture file="mars.jpg" /> 
+					<color>
+						<diffuse R="200" G="200" B="200" />
+						<ambient R="50" G="50" B="50" />
+						<specular R="0" G="0" B="0" />
+						<emissive R="0" G="0" B="0" />
+						<shininess value="0" />
+					</color>
+				</model>
+            </models>
+
+            <group>
+                <transform>
+                    <translate time="3" align="false">
+                        <point x="3.000000" y="0.000000" z="-0.000000" />
+                        <point x="2.771639" y="0.000000" z="-1.148050" />
+                        <point x="2.121320" y="0.000000" z="-2.121320" />
+                        <point x="1.148050" y="0.000000" z="-2.771639" />
+                        <point x="-0.000000" y="0.000000" z="-3.000000" />
+                        <point x="-1.148050" y="0.000000" z="-2.771639" />
+                        <point x="-2.121320" y="0.000000" z="-2.121320" />
+                        <point x="-2.771639" y="0.000000" z="-1.148050" />
+                        <point x="-3.000000" y="0.000000" z="0.000000" />
+                        <point x="-2.771639" y="0.000000" z="1.148050" />
+                        <point x="-2.121320" y="0.000000" z="2.121320" />
+                        <point x="-1.148050" y="0.000000" z="2.771639" />
+                        <point x="0.000000" y="0.000000" z="3.000000" />
+                        <point x="1.148050" y="0.000000" z="2.771639" />
+                        <point x="2.121320" y="0.000000" z="2.121320" />
+                        <point x="2.771639" y="0.000000" z="1.148050" />
+                    </translate>
+
+                    <rotate time="7" x="0" y="-1" z="0" />
+                    <scale x="0.3" y="0.3" z="0.3" />
+                </transform>
+
+                <models>
+                    <model file="sphere_nt2.3d"  > 
+                        <texture file="moon3.jpg" /> 
+                        <color>
+                            <diffuse R="200" G="200" B="200" />
+                            <ambient R="50" G="50" B="50" />
+                            <specular R="0" G="0" B="0" />
+                            <emissive R="0" G="0" B="0" />
+                            <shininess value="0" />
+                        </color>
+				    </model>
+                </models>
+                
+            </group>
+
+            <group>
+                <transform>
+                    <translate time="7" align="false">
+                        <point x="5.000000" y="0.000000" z="-0.000000" />
+                        <point x="4.619398" y="0.000000" z="-1.913417" />
+                        <point x="3.535534" y="0.000000" z="-3.535534" />
+                        <point x="1.913417" y="0.000000" z="-4.619398" />
+                        <point x="-0.000000" y="0.000000" z="-5.000000" />
+                        <point x="-1.913417" y="0.000000" z="-4.619398" />
+                        <point x="-3.535534" y="0.000000" z="-3.535534" />
+                        <point x="-4.619398" y="0.000000" z="-1.913417" />
+                        <point x="-5.000000" y="0.000000" z="0.000000" />
+                        <point x="-4.619398" y="0.000000" z="1.913417" />
+                        <point x="-3.535534" y="0.000000" z="3.535534" />
+                        <point x="-1.913417" y="0.000000" z="4.619398" />
+                        <point x="0.000000" y="0.000000" z="5.000000" />
+                        <point x="1.913417" y="0.000000" z="4.619398" />
+                        <point x="3.535534" y="0.000000" z="3.535534" />
+                        <point x="4.619398" y="0.000000" z="1.913417" />
+                    </translate>
+
+                    <rotate time="2" x="0" y="-1" z="0" />
+                    <scale x="0.1" y="0.1" z="0.1" />
+                </transform>
+
+                <models>
+                    <model file="sphere_nt2.3d"  > 
+                        <texture file="moon1.jpg" /> 
+                        <color>
+                            <diffuse R="200" G="200" B="200" />
+                            <ambient R="50" G="50" B="50" />
+                            <specular R="0" G="0" B="0" />
+                            <emissive R="0" G="0" B="0" />
+                            <shininess value="0" />
+                        </color>
+				    </model>
+                </models>
+
+            </group>
+
+        </group>
+
+        <!--Jupiter,Io,Europa,Ganimedes e Calisto-->
+        <group>
+            <transform>
+                <translate time="100" align="false">
+                    <point x="70.000000" y="0.000000" z="-0.000000" />
+                    <point x="64.671570" y="0.000000" z="-26.787840" />
+                    <point x="49.497475" y="0.000000" z="-49.497475" />
+                    <point x="26.787840" y="0.000000" z="-64.671570" />
+                    <point x="-0.000000" y="0.000000" z="-70.000000" />
+                    <point x="-26.787840" y="0.000000" z="-64.671570" />
+                    <point x="-49.497475" y="0.000000" z="-49.497475" />
+                    <point x="-64.671570" y="0.000000" z="-26.787840" />
+                    <point x="-70.000000" y="0.000000" z="0.000000" />
+                    <point x="-64.671570" y="0.000000" z="26.787840" />
+                    <point x="-49.497475" y="0.000000" z="49.497475" />
+                    <point x="-26.787840" y="0.000000" z="64.671570" />
+                    <point x="0.000000" y="0.000000" z="70.000000" />
+                    <point x="26.787840" y="0.000000" z="64.671570" />
+                    <point x="49.497475" y="0.000000" z="49.497475" />
+                    <point x="64.671570" y="0.000000" z="26.787840" />
+                </translate>
+
+				<rotate time="5" x="0" y="1" z="0" />
+				<scale x="3" y="3" z="3" />
+            </transform>
+
+			<models>
+				<model file="sphere_nt2.3d"  > 
+					<texture file="jupiter.jpg" /> 
+					<color>
+						<diffuse R="200" G="200" B="200" />
+						<ambient R="50" G="50" B="50" />
+						<specular R="0" G="0" B="0" />
+						<emissive R="0" G="0" B="0" />
+						<shininess value="0" />
+					</color>
+				</model>
+			</models>
+
+            <group>
+                <transform>
+                    <translate time="3" align="false">
+                        <point x="2.200000" y="0.000000" z="-0.000000" />
+                        <point x="2.032535" y="0.000000" z="-0.841904" />
+                        <point x="1.555635" y="0.000000" z="-1.555635" />
+                        <point x="0.841904" y="0.000000" z="-2.032535" />
+                        <point x="-0.000000" y="0.000000" z="-2.200000" />
+                        <point x="-0.841904" y="0.000000" z="-2.032535" />
+                        <point x="-1.555635" y="0.000000" z="-1.555635" />
+                        <point x="-2.032535" y="0.000000" z="-0.841904" />
+                        <point x="-2.200000" y="0.000000" z="0.000000" />
+                        <point x="-2.032535" y="0.000000" z="0.841904" />
+                        <point x="-1.555635" y="0.000000" z="1.555635" />
+                        <point x="-0.841904" y="0.000000" z="2.032535" />
+                        <point x="0.000000" y="0.000000" z="2.200000" />
+                        <point x="0.841904" y="0.000000" z="2.032535" />
+                        <point x="1.555635" y="0.000000" z="1.555635" />
+                        <point x="2.032535" y="0.000000" z="0.841904" />
+                    </translate>
+
+					<rotate angle="10" x="0" y="-1" z="0" />
+					<scale x="0.3" y="0.3" z="0.3" />
+                </transform>
+                <models>
+                    <model file="sphere_nt2.3d"  > 
+                        <texture file="moon3.jpg" /> 
+                        <color>
+                            <diffuse R="200" G="200" B="200" />
+                            <ambient R="50" G="50" B="50" />
+                            <specular R="0" G="0" B="0" />
+                            <emissive R="0" G="0" B="0" />
+                            <shininess value="0" />
+                        </color>
+				    </model>
+                </models>
+            </group>
+
+            <group>
+                <transform>
+                    <translate time="3" align="false">
+                        <point x="2.800000" y="0.000000" z="-0.000000" />
+                        <point x="2.586863" y="0.000000" z="-1.071514" />
+                        <point x="1.979899" y="0.000000" z="-1.979899" />
+                        <point x="1.071514" y="0.000000" z="-2.586863" />
+                        <point x="-0.000000" y="0.000000" z="-2.800000" />
+                        <point x="-1.071514" y="0.000000" z="-2.586863" />
+                        <point x="-1.979899" y="0.000000" z="-1.979899" />
+                        <point x="-2.586863" y="0.000000" z="-1.071514" />
+                        <point x="-2.800000" y="0.000000" z="0.000000" />
+                        <point x="-2.586863" y="0.000000" z="1.071514" />
+                        <point x="-1.979899" y="0.000000" z="1.979899" />
+                        <point x="-1.071514" y="0.000000" z="2.586863" />
+                        <point x="0.000000" y="0.000000" z="2.800000" />
+                        <point x="1.071514" y="0.000000" z="2.586863" />
+                        <point x="1.979899" y="0.000000" z="1.979899" />
+                        <point x="2.586863" y="0.000000" z="1.071514" />
+                    </translate>
+
+					<rotate time="4" x="0" y="-1" z="0" />
+					<scale x="0.3" y="0.3" z="0.3" />
+                </transform>
+
+                <models>
+                    <model file="sphere_nt2.3d"  > 
+					<texture file="moon2.jpg" /> 
+					<color>
+						<diffuse R="200" G="200" B="200" />
+						<ambient R="50" G="50" B="50" />
+						<specular R="0" G="0" B="0" />
+						<emissive R="0" G="0" B="0" />
+						<shininess value="0" />
+					</color>
+				</model>
+                </models>
+            </group>
+
+            <group>
+                <transform>
+                    <translate time="6" align="false">
+                        <point x="4.000000" y="0.000000" z="-0.000000" />
+                        <point x="3.695518" y="0.000000" z="-1.530734" />
+                        <point x="2.828427" y="0.000000" z="-2.828427" />
+                        <point x="1.530734" y="0.000000" z="-3.695518" />
+                        <point x="-0.000000" y="0.000000" z="-4.000000" />
+                        <point x="-1.530734" y="0.000000" z="-3.695518" />
+                        <point x="-2.828427" y="0.000000" z="-2.828427" />
+                        <point x="-3.695518" y="0.000000" z="-1.530734" />
+                        <point x="-4.000000" y="0.000000" z="0.000000" />
+                        <point x="-3.695518" y="0.000000" z="1.530734" />
+                        <point x="-2.828427" y="0.000000" z="2.828427" />
+                        <point x="-1.530734" y="0.000000" z="3.695518" />
+                        <point x="0.000000" y="0.000000" z="4.000000" />
+                        <point x="1.530734" y="0.000000" z="3.695518" />
+                        <point x="2.828427" y="0.000000" z="2.828427" />
+                        <point x="3.695518" y="0.000000" z="1.530734" />
+                    </translate>
+
+					<rotate time="6" x="0" y="-1" z="0" />
+					<scale x="0.2" y="0.2" z="0.2" />
+                </transform>
+                <models>
+                    <model file="sphere.3d" />
+                </models>
+            </group>
+
+            <group>
+                <transform>
+                    <translate time="11" align="false">
+                        <point x="5.000000" y="0.000000" z="-0.000000" />
+                        <point x="4.619398" y="0.000000" z="-1.913417" />
+                        <point x="3.535534" y="0.000000" z="-3.535534" />
+                        <point x="1.913417" y="0.000000" z="-4.619398" />
+                        <point x="-0.000000" y="0.000000" z="-5.000000" />
+                        <point x="-1.913417" y="0.000000" z="-4.619398" />
+                        <point x="-3.535534" y="0.000000" z="-3.535534" />
+                        <point x="-4.619398" y="0.000000" z="-1.913417" />
+                        <point x="-5.000000" y="0.000000" z="0.000000" />
+                        <point x="-4.619398" y="0.000000" z="1.913417" />
+                        <point x="-3.535534" y="0.000000" z="3.535534" />
+                        <point x="-1.913417" y="0.000000" z="4.619398" />
+                        <point x="0.000000" y="0.000000" z="5.000000" />
+                        <point x="1.913417" y="0.000000" z="4.619398" />
+                        <point x="3.535534" y="0.000000" z="3.535534" />
+                        <point x="4.619398" y="0.000000" z="1.913417" />
+                    </translate>
+
+					<rotate time="10" x="0" y="-1" z="0" />
+					<scale x="0.1" y="0.1" z="0.1" />
+                </transform>
+
+                <models>
+                    <model file="sphere_nt2.3d"  > 
+                        <texture file="moon4.jpg" /> 
+                        <color>
+                            <diffuse R="200" G="200" B="200" />
+                            <ambient R="50" G="50" B="50" />
+                            <specular R="0" G="0" B="0" />
+                            <emissive R="0" G="0" B="0" />
+                            <shininess value="0" />
+                        </color>
+				    </model>
+                </models>
+            </group>
+        </group>
+
+        <!--Saturno-->
+        <group>
+            <transform>
+                <translate time="140" align="false">
+                    <point x="102.000000" y="0.000000" z="-0.000000" />
+                    <point x="94.235710" y="0.000000" z="-39.033710" />
+                    <point x="72.124893" y="0.000000" z="-72.124893" />
+                    <point x="39.033710" y="0.000000" z="-94.235710" />
+                    <point x="-0.000000" y="0.000000" z="-102.000000" />
+                    <point x="-39.033710" y="0.000000" z="-94.235710" />
+                    <point x="-72.124893" y="0.000000" z="-72.124893" />
+                    <point x="-94.235710" y="0.000000" z="-39.033710" />
+                    <point x="-102.000000" y="0.000000" z="0.000000" />
+                    <point x="-94.235710" y="0.000000" z="39.033710" />
+                    <point x="-72.124893" y="0.000000" z="72.124893" />
+                    <point x="-39.033710" y="0.000000" z="94.235710" />
+                    <point x="0.000000" y="0.000000" z="102.000000" />
+                    <point x="39.033710" y="0.000000" z="94.235710" />
+                    <point x="72.124893" y="0.000000" z="72.124893" />
+                    <point x="94.235710" y="0.000000" z="39.033710" />
+                </translate>
+				<rotate angle="20" x="0" y="0" z="1" />
+				<rotate time="3" x="0" y="-1" z="0" />
+				<scale x="3" y="3" z="3" />
+
+            </transform>
+			<models>
+				<model file="sphere_nt2.3d"  > 
+					<texture file="saturn.jpg" /> 
+					<color>
+						<diffuse R="200" G="200" B="200" />
+						<ambient R="50" G="50" B="50" />
+						<specular R="0" G="0" B="0" />
+						<emissive R="0" G="0" B="0" />
+						<shininess value="0" />
+					</color>
+				</model>
+			</models>
+
+			<group>
+				<transform>
+					<scale x="1" y="0.01" z="1" />
+				</transform>
+				<models>
+                    <model file="ring.3d"  > 
+                        <texture file="moon2.jpg" /> 
+                        <color>
+                            <diffuse R="200" G="200" B="200" />
+                            <ambient R="50" G="50" B="50" />
+                            <specular R="0" G="0" B="0" />
+                            <emissive R="0" G="0" B="0" />
+                            <shininess value="0" />
+                        </color>
+				    </model>
+				</models>
+			</group>
+        </group>
+
+        <!--Urano-->
+        <group>
+            <transform>
+                <translate time="200" align="false" >
+                    <point x="130.000000" y="0.000000" z="-0.000000" />
+                    <point x="120.104340" y="0.000000" z="-49.748848" />
+                    <point x="91.923882" y="0.000000" z="-91.923882" />
+                    <point x="49.748848" y="0.000000" z="-120.104340" />
+                    <point x="-0.000000" y="0.000000" z="-130.000000" />
+                    <point x="-49.748848" y="0.000000" z="-120.104340" />
+                    <point x="-91.923882" y="0.000000" z="-91.923882" />
+                    <point x="-120.104340" y="0.000000" z="-49.748848" />
+                    <point x="-130.000000" y="0.000000" z="0.000000" />
+                    <point x="-120.104340" y="0.000000" z="49.748848" />
+                    <point x="-91.923882" y="0.000000" z="91.923882" />
+                    <point x="-49.748848" y="0.000000" z="120.104340" />
+                    <point x="0.000000" y="0.000000" z="130.000000" />
+                    <point x="49.748848" y="0.000000" z="120.104340" />
+                    <point x="91.923882" y="0.000000" z="91.923882" />
+                    <point x="120.104340" y="0.000000" z="49.748848" />
+                </translate>
+				<rotate angle="60" x="0" y="0" z="1" />
+				<rotate time="4" x="0" y="-1" z="0" />
+				<scale x="3" y="3" z="3" />
+
+            </transform>
+			<models>
+				<model file="sphere_nt2.3d"  > 
+					<texture file="uranus.jpg" /> 
+					<color>
+						<diffuse R="200" G="200" B="200" />
+						<ambient R="50" G="50" B="50" />
+						<specular R="0" G="0" B="0" />
+						<emissive R="0" G="0" B="0" />
+						<shininess value="0" />
+					</color>
+				</model>
+			</models>
+
+			<group>
+				<transform>
+					<translate x="1" y="0" z="-2"/>
+					<rotate angle="40" x="0" y="-1" z="0" />
+					<scale x="0.2" y="0.2" z="0.2" />
+				</transform>
+				<models>
+                    <model file="sphere_nt2.3d"  > 
+                        <texture file="moon1.jpg" /> 
+                        <color>
+                            <diffuse R="200" G="200" B="200" />
+                            <ambient R="50" G="50" B="50" />
+                            <specular R="0" G="0" B="0" />
+                            <emissive R="0" G="0" B="0" />
+                            <shininess value="0" />
+                        </color>
+				    </model>
+				</models>
+			</group>
+
+			<group>
+				<transform>
+					<translate x="1" y="0" z="2"/>
+					<rotate angle="40" x="0" y="-1" z="0" />
+					<scale x="0.2" y="0.2" z="0.2" />
+				</transform>
+				<models>
+					<model file="sphere_nt2.3d"  > 
+                        <texture file="moon3.jpg" /> 
+                        <color>
+                            <diffuse R="200" G="200" B="200" />
+                            <ambient R="50" G="50" B="50" />
+                            <specular R="0" G="0" B="0" />
+                            <emissive R="0" G="0" B="0" />
+                            <shininess value="0" />
+                        </color>
+				    </model>
+				</models>
+			</group>
+
+			<group>
+				<transform>
+					<translate x="1" y="0" z="0"/>
+					<rotate angle="40" x="0" y="-1" z="0" />
+					<scale x="0.2" y="0.2" z="0.2" />
+				</transform>
+				<models>
+					<model file="sphere_nt2.3d"  > 
+                        <texture file="moon3.jpg" /> 
+                        <color>
+                            <diffuse R="200" G="200" B="200" />
+                            <ambient R="50" G="50" B="50" />
+                            <specular R="0" G="0" B="0" />
+                            <emissive R="0" G="0" B="0" />
+                            <shininess value="0" />
+                        </color>
+				    </model>
+				</models>
+			</group>
+        </group>
+
+        <!--Neptuno-->
+        <group>
+            <transform>
+                <translate time="400" align="false">
+                    <point x="158.000000" y="0.000000" z="-0.000000" />
+                    <point x="145.972961" y="0.000000" z="-60.463982" />
+                    <point x="111.722870" y="0.000000" z="-111.722870" />
+                    <point x="60.463982" y="0.000000" z="-145.972961" />
+                    <point x="-0.000000" y="0.000000" z="-158.000000" />
+                    <point x="-60.463982" y="0.000000" z="-145.972961" />
+                    <point x="-111.722870" y="0.000000" z="-111.722870" />
+                    <point x="-145.972961" y="0.000000" z="-60.463982" />
+                    <point x="-158.000000" y="0.000000" z="0.000000" />
+                    <point x="-145.972961" y="0.000000" z="60.463982" />
+                    <point x="-111.722870" y="0.000000" z="111.722870" />
+                    <point x="-60.463982" y="0.000000" z="145.972961" />
+                    <point x="0.000000" y="0.000000" z="158.000000" />
+                    <point x="60.463982" y="0.000000" z="145.972961" />
+                    <point x="111.722870" y="0.000000" z="111.722870" />
+                    <point x="145.972961" y="0.000000" z="60.463982" />
+                </translate>
+			<rotate angle="20" x="0" y="0" z="1" />
+			<rotate time="4" x="0" y="-1" z="0" />
+			<scale x="3" y="3" z="3" />
+            </transform>
+
+			<models>
+				<model file="sphere_nt2.3d"  > 
+					<texture file="neptune.jpg" /> 
+					<color>
+						<diffuse R="200" G="200" B="200" />
+						<ambient R="50" G="50" B="50" />
+						<specular R="0" G="0" B="0" />
+						<emissive R="0" G="0" B="0" />
+						<shininess value="0" />
+					</color>
+				</model>
+			</models>
+
+			<group>
+				<transform>
+					<translate x="1" y="0" z="-2"/>
+					<rotate angle="40" x="0" y="-1" z="0" />
+					<scale x="0.2" y="0.2" z="0.2" />
+				</transform>
+				<models>
+					<model file="sphere_nt2.3d"  > 
+                        <texture file="moon4.jpg" /> 
+                        <color>
+                            <diffuse R="200" G="200" B="200" />
+                            <ambient R="50" G="50" B="50" />
+                            <specular R="0" G="0" B="0" />
+                            <emissive R="0" G="0" B="0" />
+                            <shininess value="0" />
+                        </color>
+				    </model>
+				</models>
+			</group>
+
+			<group>
+				<transform>
+					<translate x="1" y="0" z="2"/>
+					<rotate angle="40" x="0" y="-1" z="0" />
+					<scale x="0.2" y="0.2" z="0.2" />
+				</transform>
+				<models>
+					<model file="sphere_nt2.3d"  > 
+                        <texture file="moon2.jpg" /> 
+                        <color>
+                            <diffuse R="200" G="200" B="200" />
+                            <ambient R="50" G="50" B="50" />
+                            <specular R="0" G="0" B="0" />
+                            <emissive R="0" G="0" B="0" />
+                            <shininess value="0" />
+                        </color>
+				    </model>
+				</models>
+			</group>
+        </group>
+
+        <!--Cometa-->
+        <group>
+            <transform>
+			    <rotate angle="5" x="0" y="0" z="1" />
+                <translate time = "20" align="true">
+                    <point x="180.000000" y="0.000000" z="0.000000" />
+                    <point x="172.387939" y="0.000000" z="9.567086" />
+                    <point x="150.710678" y="0.000000" z="17.677670" />
+                    <point x="118.268341" y="0.000000" z="23.096987" />
+                    <point x="79.999992" y="0.000000" z="25.000000" />
+                    <point x="41.731659" y="0.000000" z="23.096989" />
+                    <point x="9.289322" y="0.000000" z="17.677670" />
+                    <point x="-12.387947" y="0.000000" z="9.567087" />
+                    <point x="-20.000000" y="0.000000" z="-0.000002" />
+                    <point x="-12.387947" y="0.000000" z="-9.567085" />
+                    <point x="9.289314" y="0.000000" z="-17.677668" />
+                    <point x="41.731644" y="0.000000" z="-23.096987" />
+                    <point x="80.000000" y="0.000000" z="-25.000000" />
+                    <point x="118.268356" y="0.000000" z="-23.096987" />
+                    <point x="150.710663" y="0.000000" z="-17.677671" />
+                    <point x="172.387955" y="0.000000" z="-9.567085" />
+                </translate>
+            </transform>
+			<group>
+                <transform>
+                    <rotate angle="90" x="0" y="1" z="0" />
+                    <scale x="0.5" y="0.5" z="0.5" />
+                </transform>
+				<models>
+					<model file="bezier_nt.3d" > 
+                        <color>
+                            <diffuse R="00" G="87" B="184" />
+                            <ambient R="0" G="8" B="18" />
+                            <specular R="255" G="255" B="255" />
+                            <emissive R="0" G="0" B="0" />
+                            <shininess value="128" />  
+                        </color>
+				    </model>
+				</models>
+			</group>
+        </group>
+    </group>
+</world>
