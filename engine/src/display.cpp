@@ -565,6 +565,7 @@ static void gl_start(int argc, char** argv){
     glutKeyboardFunc(keys_event);
     glutSpecialFunc(special_keys_event);
     glutPassiveMotionFunc(mouse_event);
+    glutMotionFunc(mouse_event);
 
 
 

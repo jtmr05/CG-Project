@@ -109,7 +109,7 @@ void mouse_event(int x, int y){
         PolarPoint3d dir { cart_to_polar(cs.look_at - cs.position) };
 
         dir.zOx += -1.0 * fps_angle_delta * delta_x;
-        dir.yOp = std::max(0.0, std::min(dir.yOp + (fps_angle_delta * delta_y), 179.9));
+        dir.yOp = std::max(0.1, std::min(dir.yOp + (fps_angle_delta * delta_y), 179.9));
 
         cs.look_at = polar_to_cart(dir) + cs.position;
     }
