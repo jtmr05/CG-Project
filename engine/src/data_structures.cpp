@@ -74,7 +74,7 @@ RGB::RGB(uint8_t r, uint8_t g, uint8_t b) :
 
 array<float, 4> RGB::as_float_array() const {
 
-    constexpr float uint8_t_max_valuef { static_cast<float>(std::numeric_limits<uint8_t>::max()) };
+    constexpr float uint8_t_max_valuef { 255.f };
 
     return {
         static_cast<float>(this->operator[](0)) / uint8_t_max_valuef,

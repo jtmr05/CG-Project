@@ -6,7 +6,6 @@
 #include <memory>
 #include <array>
 #include <optional>
-#include <limits>
 
 #include "point.hpp"
 #include "filters.hpp"

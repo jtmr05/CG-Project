@@ -25,8 +25,14 @@ TexturesHandler::TexturesHandler(const set<string>& texture_fns) :
 
         ilBindImage(this->images[image_count]);
 
-        if(ilLoadImage(texture_fn.c_str()) == IL_FALSE) //bruh??
+        if(ilLoadImage(texture_fn.c_str()) == IL_FALSE){ //bruh??
+
+            std::cerr << "\033[33;1mWarning:\033[0m Unable to load image '"
+                      << texture_fn
+                      << "'.\n";
+
             continue;
+        }
 
         const int width { ilGetInteger(IL_IMAGE_WIDTH) };
         const int height { ilGetInteger(IL_IMAGE_HEIGHT) };

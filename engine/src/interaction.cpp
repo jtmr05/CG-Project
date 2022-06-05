@@ -4,14 +4,15 @@ extern CameraSettings cs;
 
 
 
+//options
 static bool fill { true };
 static bool lighting_enabled { true };
 static bool show_axis { false };
-
 static bool first_person { false };
 
 static constexpr double speed { 0.1 };
-static constexpr angle_t angle_delta { 0.75 };
+static constexpr angle_t fps_angle_delta { 0.5 };
+static constexpr angle_t fixed_mode_angle_delta { 2.5 };
 
 
 void interaction_init(bool lighting_available){
@@ -23,40 +24,44 @@ void interaction_init(bool lighting_available){
 void special_keys_event(int key_code, int, int){
 
     const CartPoint3d dir { cs.look_at - cs.position };
-    const CartPoint3d right { speed * cross_product(dir, cs.up).normalize() };
-    const CartPoint3d real_up { speed * cross_product(right, dir).normalize() };
 
     if(!first_person){
 
+        PolarPoint3d polar_dir { cart_to_polar(dir) };
+        bool has_changed { true };
+
         switch (key_code){
 
-        case GLUT_KEY_LEFT: {
-            const CartPoint3d left { -1.0 * right };
-            cs.position += left;
+        case GLUT_KEY_LEFT:
+            polar_dir.zOx -= fixed_mode_angle_delta;
             break;
-        }
 
         case GLUT_KEY_RIGHT:
-            cs.position += right;
+            polar_dir.zOx += fixed_mode_angle_delta;
             break;
 
-        case GLUT_KEY_DOWN: {
-            const CartPoint3d real_down { -1.0 * real_up };
-            cs.position += real_down;
+        case GLUT_KEY_DOWN:
+            polar_dir.yOp = std::max(0.0, std::min(polar_dir.yOp - fixed_mode_angle_delta, 179.9));
             break;
-        }
 
         case GLUT_KEY_UP:
-            cs.position += real_up;
+            polar_dir.yOp = std::max(0.0, std::min(polar_dir.yOp + fixed_mode_angle_delta, 179.9));
             break;
 
         default:
+            has_changed = false;
             break;
         }
+
+        if(has_changed)
+            cs.position = cs.look_at - polar_to_cart(polar_dir);
     }
 
 
     else {
+
+        const CartPoint3d right   { speed * cross_product(dir, cs.up).normalize() };
+        const CartPoint3d real_up { speed * cross_product(right, dir).normalize() };
 
         switch (key_code){
 
@@ -72,20 +77,48 @@ void special_keys_event(int key_code, int, int){
             cs.look_at  += right;
             break;
 
-        case GLUT_KEY_DOWN:
-            cs.position += -1.0 * speed * dir.normalize();
-            cs.look_at  += -1.0 * speed * dir.normalize();
+        case GLUT_KEY_DOWN: {
+            const CartPoint3d weighted_dir { -1.0 * speed * dir.normalize() };
+            cs.position += weighted_dir;
+            cs.look_at  += weighted_dir;
             break;
+        }
 
-        case GLUT_KEY_UP:
-            cs.position += speed * dir.normalize();
-            cs.look_at  += speed * dir.normalize();
+        case GLUT_KEY_UP: {
+            const CartPoint3d weighted_dir { speed * dir.normalize() };
+            cs.position += weighted_dir;
+            cs.look_at  += weighted_dir;
             break;
+        }
 
         default:
             break;
         }
     }
+
+    glutPostRedisplay();
+}
+
+// function to process mouse events
+void mouse_event(int x, int y){
+
+    static int last_x { x }, last_y { y }; //initialized only once
+
+    if(first_person){
+
+        const double delta_x { static_cast<double>(x - last_x) };
+        const double delta_y { static_cast<double>(y - last_y) };
+
+        PolarPoint3d dir { cart_to_polar(cs.look_at - cs.position) };
+
+        dir.zOx += -1.0 * fps_angle_delta * delta_x;
+        dir.yOp = std::max(0.0, std::min(dir.yOp + (fps_angle_delta * delta_y), 179.9));
+
+        cs.look_at = polar_to_cart(dir) + cs.position;
+    }
+
+    last_x = x;
+    last_y = y;
 
     glutPostRedisplay();
 }
@@ -119,8 +152,6 @@ void keys_event(unsigned char key, int, int){
         std::exit(1);
         break;
 
-
-
     case 'w':
         special_keys_event(GLUT_KEY_UP, 0, 0);
         break;
@@ -144,31 +175,6 @@ void keys_event(unsigned char key, int, int){
     glutPostRedisplay();
 }
 
-// function to process mouse events
-void mouse_event(int x, int y){
-
-    static int last_x { x }, last_y { y }; //initialized only once
-
-    if(first_person){
-
-        const double diff_x { static_cast<double>(x - last_x) };
-        const double diff_y { static_cast<double>(y - last_y) };
-
-        PolarPoint3d dir { cart_to_polar(cs.look_at - cs.position) };
-
-        dir.zOx += -1.0 * angle_delta * diff_x;
-        dir.yOp = std::max(0.0, std::min(dir.yOp + (angle_delta * diff_y), 180.0));
-
-        cs.look_at = polar_to_cart(dir);
-
-
-        last_x = x;
-        last_y = y;
-    }
-
-    glutPostRedisplay();
-}
-
 
 
 void set_axis(){
@@ -181,18 +187,18 @@ void set_axis(){
 
             // X axis in red
             glColor3ub(255, 0, 0);
-            glVertex3f(-1000.0f, 0.0f, 0.0f);
-            glVertex3f( 1000.0f, 0.0f, 0.0f);
+            glVertex3d(-1000.0, 0.0, 0.0);
+            glVertex3d( 1000.0, 0.0, 0.0);
 
             // Y Axis in Green
             glColor3ub(0, 255, 0);
-            glVertex3f(0.0f, -1000.0f, 0.0f);
-            glVertex3f(0.0f,  1000.0f, 0.0f);
+            glVertex3d(0.0, -1000.0, 0.0);
+            glVertex3d(0.0,  1000.0, 0.0);
 
             // Z Axis in Blue
             glColor3ub(0, 0, 255);
-            glVertex3f(0.0f, 0.0f, -1000.0f);
-            glVertex3f(0.0f, 0.0f,  1000.0f);
+            glVertex3d(0.0, 0.0, -1000.0);
+            glVertex3d(0.0, 0.0,  1000.0);
 
         glEnd();
     }
