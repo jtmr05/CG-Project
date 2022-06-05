@@ -163,7 +163,10 @@ get_global_catmull_rom_point(const vector<CartPoint3d> &points, double gt){
     );
 }
 
-static void render_catmull_rom_curve(const vector<CartPoint3d> &points){
+static void render_catmull_rom_curve(const vector<CartPoint3d> &points, bool lighting_enabled){
+
+    if(lighting_enabled)
+        glDisable(GL_LIGHTING);
 
     const double step { 1.0 / static_cast<double>(tesselation.value()) };
 
@@ -176,6 +179,9 @@ static void render_catmull_rom_curve(const vector<CartPoint3d> &points){
         }
 
     glEnd();
+
+    if(lighting_enabled)
+        glEnable(GL_LIGHTING);
 }
 
 #ifdef BENCH
@@ -426,7 +432,7 @@ static void render_scene(){
                 DynamicTranslate const *dt { dynamic_cast<DynamicTranslate*>(t.get()) };
                 assert(dt != nullptr);
 
-                render_catmull_rom_curve(*(dt->points));
+                render_catmull_rom_curve(*(dt->points), lighting_enabled);
 
                 double const t {
                     static_cast<double>(glutGet(GLUT_ELAPSED_TIME)) /
