@@ -28,7 +28,6 @@ void special_keys_event(int key_code, int, int){
     if(!first_person){
 
         PolarPoint3d polar_dir { cart_to_polar(dir) };
-        bool has_changed { true };
 
         switch (key_code){
 
@@ -41,20 +40,18 @@ void special_keys_event(int key_code, int, int){
             break;
 
         case GLUT_KEY_DOWN:
-            polar_dir.yOp = std::max(0.0, std::min(polar_dir.yOp - fixed_mode_angle_delta, 179.9));
+            polar_dir.yOp = std::max(0.1, std::min(polar_dir.yOp - fixed_mode_angle_delta, 179.9));
             break;
 
         case GLUT_KEY_UP:
-            polar_dir.yOp = std::max(0.0, std::min(polar_dir.yOp + fixed_mode_angle_delta, 179.9));
+            polar_dir.yOp = std::max(0.1, std::min(polar_dir.yOp + fixed_mode_angle_delta, 179.9));
             break;
 
         default:
-            has_changed = false;
             break;
         }
 
-        if(has_changed)
-            cs.position = cs.look_at - polar_to_cart(polar_dir);
+        cs.position = cs.look_at - polar_to_cart(polar_dir);
     }
 
 
