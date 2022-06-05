@@ -74,8 +74,8 @@ clean:
 	-make -C $(GEN_DIR) clean
 	-make -C $(shell realpath --relative-to . $(UTILS_DIR)) clean
 	-make -C $(shell realpath --relative-to . $(TINYXML_DIR)) clean
-	-find $(RSR_DIR)/* | grep \.3d | xargs rm -f
-	-find $(RSR_DIR)/* | grep \.norm | xargs rm -f
-	-find $(RSR_DIR)/* | grep \.text | xargs rm -f
+	-find $(RSR_DIR)/* | grep '\.3d' | xargs rm -f
+	-find $(RSR_DIR)/* | grep '\.norm' | xargs rm -f
+	-find $(RSR_DIR)/* | grep '\.text' | xargs rm -f
 	-rm -f *.stackdump
 	-rm -rf $(BIN_DIR)
