@@ -10,9 +10,8 @@ static bool show_axis { false };
 
 static bool first_person { false };
 
-static constexpr float sensitivity { 0.25f };
-static constexpr float speed { 0.1f };
-static constexpr angle_t angle_delta { 1.0 };
+static constexpr double speed { 0.1 };
+static constexpr angle_t angle_delta { 0.75 };
 
 
 void interaction_init(bool lighting_available){
@@ -118,6 +117,24 @@ void keys_event(unsigned char key, int, int){
 
     case 'q':
         std::exit(1);
+        break;
+
+
+
+    case 'w':
+        special_keys_event(GLUT_KEY_UP, 0, 0);
+        break;
+
+    case 's':
+        special_keys_event(GLUT_KEY_DOWN, 0, 0);
+        break;
+
+    case 'a':
+        special_keys_event(GLUT_KEY_LEFT, 0, 0);
+        break;
+
+    case 'd':
+        special_keys_event(GLUT_KEY_RIGHT, 0, 0);
         break;
 
     default:
