@@ -5,3 +5,6 @@
 *.norm
 *.text
 *.stackdump
+bin
+lib/utils/lib
+lib/tinyxml/lib

@@ -78,6 +78,7 @@ std::istream& operator>>(std::istream& stream, CartPoint2d& p);
 CartPoint3d operator*(const CartPoint3d &p, double d);
 CartPoint3d operator*(double d, const CartPoint3d &p);
 CartPoint3d operator+(const CartPoint3d &p1, const CartPoint3d &p2);
+CartPoint3d operator-(const CartPoint3d &p1, const CartPoint3d &p2);
 void operator+=(CartPoint3d &p1, const CartPoint3d &p2);
 
 CartPoint3d cross_product(const CartPoint3d &p1, const CartPoint3d &p2);

@@ -12,6 +12,7 @@ main(){
         $DIR/gen2.sh
         $DIR/gen3.sh
         $DIR/gen4.sh
+        $DIR/gen_solar.sh
         return 0
     else
         echo "error: bin/generator not found" 1>&2

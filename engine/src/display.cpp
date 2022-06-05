@@ -645,6 +645,7 @@ static void gl_start(int argc, char** argv){
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glEnable(GL_NORMALIZE);
+    glEnable(GL_RESCALE_NORMAL);
     glEnable(GL_TEXTURE_2D);
 
 

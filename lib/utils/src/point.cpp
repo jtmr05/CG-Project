@@ -198,6 +198,10 @@ CartPoint3d operator+(const CartPoint3d &p1, const CartPoint3d &p2){
     return { p1.x + p2.x, p1.y + p2.y, p1.z + p2.z };
 }
 
+CartPoint3d operator-(const CartPoint3d &p1, const CartPoint3d &p2){
+    return { p1.x - p2.x, p1.y - p2.y, p1.z - p2.z };
+}
+
 void operator+=(CartPoint3d &p1, const CartPoint3d &p2){
     p1.x += p2.x;
     p1.y += p2.y;

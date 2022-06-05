@@ -5,134 +5,86 @@ extern CameraSettings cs;
 
 
 static bool fill { true };
-static bool show_axis { false };
 static bool lighting_enabled { true };
+static bool show_axis { false };
 
-static CartPoint3d direction {};
 static bool first_person { false };
-static bool first_mouse { true };
-static int last_x {};
-static int last_y {};
 
-static float yaw { 0.f };
-static float pitch { 0.f };
-
-static constexpr float sensitivity { 0.5f };
+static constexpr float sensitivity { 0.25f };
 static constexpr float speed { 0.1f };
-
+static constexpr angle_t angle_delta { 1.0 };
 
 
 void interaction_init(bool lighting_available){
-
-    if(!lighting_available){
-        lighting_enabled = false;
-        fill = false;
-    }
-
-    const double dx { cs.position.x - cs.look_at.x };
-    const double dy { cs.position.y - cs.look_at.y };
-    const double dz { cs.position.z - cs.look_at.z };
-
-    yaw = std::atan2(dz, dx);
-    pitch = std::atan2(std::sqrt(dz * dz + dx * dx), dy) + PI;
-
-    direction.x = std::sin(degree_to_radian(yaw)) * std::cos(degree_to_radian(pitch));
-    direction.y = std::sin(degree_to_radian(pitch));
-    direction.z = std::cos(degree_to_radian(yaw)) * std::cos(degree_to_radian(pitch));
+    lighting_enabled = lighting_available;
+    fill = lighting_available;
 }
 
 // function to process special keyboard events
 void special_keys_event(int key_code, int, int){
 
-    bool nothing { false };
+    const CartPoint3d dir { cs.look_at - cs.position };
+    const CartPoint3d right { speed * cross_product(dir, cs.up).normalize() };
+    const CartPoint3d real_up { speed * cross_product(right, dir).normalize() };
 
     if(!first_person){
 
-        auto const& [px, py, pz] { cs.position };
-        double radius { std::sqrt(pz * pz + px * px + py * py) };
-
         switch (key_code){
 
-        case GLUT_KEY_LEFT:
-            yaw -= 1.0f;
+        case GLUT_KEY_LEFT: {
+            const CartPoint3d left { -1.0 * right };
+            cs.position += left;
             break;
+        }
 
         case GLUT_KEY_RIGHT:
-            yaw += 1.0f;
+            cs.position += right;
             break;
 
-        case GLUT_KEY_DOWN:
-            pitch -= 1.0f;
+        case GLUT_KEY_DOWN: {
+            const CartPoint3d real_down { -1.0 * real_up };
+            cs.position += real_down;
             break;
+        }
 
         case GLUT_KEY_UP:
-            pitch += 1.0f;
-            break;
-
-        case GLUT_KEY_PAGE_DOWN:
-            radius -= 1.0f;
-            nothing = true;
-            break;
-
-        case GLUT_KEY_PAGE_UP:
-            radius += 1.0f;
-            nothing = true;
+            cs.position += real_up;
             break;
 
         default:
-            nothing = true;
             break;
         }
-
-        if(!nothing){
-            if(pitch > 89.0f)
-                pitch = 89.0f;
-            if(pitch < -89.0f)
-                pitch = -89.0f;
-
-            cs.position.x = radius * std::sin(degree_to_radian(yaw)) * std::cos(degree_to_radian(pitch));
-            cs.position.y = radius * std::sin(degree_to_radian(pitch));
-            cs.position.z = radius * std::cos(degree_to_radian(yaw)) * std::cos(degree_to_radian(pitch));
-        }
-
     }
-    else{
+
+
+    else {
 
         switch (key_code){
 
-        case GLUT_KEY_LEFT:
-            cs.position.x += speed * direction.z;
-            cs.position.y += speed * direction.y;
-            cs.position.z -= speed * direction.x;
-            break;
-
-        case GLUT_KEY_RIGHT :
-            cs.position.x -= speed * direction.z;
-            cs.position.y += speed * direction.y;
-            cs.position.z += speed * direction.x;
-            break;
-
-        case GLUT_KEY_DOWN:
-            cs.position.x -= speed * direction.x;
-            cs.position.y -= speed * direction.y;
-            cs.position.z -= speed * direction.z;
-            break;
-
-        case GLUT_KEY_UP:
-            cs.position.x += speed * direction.x;
-            cs.position.y += speed * direction.y;
-            cs.position.z += speed * direction.z;
-            break;
-
-        default:
-            nothing = true;
+        case GLUT_KEY_LEFT: {
+            const CartPoint3d left { -1.0 * right };
+            cs.position += left;
+            cs.look_at  += left;
             break;
         }
 
-        if(!nothing){
-            cs.look_at.x = cs.position.x + direction.x;
-            cs.look_at.y = cs.position.y + direction.y;
-            cs.look_at.z = cs.position.z + direction.z;
+        case GLUT_KEY_RIGHT:
+            cs.position += right;
+            cs.look_at  += right;
+            break;
+
+        case GLUT_KEY_DOWN:
+            cs.position += -1.0 * speed * dir.normalize();
+            cs.look_at  += -1.0 * speed * dir.normalize();
+            break;
+
+        case GLUT_KEY_UP:
+            cs.position += speed * dir.normalize();
+            cs.look_at  += speed * dir.normalize();
+            break;
+
+        default:
+            break;
         }
     }
 
@@ -145,22 +97,6 @@ void keys_event(unsigned char key, int, int){
     switch(key){
 
     case 'p':
-        if(first_person) {
-            cs.look_at.x = 0.0;
-            cs.look_at.y = 0.0;
-            cs.look_at.z = 0.0;
-
-            const double dz { cs.position.z - cs.look_at.z };
-            const double dy { cs.position.y - cs.look_at.y };
-            const double dx { cs.position.x - cs.look_at.x };
-
-            yaw = std::atan2(dz, dx);
-            pitch = std::atan2(std::sqrt(dz * dz + dx * dx), dy) + PI;
-
-            direction.x = std::sin(degree_to_radian(yaw)) * std::cos(degree_to_radian(pitch));
-            direction.y = std::sin(degree_to_radian(pitch));
-            direction.z = std::cos(degree_to_radian(yaw)) * std::cos(degree_to_radian(pitch));
-        }
         first_person = !first_person;
         break;
 
@@ -194,34 +130,23 @@ void keys_event(unsigned char key, int, int){
 // function to process mouse events
 void mouse_event(int x, int y){
 
+    static int last_x { x }, last_y { y }; //initialized only once
+
     if(first_person){
 
-        if (first_mouse){
-            last_x = x;
-            last_y = y;
-            first_mouse = false;
-        }
+        const double diff_x { static_cast<double>(x - last_x) };
+        const double diff_y { static_cast<double>(y - last_y) };
 
-        float const xoffset { static_cast<float>(x - last_x) * sensitivity };
-        float const yoffset { static_cast<float>(y - last_y) * sensitivity };
+        PolarPoint3d dir { cart_to_polar(cs.look_at - cs.position) };
+
+        dir.zOx += -1.0 * angle_delta * diff_x;
+        dir.yOp = std::max(0.0, std::min(dir.yOp + (angle_delta * diff_y), 180.0));
+
+        cs.look_at = polar_to_cart(dir);
+
+
         last_x = x;
         last_y = y;
-
-        yaw   -= xoffset;
-        pitch -= yoffset;
-
-        if(pitch > 89.0f)
-            pitch = 89.0f;
-        if(pitch < -89.0f)
-            pitch = -89.0f;
-
-        direction.x = std::sin(degree_to_radian(yaw)) * std::cos(degree_to_radian(pitch));
-        direction.y = std::sin(degree_to_radian(pitch));
-        direction.z = std::cos(degree_to_radian(yaw)) * std::cos(degree_to_radian(pitch));
-
-        cs.look_at.x = cs.position.x + direction.x;
-        cs.look_at.y = cs.position.y + direction.y;
-        cs.look_at.z = cs.position.z + direction.z;
     }
 
     glutPostRedisplay();
