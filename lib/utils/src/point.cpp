@@ -62,7 +62,7 @@ PolarPoint3d::PolarPoint3d() :
 PolarPoint3d::PolarPoint3d(double radius, angle_t zOx, angle_t yOp) :
     radius(radius), zOx(zOx), yOp(yOp)
 {
-    assert(yOp >= 0.0 && yOp < 180.0);
+    assert(yOp >= 0.0 && yOp <= 180.0);
     assert(radius >= 0.0);
 }
 
