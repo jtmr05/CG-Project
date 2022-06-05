@@ -7,7 +7,7 @@ RESOURCES=$DIR/../resources
 
 main(){
 
-    if [[ -f bin/generator ]]
+    if [[ -f $GEN ]]
     then
         $GEN bezier $RESOURCES/teapot.patch 10 $RESOURCES/bezier.3d
         return 0
